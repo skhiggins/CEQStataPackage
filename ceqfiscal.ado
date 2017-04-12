@@ -1,7 +1,8 @@
 ** ADO FILE FOR FISCAL INTERVENTIONS SHEET OF CEQ OUTPUT TABLES
 
 ** VERSION AND NOTES (changes between versions described under CHANGES)
-*! v4.5 08mar2017 For use with Oct 2016 version of Output Tables
+*! v4.6 06apr2017 For use with Oct 2016 version of Output Tables
+** v4.5 08mar2017 For use with Oct 2016 version of Output Tables
 ** v4.4 12jan2017 For use with Oct 2016 version of Output Tables
 ** v4.3 30oct2016 For use with Jun 2016 version of Output Tables 
 ** v4.2 01oct2016 For use with Jun 2016 version of Output Tables 
@@ -25,6 +26,7 @@
 *! (beta version; please report any bugs), written by Sean Higgins sean.higgins@ceqinstitute.org
 
 ** CHANGES
+**   04-06-2017 Remove the temporary variables from the negative tax warning list 
 **   03-08-2017 Remove the net in-kind transfers as a broad category in accordance with the instruction that users
 **				 supply net in-kind transfer variables to health/education/otherpublic options
 ** 	 01-12-2017 Set the data type of all newly generated variables to be double
@@ -143,8 +145,8 @@ end // END covconc
 **********************
 ** For sheet E10. Concentration
 // BEGIN ceqfiscal (Higgins 2015)
-capture program drop ceqfiscal
-program define ceqfiscal, rclass 
+capture program drop ceqfiscalapr2
+program define ceqfiscalapr2, rclass 
 	version 13.0
 	#delimit ;
 	syntax 
@@ -226,7 +228,7 @@ program define ceqfiscal, rclass
 	local dit display as text in smcl
 	local die display as error in smcl
 	local command ceqfiscal
-	local version 4.5
+	local version 4.6
 	`dit' "Running version `version' of `command' on `c(current_date)' at `c(current_time)'" _n "   (please report this information if reporting a bug to sean.higgins@ceqinstitute.org)"
 	
 	** income concepts
@@ -692,6 +694,21 @@ program define ceqfiscal, rclass
 	** OTHER MODIFICATION *
 	***********************
 	
+	** separate warning so that the temporary variables do not show on the command screen
+	if wordcount("`allprogs'")>0 ///
+	foreach tax of local taxlist {
+		foreach pr in ``tax'' {
+			qui summ `pr', meanonly
+			if r(mean)>0 {
+				if wordcount("`taxwarning'")>0 local taxwarning `taxwarning', `pr'
+				else local taxwarning `pr'
+			}	
+		}
+	}
+	if wordcount("`taxwarning'")>0 {
+		`dit' "Taxes appear to be positive values for variable(s) `taxwarning'; replaced with negative for calculations"
+	}
+	
 	** create new variables for program categories
 
 	if wordcount("`allprogs'")>0 ///
@@ -702,9 +719,6 @@ program define ceqfiscal, rclass
 			else local postax `pr'
 			qui replace `pr' = -`pr' // replace doesnt matter since we restore at the end
 		}
-	}
-	if wordcount("`postax'")>0 {
-		`dit' "Taxes appear to be positive values for variable(s) `postax'; replaced with negative for calculations"
 	}
 	
 	** PPP converted variables

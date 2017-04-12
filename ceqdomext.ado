@@ -1,12 +1,14 @@
 * ADO FILE FOR EXTENDED INCOME CONCEPTS DOMINANCE SHEET OF CEQ OUTPUT TABLES
 
 ** VERSION AND NOTES (changes between versions described under CHANGES)
-*! v1.4 18mar2017 For use with Oct 2016 version of Output Tables
+*! v1.5 06apr2017 For use with Oct 2016 version of Output Tables
+** v1.4 18mar2017 For use with Oct 2016 version of Output Tables
 ** v1.3 12jan2017 For use with Oct 2016 version of Output Tables
 ** v1.2 30sep2016 
 *! (beta version; please report any bugs), written by Rodrigo Aranda raranda@tulane.edu
 
 ** CHANGES
+**   04-06-2017 Remove the warning about negative tax values
 **   03-18-2017 Change bootstrap ksmirnov to ksmorniv 
 ** 	 01-12-2017 Set the data type of all newly generated variables to be double
 ** 				Add a check of the data type of income and fiscal variables and issue a warning if
@@ -472,7 +474,7 @@ program define ceqdomext
 	local dit display as text in smcl
 	local die display as error in smcl
 	local command ceqdomext
-	local version 1.4
+	local version 1.5
 	`dit' "Running version `version' of `command' on `c(current_date)' at `c(current_time)'" _n "   (please report this information if reporting a bug to raranda@tulane.edu)"
 	
 	** income concept options
@@ -985,9 +987,9 @@ program define _ceqdomext, rclass
 			qui replace `pr' = -`pr' // replace doesnt matter since we restore at the end
 		}
 	}
-	if wordcount("`postax'")>0 {
+	/*if wordcount("`postax'")>0 {
 		`dit' "Taxes appear to be positive values for variable(s) `postax'; replaced with negative for calculations"
-	}
+	}*/
 	
 	foreach y of local alllist {
 		local marg`y' ``y''

@@ -1,12 +1,14 @@
 ** ADO FILE FOR MARGINAL EFFECTS
 
 ** VERSION AND NOTES (changes between versions described under CHANGES)
-*! v1.2 27mar2017 For use with Oct 2016 version of Output Tables
+*! v1.3 06apr2017 For use with Oct 2016 version of Output Tables
+** v1.2 27mar2017 For use with Oct 2016 version of Output Tables
 ** v1.1 08mar2017 For use with Oct 2016 version of Output Tables
 ** v1.0 12feb2017 For use with Oct 2016 version of Output Tables
 *! (beta version; please report any bugs), written by Sean Higgins sean.higgins@ceqinstitute.org
 
 ** CHANGES
+**   04-06-2017 Remove the warning about negative tax values
 **   03-08-2017 Remove the net in-kind transfers as a broad category in accordance with the instruction that users
 **				 supply net in-kind transfer variables to health/education/otherpublic options
 **	 03-23-2017 Fix cell alignment 
@@ -104,8 +106,8 @@ end
 **********************
 ** For sheet E13. Marg. Contrib.
 // BEGIN ceqmarg (Higgins 2015)
-capture program drop ceqmarg
-program define ceqmarg, rclass 
+capture program drop ceqmargapr2
+program define ceqmargapr2, rclass 
 	version 13.0
 	#delimit ;
 	syntax 
@@ -196,7 +198,7 @@ program define ceqmarg, rclass
 	local dit display as text in smcl
 	local die display as error in smcl
 	local command ceqmarg
-	local version 1.2
+	local version 1.3
 	`dit' "Running version `version' of `command' on `c(current_date)' at `c(current_time)'" _n "   (please report this information if reporting a bug to sean.higgins@ceqinstitute.org)"
 	
 	** income concepts
@@ -710,9 +712,9 @@ program define ceqmarg, rclass
 			qui replace `pr' = -`pr' // replace doesnt matter since we restore at the end
 		}
 	}
-	if wordcount("`postax'")>0 {
+	/* if wordcount("`postax'")>0 {
 		`dit' "Taxes appear to be positive values for variable(s) `postax'; replaced with negative for calculations"
-	}
+	} */
 	
 	** create extended income variables
 	foreach pr in `pensions' `v_pensions' { // did it this way so if they're missing loop is skipped over, no error

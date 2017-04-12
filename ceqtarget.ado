@@ -1,7 +1,7 @@
 ** ADO FILE FOR FISCAL INTERVENTIONS SHEET OF CEQ MASTER WORKBOOK SECTION E
 
 ** VERSION AND NOTES (changes between versions described under CHANGES)
-*! v2.0 30mar2017 For use with Oct 2016 version of Output Tables
+*! v2.0 06apr2017 For use with Oct 2016 version of Output Tables
 ** v1.6 03mar2017 For use with Sep 2016 version of CEQ Master Workbook 2016
 ** v1.5 06feb2017 For use with Sep 2016 version of CEQ Master Workbook 2016
 ** v1.4 12jan2017 For use with Oct 2016 version of CEQ Master Workbook 2016
@@ -12,11 +12,14 @@
 *! (beta version; please report any bugs), written by Sean Higgins sean.higgins@ceqinstitute.org
 
 ** CHANGES
-**   03-30-2017 Fix the too many options issues
+**   04-06-2017 Add warning that users need to specify fiscal intervention option for target results
+**				Fix the too many options issues
 **				Update target and direct beneficiary matrices
 **				Update warning messages
 **				Add flexibility checks
 **				Add flexibility for hh-level data
+**				Update calculation matrices
+**				Remove the temporary variables from the negative tax warning list  
 **   03-08-2017 Remove the net in-kind transfers as a broad category in accordance with the instruction that users
 **				 supply net in-kind transfer variables to health/education/otherpublic options
 **   03-03-2017 Update row alignment
@@ -331,13 +334,17 @@ program define ceqtarget, rclass
 					exit 198
 				}	
 			}
-			if "``_``x'opt'''"=="" & "`t`_``x'opt'''"!="" {
+			if "`t`_``x'opt'''"!="" & "``_``x'opt'''"=="" {
 				`dit' "Warning: {bf:`_``x'opt''} not specified; target direct beneficiary results not produced"
 				local warning `warning' "Warning: {bf:`_``x'opt''} not specified; target direct beneficiary results not produced"
 			}
 			if "`t`_``x'opt'''"=="" & "```x'opt''"!="" {
 				`dit' "Warning: {bf:t`_``x'opt''} not specified; no results are produced"
 				local warning `warning' "Warning: {bf:t`_``x'opt''} not specified; no results are produced"
+			}
+			if "`t`_``x'opt'''"!="" & "```x'opt''"=="" {
+				`dit' "Warning: {bf:``x'opt'} need to be specified for target results to be produced"
+				local warning `warning' "Warning: {bf:``x'opt'} need to be specified for target results to be produced"
 			}
 			
 			
@@ -349,7 +356,8 @@ program define ceqtarget, rclass
 				local tb_`x'vars `tb_`x'vars' `t`_``x'opt''' // variable names for target (trec..., tpay...)
 			}		
 			// Separate loop for flexibility
-			if "``_``x'opt'''"!="" &  "`t`_``x'opt'''"!="" {
+			if "```x'opt''"!="" & "``_``x'opt'''"!="" &  "`t`_``x'opt'''"!="" {
+
 				local `x'list ``x'list' ``x'opt' // the option names
 				local `x'vars2 ``x'vars2' ```x'opt'' // the variable names  
 				local _`x'list `_`x'list'  `_``x'opt'' // option names (rec..., pay...)
@@ -362,8 +370,6 @@ program define ceqtarget, rclass
 		}
 
 	}
-	//! Rosie's comment: We should add something like assert target and DB variable only has 0 and 1 values
-	//! Rosie's question: Will the command work if the users use the same variables to specify different target option?
 	
 	** Generate the variables for benefits   
 	tokenize `tb_recvars' 
@@ -470,7 +476,7 @@ program define ceqtarget, rclass
 							tempvar tarb_`v_`cat''
 							local tpaytotalb
 							foreach x in `tpay`cat'' {
-								if wordcount("`tpaytotalb'") > 0 local tpaytotal `tpaytotalb' ,`x'
+								if wordcount("`tpaytotalb'") > 0 local tpaytotalb `tpaytotalb' ,`x'
 								else local tpaytotalb `x' 
 							}
 							if strpos("`tpaytotalb'",",")!=0 {
@@ -519,7 +525,7 @@ program define ceqtarget, rclass
 							tempvar tarb_`v_`cat''
 							local trectotalb
 							foreach x in `trec`cat'' {
-								if wordcount("`trectotalb'") > 0 local trectotal `trectotalb' ,`x'
+								if wordcount("`trectotalb'") > 0 local trectotalb `trectotalb' ,`x'
 								else local trectotalb `x' 
 							}
 							if strpos("`trectotalb'",",")!=0 {
@@ -588,7 +594,7 @@ program define ceqtarget, rclass
 								tempvar tarb_`v_`bc''
 								local tpaytotalb
 								foreach x in `tpay`cat'' {
-									if wordcount("`tpaybroadb'") > 0 local tpaybroad `tpaybroadb' ,`x'
+									if wordcount("`tpaybroadb'") > 0 local tpaybroadb `tpaybroadb' ,`x'
 									else local tpaybroadb `x'
 								}
 							}
@@ -616,7 +622,7 @@ program define ceqtarget, rclass
 								tempvar tarb_`v_`bc''
 								local trectotalb
 								foreach x in `trec`cat'' {
-									if wordcount("`trecbroadb'") > 0 local trecbroad `trecbroadb' ,`x'
+									if wordcount("`trecbroadb'") > 0 local trecbroadb `trecbroadb' ,`x'
 									else local trecbroadb `x'
 								}
 							}
@@ -1160,6 +1166,21 @@ program define ceqtarget, rclass
 	** OTHER MODIFICATION *
 	***********************
 	
+	** separate warning so that the temporary variables do not show on the command screen
+	if wordcount("`allprogs'")>0 ///
+	foreach tax of local taxlist {
+		foreach pr in ``tax'' {
+			qui summ `pr', meanonly
+			if r(mean)>0 {
+				if wordcount("`taxwarning'")>0 local taxwarning `taxwarning', `pr'
+				else local taxwarning `pr'
+			}	
+		}
+	}
+	if wordcount("`taxwarning'")>0 {
+		`dit' "Taxes appear to be positive values for variable(s) `taxwarning'; replaced with negative for calculations"
+	}
+	
 	** create new variables for program categories
 
 	if wordcount("`allprogs'")>0 ///
@@ -1170,9 +1191,6 @@ program define ceqtarget, rclass
 			else local postax `pr'
 			qui replace `pr' = -`pr' // replace doesnt matter since we restore at the end
 		}
-	}
-	if wordcount("`postax'")>0 {
-		`dit' "Taxes appear to be positive values for variable(s) `postax'; replaced with negative for calculations"
 	}
 	
 	** PPP converted variables
@@ -1308,14 +1326,16 @@ program define ceqtarget, rclass
 						}
 	
 						// TARGET POPULATION MATRICES
-						if "`tar_`pr''"!="" & `db_result' == 1 {
+						// Use tarb rather than tar here because tarb_`var' is restricted by benefit and target specification;
+						// tar_`pr' is restricted by benefit, target and db. This offers more flexibility
+						if "`tarb_`pr''"!="" & `db_result' == 1 {
 							// Target Direct 
 							forval gp=1/6 {
-								qui summ `tar_`pr'' if ``v'_group'==`gp' [aw=`exp']    // using the new variable
+								qui summ `tarb_`pr'' if ``v'_group'==`gp' [aw=`exp']    // using the new variable
 								matrix `mat'`v'_target[`pr_row',`gp'] = r(sum)
 							}
 							
-							qui summ `tar_`pr'' [aw=`exp']
+							qui summ `tarb_`pr'' [aw=`exp']
 							matrix `mat'`v'_target[`pr_row',7] = r(sum)
 						}
 						else {
@@ -1323,11 +1343,11 @@ program define ceqtarget, rclass
 								matrix `mat'`v'_target[`pr_row',`noval'] = .
 							}
 						}
-	
+						
 						if "`tar_`pr''"!="" {
 							// Target beneficiary households
 							forval gp=1/6 {
-								qui summ `one' if ``v'_group'==`gp' & !missing(`pr') & `tar_`pr'' > 0 ///
+								qui summ `one' if ``v'_group'==`gp' & !missing(`pr') & `tarb_`pr'' > 0 ///
 									[aw=`exp']
 								matrix `mat'`v'_target_hh[`pr_row',`gp'] = r(sum)
 							}
@@ -1337,11 +1357,11 @@ program define ceqtarget, rclass
 					
 							// Direct and indirect target beneficiaries
 							forval gp=1/6 {
-								qui summ `one' if ``v'_group'==`gp' & !missing(`pr') & `tar_`pr'' > 0 ///
+								qui summ `one' if ``v'_group'==`gp' & !missing(`pr') & `tarb_`pr'' > 0 ///
 									`aw'
 								matrix `mat'`v'_target_all[`pr_row',`gp'] = r(sum)
 							}
-							qui summ `one' if !missing(`pr') & `tar_`pr''>0 ///
+							qui summ `one' if !missing(`pr') & `tarb_`pr''>0 ///
 								`aw'
 							matrix `mat'`v'_target_all[`pr_row',7] = r(sum) // total
 						}
@@ -1530,7 +1550,7 @@ program define ceqtarget, rclass
 		}
 		
 		// Print warning message on Excel sheet 
-		local warningrow = 623
+		local warningrow = 721
 		local warningcount = -1
 		foreach x of local warning {
 			local warningprint `warningprint' A`warningrow'=("`x'")
@@ -1542,7 +1562,7 @@ program define ceqtarget, rclass
 			local warningprint `warningprint' A`=`warningrow'+`i''=("")
 		}
 		// count warning messages and print at the top of MWB
-		local warningprint `warningprint' A5=("`warningcount' important warning messages are printed starting on row 662.") 
+		local warningprint `warningprint' A5=("`warningcount' important warning messages are printed starting on row 721.") 
 		
 		// putexcel
 		foreach vrank of local alllist {

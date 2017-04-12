@@ -1,7 +1,8 @@
 ** ADO FILE FOR EXTENDED INCOME CONCEPTS SHEET OF CEQ MASTER WORKBOOK SECTION E
 
 ** VERSION AND NOTES (changes between versions described under CHANGES)
-*! v1.5 08mar2017 For use with Oct 2016 version of Output Tables
+*! v1.6 06apr2017 For use with Oct 2016 version of CEQ Master Workbook 
+** v1.5 08mar2017 For use with Oct 2016 version of CEQ Master Workbook 
 ** v1.4 12jan2017 For use with Oct 2016 version of CEQ Master Workbook
 ** v1.3 13nov2016 For use with Oct 2016 version of CEQ Master Workbook
 ** v1.2 30oct2016 For use with July 2016 version of CEQ Master Workbook
@@ -10,6 +11,7 @@
 *! (beta version; please report any bugs), written by Sean Higgins sean.higgins@ceqinstitute.org
 
 ** CHANGES
+**   04-06-2017 Remove the warning about negative tax values
 **   03-08-2017 Remove the net in-kind transfers as a broad category in accordance with the instruction that users
 **				 supply net in-kind transfer variables to health/education/otherpublic options
 ** 	 01-12-2017 Set the data type of all newly generated variables to be double
@@ -99,7 +101,7 @@ program define ceqextsig
 	local dit display as text in smcl
 	local die display as error in smcl
 	local command ceqextsig
-	local version 1.5
+	local version 1.6
 	`dit' "Running version `version' of `command' on `c(current_date)' at `c(current_time)'" _n "   (please report this information if reporting a bug to sean.higgins@ceqinstitute.org)"
 	
 	** income concept options
@@ -745,9 +747,9 @@ program define _ceqextsig, rclass
 			qui replace `pr' = -`pr' // replace doesnt matter since we restore at the end
 		}
 	}
-	if wordcount("`postax'")>0 {
+	/*if wordcount("`postax'")>0 {
 		`dit' "Taxes appear to be positive values for variable(s) `postax'; replaced with negative for calculations"
-	}
+	}*/
 	
 	foreach y of local alllist {
 		local marg`y' ``y''
