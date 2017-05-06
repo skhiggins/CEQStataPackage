@@ -1,7 +1,8 @@
 ** ADO FILE FOR FISCAL INTERVENTIONS SHEET OF CEQ MASTER WORKBOOK SECTION E
 
 ** VERSION AND NOTES (changes between versions described under CHANGES)
-*! v2.0 06apr2017 For use with Oct 2016 version of Output Tables
+*! v2.0 23apr2017 For use with Oct 2016 version of CEQ Master Workbook 2017
+** v1.7 06apr2017 For use with Oct 2016 version of CEQ Master Workbook 2017
 ** v1.6 03mar2017 For use with Sep 2016 version of CEQ Master Workbook 2016
 ** v1.5 06feb2017 For use with Sep 2016 version of CEQ Master Workbook 2016
 ** v1.4 12jan2017 For use with Oct 2016 version of CEQ Master Workbook 2016
@@ -12,6 +13,8 @@
 *! (beta version; please report any bugs), written by Sean Higgins sean.higgins@ceqinstitute.org
 
 ** CHANGES
+**   04-23-2017 Change variable used to calculate beneficiary household and direct and indirect beneficiaries
+**				Change the if condition for target from == 1 to >0 to account for household-level data
 **   04-06-2017 Add warning that users need to specify fiscal intervention option for target results
 **				Fix the too many options issues
 **				Update target and direct beneficiary matrices
@@ -398,7 +401,7 @@ program define ceqtarget, rclass
 		qui gen `dbc_`var'' = ``db_count''
 		tempvar bdt_temp_`var'
 		qui gen `bdt_temp_`var'' = 0               
-		qui replace `bdt_temp_`var'' = 1 if ``db_count''==1   
+		qui replace `bdt_temp_`var'' = 1 if ``db_count''>0  & !missing(``db_count'')
 	}			// Note if there are missing values for the variable ``db_count'' we will consider it to be 0
 	
 	tokenize `_payvars'
@@ -409,7 +412,7 @@ program define ceqtarget, rclass
 		qui gen `dbc_`var'' = ``db_count''
 		tempvar bdt_temp_`var'
 		qui gen `bdt_temp_`var'' = 0                
-		qui replace `bdt_temp_`var'' = 1 if ``db_count''==1
+		qui replace `bdt_temp_`var'' = 1 if ``db_count''>0 & !missing(``db_count'')
 	}
 	
 	// Target beneficiaries
@@ -419,7 +422,7 @@ program define ceqtarget, rclass
 		local ++tar_count
 		tempvar tarc_`var'
 		qui gen `tarc_`var'' = ``tar_count''
-		qui replace `bdt_temp_`var'' = 0 if ``tar_count''==0 | missing(``tar_count'') //! Added the or condition per Sean's comment on March 22nd
+		qui replace `bdt_temp_`var'' = 0 if ``tar_count''==0 | missing(``tar_count'') // make sure the missing values are converted to 0
 		local bdtc_`var' `bdtc_`var'' `bdt_temp_`var''          
 	}
 	
@@ -445,7 +448,7 @@ program define ceqtarget, rclass
 	
 	** generate db variables
 	if "`hsize'"!= "" {
-		local db_result = 0        // not produce db results for hh-level data      //! I thought we are not producing results for hh-level.
+		local db_result = 0        // not produce db results for hh-level data     
 		`dit' "Warning: Household-level data used, but individual-level data strongly recommended for {cmd:ceqtarget}. Household-level data should only be used if each program's target population defined at household level. Individual-level results are not produced."
 		local warning `warning' "Warning: Household-level data used, but individual-level data strongly recommended for {cmd:ceqtarget}. Household-level data should only be used if each program's target population defined at household level. Individual-level results are not produced."
 		/*foreach var in `recvars' `payvars' {
@@ -453,7 +456,7 @@ program define ceqtarget, rclass
 			qui gen `db_`var'' = `dbc_`var''
 			local db_tokeep `db_tokeep' `db_`var''
 		}*/
-		//! creat missing for 
+		
 	}
 	
 	** create individual-level direct beneficiary vars 
@@ -468,6 +471,7 @@ program define ceqtarget, rclass
 		}*/
 
 	foreach cat of local programlist {   		
+			local bdttotal 
 			// empty the locals before each loop
 			if strpos("`pay_options'","`cat'") != 0 {
 					// Taxes paid by Target Population
@@ -487,7 +491,7 @@ program define ceqtarget, rclass
 							}	
 						}
 						if "`pay`cat''"!="" { 
-							tempvar tar_`v_`cat'' db_`v_`cat'' bdt_`v_`cat''
+							tempvar tar_`v_`cat'' db_`v_`cat'' 
 							local tpaytotal
 							local paytotal
 							foreach x in `tpay`cat'' {
@@ -511,10 +515,19 @@ program define ceqtarget, rclass
 							else {
 								qui gen double `db_`v_`cat''' = `paytotal'
 							}
+							foreach var in ``cat'' {
+								if wordcount("`bdttotal'")>0 local bdttotal `bdttotal', `bdt_temp_`var''
+								else local bdttotal `bdt_temp_`var''
+							}
 
-							// Identify individuals who are both direct beneficiaries and target population  
-							qui gen `bdt_`v_`cat''' = 0
-							qui replace `bdt_`v_`cat''' = 1 if `db_`v_`cat'''==1 & `tar_`v_`cat''' == 1
+							// Identify individuals who are both direct beneficiaries and target population
+							if "`bdttotal'"!="" {
+								tempvar bdt_`v_`cat''
+								if strpos("`bdttotal'",",")!=0 qui gen `bdt_`v_`cat''' = max(`bdttotal')
+								if strpos("`bdttotal'",",")==0 qui gen `bdt_`v_`cat''' = `bdttotal'
+							}
+							// qui gen `bdt_`v_`cat''' = 0
+							// qui replace `bdt_`v_`cat''' = 1 if `db_`v_`cat'''==1 & `tar_`v_`cat''' == 1
 							// target beneficiary for broad category if target for 
 						}		//  at least one component of broad category
 					}
@@ -536,7 +549,7 @@ program define ceqtarget, rclass
 							}	
 						}
 						if "`rec`cat''"!="" { 
-							tempvar tar_`v_`cat'' db_`v_`cat'' bdt_`v_`cat''
+							tempvar tar_`v_`cat'' db_`v_`cat'' 
 							local trectotal 
 							local rectotal 
 							foreach x in `trec`cat'' {
@@ -560,21 +573,32 @@ program define ceqtarget, rclass
 							else {
 								qui gen double `db_`v_`cat''' = `rectotal'
 							}
+							foreach var in ``cat'' {
+								if wordcount("`bdttotal'")>0 local bdttotal `bdttotal', `bdt_temp_`var''
+								else local bdttotal `bdt_temp_`var''
+							}
+
+							// Identify individuals who are both direct beneficiaries and target population
+							if "`bdttotal'"!="" {
+								tempvar bdt_`v_`cat''
+								if strpos("`bdttotal'",",")!=0 qui gen `bdt_`v_`cat''' = max(`bdttotal')
+								if strpos("`bdttotal'",",")==0 qui gen `bdt_`v_`cat''' = `bdttotal'
+							}
 
 							// Identify individuals who are both direct beneficiaries and target population  
-							qui gen `bdt_`v_`cat''' = 0
-							qui replace `bdt_`v_`cat''' = 1 if `db_`v_`cat'''==1 & `tar_`v_`cat''' == 1
+							// qui gen `bdt_`v_`cat''' = 0
+							// qui replace `bdt_`v_`cat''' = 1 if `db_`v_`cat'''==1 & `tar_`v_`cat''' == 1
 							// target beneficiary for broad category if target for 
 						}		//  at least one component of broad category
 					}
 			}
-						
+			
 			local db_vlist `db_vlist' `db_`v_`cat'''
 			local tar_vlist `tar_vlist' `tar_`v_`cat'''
 			local bdt_vlist `bdt_vlist' `bdt_`v_`cat'''
 			local tarb_vlist `tarb_vlist' `tarb_`v_`cat'''
 			
-		}
+	}
 			
 		
 		foreach bc of local broadcats {
@@ -611,6 +635,10 @@ program define ceqtarget, rclass
 									if wordcount("`paybroad'") > 0 local paybroad `paybroad' ,`x'
 									else local paybroad `x' 
 								}
+								if "`bdt_`v_`cat'''"!="" {
+									if wordcount("`bdtbroad'")>0 local bdtbroad `bdtbroad', `bdt_`v_`cat'''
+									else local bdtbroad `bdt_`v_`cat'''
+								}
 							}
 						}
 					}
@@ -638,6 +666,10 @@ program define ceqtarget, rclass
 								foreach x in `rec`cat'' {
 									if wordcount("`recbroad'") > 0 local recbroad `recbroad' ,`x'
 									else local recbroad `x' 
+								}
+								if "`bdt_`v_`cat'''"!="" {
+									if wordcount("`bdtbroad'")>0 local bdtbroad `bdtbroad', `bdt_`v_`cat'''
+									else local bdtbroad `bdt_`v_`cat'''
 								}
 							}
 						}
@@ -673,10 +705,13 @@ program define ceqtarget, rclass
 					if `recid' == 1 & strpos("`trecbroadb'",",")!=0 qui gen `tarb_`v_`bc''' = max(`trecbroadb')
 					if `recid' == 1 & strpos("`trecbroadb'",",")==0 qui gen `tarb_`v_`bc''' = `trecbroadb' 
 				}
-				capture confirm variable `db_`v_`bc''' `tar_`v_`bc'''
-				if _rc == 0 {
-					qui replace `bdt_`v_`bc''' = 1 if `db_`v_`bc'''==1 & `tar_`v_`bc'''==1
+				// capture confirm variable `db_`v_`bc''' `tar_`v_`bc'''
+				// if _rc == 0 {
+				if "`bdtbroad'"!="" {
+					if strpos("`bdtbroad'",",")!=0 	qui replace `bdt_`v_`bc''' = max(`bdtbroad')  //  1 if `db_`v_`bc'''==1 & `tar_`v_`bc'''==1
+					if strpos("`bdtbroad'",",")==0 	qui replace `bdt_`v_`bc''' = `bdtbroad'
 				}
+				// }
 				
 				local db_vlist `db_vlist' `db_`v_`bc'''
 				local tar_vlist `tar_vlist' `tar_`v_`bc'''
@@ -1002,7 +1037,7 @@ program define ceqtarget, rclass
 	local inkindcols
 		`health' `v_health' `education' `v_education' `otherpublic' `v_otherpublic' `v_inkind'
 		`userfeeshealth' `v_userfeeshealth' `userfeeseduc' `v_userfeeseduc' `userfeesother' `v_userfeesother' `v_userfees' 
-		/*`nethealth' `neteducation'  `netother' `v_netinkind'*/
+		/* `v_alltaxes' `v_alltaxescontribs'  `v_alltransfers' `v_alltransfersp'  `nethealth' `neteducation'  `netother' `v_netinkind'*/
 	;
 	local taxcols: list programcols - transfercols; // set subtraction;
 	#delimit cr
@@ -1329,7 +1364,7 @@ program define ceqtarget, rclass
 						// Use tarb rather than tar here because tarb_`var' is restricted by benefit and target specification;
 						// tar_`pr' is restricted by benefit, target and db. This offers more flexibility
 						if "`tarb_`pr''"!="" & `db_result' == 1 {
-							// Target Direct 
+							// Target Individuals
 							forval gp=1/6 {
 								qui summ `tarb_`pr'' if ``v'_group'==`gp' [aw=`exp']    // using the new variable
 								matrix `mat'`v'_target[`pr_row',`gp'] = r(sum)
@@ -1338,20 +1373,20 @@ program define ceqtarget, rclass
 							qui summ `tarb_`pr'' [aw=`exp']
 							matrix `mat'`v'_target[`pr_row',7] = r(sum)
 						}
-						else {
+						if "`tarb_`pr''"=="" | `db_result' == 0 {
 							forval noval = 1/7 {
 								matrix `mat'`v'_target[`pr_row',`noval'] = .
 							}
 						}
 						
-						if "`tar_`pr''"!="" {
-							// Target beneficiary households
+						if "`tarb_`pr''"!="" {
+							// Target households
 							forval gp=1/6 {
 								qui summ `one' if ``v'_group'==`gp' & !missing(`pr') & `tarb_`pr'' > 0 ///
 									[aw=`exp']
 								matrix `mat'`v'_target_hh[`pr_row',`gp'] = r(sum)
 							}
-							qui summ `one' if `pr'!=0 & !missing(`pr') ///
+							qui summ `one' if /*`pr'!=0 & */ !missing(`pr') & `tarb_`pr'' > 0 ///
 								[aw=`exp']
 							matrix `mat'`v'_target_hh[`pr_row',7] = r(sum) // total
 					
@@ -1371,13 +1406,13 @@ program define ceqtarget, rclass
 								matrix `mat'`v'_target_all[`pr_row',`noval'] = .
 							}
 						}
-
+						
 						// TARGET BENEFICIARY MATRICES
 						if "`tar_`pr''"!="" & "`bdt_`pr''"!="" & `db_result' == 1 {
 							// Target Direct beneficiaries
 							forval gp=1/6 {
 								qui summ `bdt_`pr'' if ``v'_group'==`gp' [aw=`exp']    // using the new variable
-								//! Rosie to self: Create a fake dataset to test
+		
 								/* qui summ `db_`pr'' if ``v'_group'==`gp' & `tar_`pr'' > 0 ///
 									[aw=`exp'] */ 
 									// `db_`pr'' has number of direct beneficiaries in hh
@@ -1392,7 +1427,7 @@ program define ceqtarget, rclass
 							// `db_`pr'' already has number of ben per hh
 							matrix `mat'`v'_direct[`pr_row',7] = r(sum)
 						}
-						if "``bdt_`pr''"=="" & `db_result' == 1 {
+						if "``bdt_`pr''"=="" | `db_result' == 0 {
 							forval noval = 1/7 {
 								matrix `mat'`v'_direct[`pr_row',`noval'] = .
 							}
@@ -1401,21 +1436,21 @@ program define ceqtarget, rclass
 						if "`tar_`pr''"!="" {
 							// Target beneficiary households
 							forval gp=1/6 {
-								qui summ `one' if ``v'_group'==`gp' & `pr'!=0 & !missing(`pr') & `tar_`pr'' > 0 ///
+								qui summ `one' if ``v'_group'==`gp'  & `bdt_`pr''>0 /* & `pr'!=0 & !missing(`pr') & `tar_`pr'' > 0 */ ///
 									[aw=`exp']
 								matrix `mat'`v'_hh[`pr_row',`gp'] = r(sum)
 							}
-							qui summ `one' if `pr'!=0 & !missing(`pr') ///
+							qui summ `one' if `bdt_`pr''>0  /* if `pr'!=0 & !missing(`pr') & `tar_`pr'' > 0 */  ///
 								[aw=`exp']
 							matrix `mat'`v'_hh[`pr_row',7] = r(sum) // total
 					
 							// Direct and indirect target beneficiaries
 							forval gp=1/6 {
-								qui summ `one' if ``v'_group'==`gp' & `pr'!=0 & !missing(`pr') & `tar_`pr'' > 0 ///
+								qui summ `one' if ``v'_group'==`gp'  & `bdt_`pr''>0  /* & `pr'!=0 & !missing(`pr') & `tar_`pr'' > 0 */ ///
 									`aw'
 								matrix `mat'`v'_all[`pr_row',`gp'] = r(sum)
 							}
-							qui summ `one' if `pr'!=0 & !missing(`pr') & `tar_`pr''>0 ///
+							qui summ `one' if `bdt_`pr''>0 /* `pr'!=0 & !missing(`pr') & `tar_`pr''>0  */  ///
 								`aw'
 							matrix `mat'`v'_all[`pr_row',7] = r(sum) // total
 						}
