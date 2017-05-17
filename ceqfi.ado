@@ -2,7 +2,8 @@
 **  OF CEQ MASTER WORKBOOK PART II
 
 ** VERSION AND NOTES (changes between versions described under CHANGES)
-*! v3.1 06feb2017 For use with Oct 2016 version of Output Tables
+*! v3.2 28mar2017 For use with Oct 2016 version of Output Tables
+** v3.1 06feb2017 For use with Oct 2016 version of Output Tables
 ** v3.0 03feb2017 For use with Oct 2016 version of Output Tables
 ** v2.6 12jan2017 For use with Oct 2016 version of Output Tables
 ** v2.5 30sep2016 For use with Jun 2016 version of Output Tables
@@ -19,6 +20,7 @@
 *! (beta version; please report any bugs), written by Sean Higgins sean.higgins@ceqinstitute.org
 
 ** CHANGES
+**   3-28-2017 Fix cell alignment for income bins
 **   2-06-2017 Fix bug introduced in Feb 3rd changes, pointed out by Sandra Martinez 
 **              (fix omission of producing by income bin and correct poverty line local specfication on line 557)
 **   2-03-2017 Fix bug for national poverty lines pointed out by Sandra Martinez
@@ -190,7 +192,7 @@ program define ceqfi, rclass
 	local dit display as text in smcl
 	local die display as error in smcl
 	local command ceqfi
-	local version 3.1
+	local version 3.2
 	`dit' "Running version `version' of `command' on `c(current_date)' at `c(current_time)'" _n "   (please report this information if reporting a bug to sean.higgins@ceqinstitute.org)"
 	
 	** income concepts
