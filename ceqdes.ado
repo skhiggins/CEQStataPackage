@@ -77,8 +77,8 @@
 //  Returns Excel column corresponding to a number
 cap program drop returncol
 program define returncol, rclass
-	confirm integer number `1' // MARC: what does confirm integer do?
-	mata: st_strscalar("col",numtobase26(`1')) // Marc: calling mata to convert number to letter in excel workbook?
+	confirm integer number `1'
+	mata: st_strscalar("col",numtobase26(`1'))
 	return local col = col
 end // END returncol
 
@@ -146,8 +146,8 @@ program define ceqdes, rclass
 	** LOCALS **
 	************
 	** general programming locals
-	local dit display as text in smcl // MARC:Establishing local for displaying text in program.
-	local die display as error in smcl // MARC: For displaying locals 
+	local dit display as text in smcl
+	local die display as error in smcl
 	local command ceqdes
 	local version 3.8
 	`dit' "Running version `version' of `command' on `c(current_date)' at `c(current_time)'" _n "   (please report this information if reporting a bug to sean.higgins@ceqinstitute.org)"
@@ -188,7 +188,7 @@ program define ceqdes, rclass
 	*************************
 	  
 	preserve
-	if wordcount("`if' `in'")!=0 quietly keep `if' `in' // MARC: keeping observations from these specifications if specificed
+	if wordcount("`if' `in'")!=0 quietly keep `if' `in'
 	
 	** make sure all newly generated variables are in double format
 	set type double 
@@ -198,17 +198,17 @@ program define ceqdes, rclass
 	local transferlist pensions dtransfers subsidies health education otherpublic
 	local programlist  pensions dtransfers dtaxes contribs subsidies indtaxes health education otherpublic userfeeshealth userfeeseduc userfeesother 
 	foreach x of local programlist {
-		local allprogs `allprogs' ``x'' // so allprogs has the actual variable names // MARC: does the ``x'' just capture the name ?
+		local allprogs `allprogs' ``x'' // so allprogs has the actual variable names
 	}
 	
 	** weight (if they specified hhsize*hhweight type of thing)  // previously under *parse options*, moved up to realize the keep var function
 	if strpos("`exp'","*")> 0 { // TBD: what if they premultiplied w by hsize?
 		`die' "Please use the household weight in {weight}; this will automatically be multiplied by the size of household given by {bf:hsize}"
 		exit
-	} 
+	}
 	
 	** hsize and hhid    
-	if wordcount("`hsize' `hhid'")!=1 { // MARC: ensuring that hhid and hhsize are not specificied at the same time, they shouldn't be.
+	if wordcount("`hsize' `hhid'")!=1 {
 		`die' "Must exclusively specify {bf:hsize} (number of household members for household-level data) or "
 		`die' "{bf:hhid} (unique household identifier for individual-level data)"
 		exit 198
@@ -242,11 +242,11 @@ program define ceqdes, rclass
 	
 	local fisctypewarn
 	foreach var of local allprogs {
-		if "`var'"!="" { // MARC: making sure variable has been specified in function.
-			local vartype: type `var' // MARC: storing variable type in a local.
-			if "`vartype'"!="double" { // MARC: checking if type of variable is double.
-				if wordcount("`fisctypewarn'")>0 local fisctypewarn `fisctypewarn', `var' // MARC: vairables not double to local
-				else local fisctypewarn `var' // MARC: Initializing local that contains vairable not double 
+		if "`var'"!="" {
+			local vartype: type `var'
+			if "`vartype'"!="double" {
+				if wordcount("`fisctypewarn'")>0 local fisctypewarn `fisctypewarn', `var'
+				else local fisctypewarn `var'
 			}
 		}
 	}
@@ -256,32 +256,32 @@ program define ceqdes, rclass
 	************************
 	** SVYSET AND WEIGHTS **
 	************************ 
-	cap svydes // MARC: checking survey design
-	scalar no_svydes = _rc // MARC: creaiting binary for whether not a survey design has been created.
+	cap svydes
+	scalar no_svydes = _rc
 	if !_rc qui svyset // gets the results saved in return list
-	if "`r(wvar)'"=="" & "`exp'"=="" { // Checking if weights are specified.
+	if "`r(wvar)'"=="" & "`exp'"=="" {
 		`dit' "Warning: weights not specified in svydes or the command"
 		`dit' "Hence, equal weights (simple random sample) assumed"
 		local warning `warning' "Warning: weights not specified in svydes or the command. Hence, equal weights (simple random sample) assumed."
 	}
 	else {
-		if "`exp'"=="" & "`r(wvar)'"!="" local w `r(wvar)' // MARC: a little confused by what `exp' here represents.
-		if "`exp'"!="" local w `exp' 
-		if "`w'"!="" { // MARC: If neither exp or r(wvar) are not empty
+		if "`exp'"=="" & "`r(wvar)'"!="" local w `r(wvar)'
+		if "`exp'"!="" local w `exp'
+		if "`w'"!="" {
 			tempvar weightvar
 			qui gen double `weightvar' = `w'*`hsize'  
-			local w `weightvar' // MARC: is a local declared to set up the weight equations below?
+			local w `weightvar'
 		}
-		else local w "`hsize'" // MARC: If both exp and r(wvar) are empty
+		else local w "`hsize'"
 		
 		if "`w'"!="" {
-			local pw "[pw = `w']" // MARC: creating probability weights from weight variable above.
-			local aw "[aw = `w']" // MARC: creating analytical weights from weight variable above.
+			local pw "[pw = `w']"
+			local aw "[aw = `w']"
 		}
-		if "`exp'"=="" & "`r(wvar)'"!="" { // MARC: no expression but weights are specified
-			local weight "pw" // MARC: Set as probability weights
-			local exp "`r(wvar)'" 
-		} // MARC: Faily confused by this section.
+		if "`exp'"=="" & "`r(wvar)'"!="" {
+			local weight "pw"
+			local exp "`r(wvar)'"
+		}
 	}
 	else if "`r(su1)'"=="" & "`psu'"=="" {
 		di as text "Wargning: primary sampling unit not specified in svydes or the `command' command's psu() option"
@@ -298,7 +298,7 @@ program define ceqdes, rclass
 		local opt strata(`strata')
 	}
 	** now set it:
-	if "`exp'"!="" qui svyset `psu' `pw', `opt' 
+	if "`exp'"!="" qui svyset `psu' `pw', `opt'
 	else           qui svyset `psu', `opt'
 	
 	***************************
@@ -315,15 +315,15 @@ program define ceqdes, rclass
 	quietly keep `relevar' 
 	
 	** missing income concepts
-	foreach var of local varlist { // looping through each income concept
-		qui count if missing(`var')   // counting number of missing observations of income concept 
-		if "`ignoremissing'"=="" { // Checking if ignoremissing isn't specificied in function
+	foreach var of local varlist {
+		qui count if missing(`var')  
+		if "`ignoremissing'"=="" {
 			if r(N) {
 				`die' "Missing values not allowed; `r(N)' missing values of `var' found" 
 				exit 198
 			}
 		}
-		else { // if ignoremissing has been specified drop missing observations
+		else {
 			if r(N) {
 				qui drop if missing(`var')
 				`dit' "Warning: `r(N)' observations that are missing `var' were dropped because the user specified {bf:ignoremissing}"
@@ -334,14 +334,14 @@ program define ceqdes, rclass
 	** missing fiscal interventions 
 	foreach var of local allprogs {
 		qui count if missing(`var') 
-		if "`ignoremissing'"=="" { // MARC: value isn't specified in function, must display error
+		if "`ignoremissing'"=="" {
 			if r(N) {
 				`die' "Missing values not allowed; `r(N)' missing values of `var' found"
 				`die' "For households that did not receive/pay the tax/transfer, assign 0"
 				exit 198
 			}
 		}
-		else { // MARC: if ignoremissing is specified dropp missings
+		else {
 			if r(N) {
 				qui drop if missing(`var')
 				`dit' "Warning: `r(N)' observations that are missing `var' were dropped because the user specified {bf:ignoremissing}"
@@ -363,11 +363,10 @@ program define ceqdes, rclass
 	local alltaxes `dtaxes' `indtaxes' 
 	local alltaxescontribs `dtaxes' `contribs' `indtaxes'
 	
-	// MARC: Summing program input values for program (i.e. different tax or transfer programs that may have been entered into the function)
 	foreach cat of local programlist {
 		if "``cat''"!="" {
 			tempvar v_`cat'
-			qui gen `v_`cat''=0 
+			qui gen `v_`cat''=0
 			foreach x of local `cat' {
 				qui replace `v_`cat'' = `v_`cat'' + `x' // so e.g. v_dtaxes will be sum of all vars given in dtaxes() option
 			}
@@ -377,16 +376,16 @@ program define ceqdes, rclass
 	}
 	foreach bc of local broadcats {
 		if wordcount("``bc''")>0 { // i.e. if any of the options were specified; for bc=inkind this says if any options health education or otherpublic were specified
-			tempvar v_`bc' 
+			tempvar v_`bc'
 			qui gen `v_`bc'' = 0
 			foreach var of local `bc' { // each element will be blank if not specified
-				qui replace `v_`bc'' = `v_`bc'' + `var' // MARC: summing inputs of category in main category (ASK FOR AN EXAMPLE)
+				qui replace `v_`bc'' = `v_`bc'' + `var'
 			}
 		}
 	}	
 
 	#delimit ;
-	local programcols // columns for all programs 
+	local programcols 
 		`pensions' `v_pensions'
 		`dtransfers' `v_dtransfers' `v_dtransfersp'
 		`dtaxes' `contribs' `v_dtaxes' `v_contribs' `v_dtaxescontribs'
@@ -405,7 +404,7 @@ program define ceqdes, rclass
 		`v_health' `v_education' `v_otherpublic' `v_inkind'
 		/*`nethealth' `neteducation' `netother' `v_netinkind'*/
 		`v_alltransfers' `v_alltransfersp'
-	; // columns for transfer programs 
+	;
 	local taxcols: list programcols - transfercols; // set subtraction;
 	#delimit cr
 	local cols = wordcount("`programcols'") // + 1 for income column
@@ -418,8 +417,8 @@ program define ceqdes, rclass
 			`dit' "Warning: variable `pr' not labeled"
 			local warning `warning' "Warning: variable `pr' not labeled."
 		}
-		if strpos("`d_`pr''","(")!=0 { // checking if there is initial  parenthesis
-			if strpos("`d_`pr''",")")==0 { // checking if there is closing parenthesis
+		if strpos("`d_`pr''","(")!=0 {
+			if strpos("`d_`pr''",")")==0 {
 				`die' "`d_`pr'' must have a closed parenthesis"
 				exit 198
 			}
@@ -497,19 +496,19 @@ program define ceqdes, rclass
 
 	** make sure using is xls or xlsx
 	cap putexcel clear
-	if `"`using'"'!="" { // Why isn't the next line note quoted completely
+	if `"`using'"'!="" {
 		qui di " // for Notepad++ syntax highlighting
-		if !strpos(`"`using'"' /* " */ , ".xls") { // MARC: Checking file extension
+		if !strpos(`"`using'"' /* " */ , ".xls") {
 			`die' "File extension must be .xls or .xlsx to write to an existing CEQ Master Workbook (requires Stata 13 or newer)"
 			exit 198
 		}
-		confirm file `"`using'"' // MARC: confirming file exists
+		confirm file `"`using'"'
 		qui di "
 	}
-	else { // MARC: if "`using'"==""
+	else { // if "`using'"==""
 		`dit' "Warning: No file specified with {bf:using}; results saved in {bf:return list} but not exported to Output Tables"
 	}
-	if strpos(`"`using'"'," ")>0 & "`open'"!="" { // MARC: has spaces in filename, do not understand the "`open'" part
+	if strpos(`"`using'"'," ")>0 & "`open'"!="" { // has spaces in filename
 		qui di "
 		`dit' `"Warning: `"`using'"' contains spaces; {bf:open} option will not be executed. File can be opened manually after `command' runs."'
 		local open "" // so that it won't try to open below
@@ -517,15 +516,15 @@ program define ceqdes, rclass
 
 	** negative incomes
 	foreach v of local alllist {
-		if "``v''"!="" { 
+		if "``v''"!="" {
 			qui count if ``v''<0 // note `v' is e.g. m, ``v'' is varname
 			if r(N) `dit' "Warning: `r(N)' negative values of ``v''"
 			if r(N) local warning `warning' "Warning: `r(N)' negative values of ``v''"
 		}
 	}	
 	
-	** negative fiscal interventions 
-	foreach pr of local programcols { 
+	** negative fiscal interventions
+	foreach pr of local programcols {
 		if "`pr'"!="" {
 			qui summ `pr'
 			if r(mean)>0 {
@@ -544,10 +543,10 @@ program define ceqdes, rclass
 	** separate warning so that the temporary variables do not show on the command screen
 	if wordcount("`allprogs'")>0 ///
 	foreach tax of local taxlist {
-		foreach pr in ``tax'' { // MARC: Looping through each inputed tax
+		foreach pr in ``tax'' {
 			qui summ `pr', meanonly
 			if r(mean)>0 {
-				if wordcount("`taxwarning'")>0 local taxwarning `taxwarning', `pr' // MARC: What's the effect of comma separated values
+				if wordcount("`taxwarning'")>0 local taxwarning `taxwarning', `pr'
 				else local taxwarning `pr'
 			}	
 		}
@@ -559,7 +558,7 @@ program define ceqdes, rclass
 	** create new variables for program categories
 
 	if wordcount("`allprogs'")>0 ///
-	foreach pr of local taxcols { 
+	foreach pr of local taxcols {
 		qui summ `pr', meanonly
 		if r(mean)>0 {
 			if wordcount("`postax'")>0 local postax `postax', `pr'
@@ -578,7 +577,7 @@ program define ceqdes, rclass
 	***********************
 	matrix results = J(`=`incomes'+`cols'',12,.)
 	local row=1
-	qui summ `one' `aw' // MARC: why are analyitcal weights called?
+	qui summ `one' `aw'
 	local pop = r(sum)
 	// calculate totals of each income concept for denominator
 	foreach v of local alllist {
@@ -593,19 +592,19 @@ program define ceqdes, rclass
 			qui summ `one' if ``v''>0 `aw' 
 			matrix results[`row',`col'] = r(sum)/`pop'
 			local ++col 
-			qui svy: reg ``v'' if ``v''>0 // svy automatically uses weight // MARC: reg using to get mean and se.
-			matrix results[`row',`col'] = _b[_cons] // MARC: Gives mean of variables
+			qui svy: reg ``v'' if ``v''>0 // svy automatically uses weight
+			matrix results[`row',`col'] = _b[_cons]
 			local ++col
-			matrix results[`row',`col'] = _se[_cons] // MARC: Gives se of mean
+			matrix results[`row',`col'] = _se[_cons]
 			local ++col
 			_pctile ``v'' if ``v''>0 `aw', n(100) // faster than summarize, detail
-			matrix results[`row',`col'] = r(r50) // MARC: gives median
+			matrix results[`row',`col'] = r(r50)
 			local ++col
 			foreach vcol of local alllist {
 				if "``vcol''"!="" {
 					qui summarize ``v'' `aw'
-					matrix results[`row',`col'] = r(sum)/``vcol'tot' 
-				} // MARC: aboves returns fraction an income concept makes of other income concepts 
+					matrix results[`row',`col'] = r(sum)/``vcol'tot'
+				}
 				local ++col
 			}
 		}
@@ -620,12 +619,12 @@ program define ceqdes, rclass
 				matrix results[`row',`col'] = r(sum)/`pop'
 				local ++col 
 				qui svy: reg `pr' if `pr'!=0 // svy automatically uses weight
-				matrix results[`row',`col'] = _b[_cons] // MARC: Returns mean
+				matrix results[`row',`col'] = _b[_cons]
 				local ++col
-				matrix results[`row',`col'] = _se[_cons] // MARC: Returns se
+				matrix results[`row',`col'] = _se[_cons]
 				local ++col
 				_pctile `pr' if `pr'!=0 `aw', n(100) // faster than summarize, detail
-				matrix results[`row',`col'] = r(r50) // Marc: Returns Median
+				matrix results[`row',`col'] = r(r50)
 				local ++col
 				foreach vcol of local alllist {
 					if "``vcol''"!="" {
@@ -658,9 +657,9 @@ program define ceqdes, rclass
 		local titlecol = 1
 		local titlelist country surveyyear authors date // ppp baseyear cpibase cpisurvey ppp_calculated
 		foreach title of local titlelist {
-			returncol `titlecol' // MARC: Returns EXCEL column to be used.
-			if "``title''"!="" & "``title''"!="-1" /// // MARC: unpacking nested macro, why would title be -1?
-				local  titlesprint `titlesprint' `r(col)'`titlerow'=("``title''") // MARC: creating local variable of EXCEL column and column title
+			returncol `titlecol'
+			if "``title''"!="" & "``title''"!="-1" ///
+				local  titlesprint `titlesprint' `r(col)'`titlerow'=("``title''")
 			local titlecol = `titlecol' + 2
 		}
 	
@@ -676,7 +675,7 @@ program define ceqdes, rclass
 		local tcol = 1
 		local colscount = 0
 		foreach pr of local programcols {
-			returncol `tcol' // MARC: Where is this used below?
+			returncol `tcol'
 			local titles `titles' A`trow'=("`d_`pr''")
 			local ++trow
 		}	
@@ -687,12 +686,12 @@ program define ceqdes, rclass
 		local warningrow = `warningstart' 
 		local warningcount = -1
 		foreach x of local warning {
-			local warningprint `warningprint' A`warningrow'=("`x'") // MARC: Building local of warnings used.
+			local warningprint `warningprint' A`warningrow'=("`x'")
 			local ++warningrow
 			local ++warningcount
 		}
 		// overwrite the obsolete warning messages if there are any
-		forval i=0/100 { // MARC: Why 0-100? Not sure whats going on here
+		forval i=0/100 {
 			local warningprint `warningprint' A`=`warningrow'+`i''=("")
 		}
 		// count warning messages and print at the top of MWB
@@ -742,5 +741,3 @@ program define ceqdes, rclass
 	restore // note this also restores svyset
 	
 end	// END ceqdes
-
-
