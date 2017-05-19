@@ -31,7 +31,7 @@ for sheet "E2b. Population" of the CEQ Master Workbook 2016
 {synopt :{opth p:ensions(varlist)}}Contributory pension variables{p_end}
 {synopt :{opth dtr:ansfers(varlist)}}Direct transfer variables{p_end}
 {synopt :{opth dtax:es(varlist)}}Direct tax variables{p_end}
-{synopt :{opth co:ntribs(varlist)}}Contribution variables{p_end}
+{synopt :{opth cont:ribs(varlist)}}Contribution variables{p_end}
 {synopt :{opth su:bsidies(varlist)}}Subsidy variables{p_end}
 {synopt :{opth indtax:es(varlist)}}Indirect tax variables{p_end}
 {synopt :{opth health(varlist)}}Health variables{p_end}
