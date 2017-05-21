@@ -38,7 +38,7 @@ capture program define ceqgraph_conc, rclass
 			Pensions   (varlist)
 			DTRansfers (varlist)
 			DTAXes     (varlist) 
-			COntribs   (varlist)
+			CONTribs   (varlist)
 			SUbsidies  (varlist)
 			INDTAXes   (varlist)
 			HEALTH     (varlist)
