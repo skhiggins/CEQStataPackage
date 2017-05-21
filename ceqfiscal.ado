@@ -1,7 +1,8 @@
 ** ADO FILE FOR FISCAL INTERVENTIONS SHEET OF CEQ OUTPUT TABLES
 
 ** VERSION AND NOTES (changes between versions described under CHANGES)
-*! v4.6 06apr2017 For use with Oct 2016 version of Output Tables
+*! v4.7 16may2017 For use with Oct 2016 version of Output Tables
+** v4.6 06apr2017 For use with Oct 2016 version of Output Tables
 ** v4.5 08mar2017 For use with Oct 2016 version of Output Tables
 ** v4.4 12jan2017 For use with Oct 2016 version of Output Tables
 ** v4.3 30oct2016 For use with Jun 2016 version of Output Tables 
@@ -26,6 +27,7 @@
 *! (beta version; please report any bugs), written by Sean Higgins sean.higgins@ceqinstitute.org
 
 ** CHANGES
+**   05-16-2017 Fix name of command mistake
 **   04-06-2017 Remove the temporary variables from the negative tax warning list 
 **   03-08-2017 Remove the net in-kind transfers as a broad category in accordance with the instruction that users
 **				 supply net in-kind transfer variables to health/education/otherpublic options
@@ -145,8 +147,8 @@ end // END covconc
 **********************
 ** For sheet E10. Concentration
 // BEGIN ceqfiscal (Higgins 2015)
-capture program drop ceqfiscalapr2
-program define ceqfiscalapr2, rclass 
+capture program drop ceqfiscal
+program define ceqfiscal, rclass 
 	version 13.0
 	#delimit ;
 	syntax 
@@ -166,7 +168,7 @@ program define ceqfiscalapr2, rclass
 			Pensions   (varlist)
 			DTRansfers (varlist)
 			DTAXes     (varlist) 
-			COntribs(varlist)
+			CONTribs(varlist)
 			SUbsidies  (varlist)
 			INDTAXes   (varlist)
 			HEALTH     (varlist)

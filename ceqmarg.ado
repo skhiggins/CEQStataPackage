@@ -1,13 +1,15 @@
 ** ADO FILE FOR MARGINAL EFFECTS
 
 ** VERSION AND NOTES (changes between versions described under CHANGES)
-*! v1.3 06apr2017 For use with Oct 2016 version of Output Tables
+*! v1.4 16may2017 For use with Oct 2016 version of Output Tables
+** v1.3 06apr2017 For use with Oct 2016 version of Output Tables
 ** v1.2 27mar2017 For use with Oct 2016 version of Output Tables
 ** v1.1 08mar2017 For use with Oct 2016 version of Output Tables
 ** v1.0 12feb2017 For use with Oct 2016 version of Output Tables
 *! (beta version; please report any bugs), written by Sean Higgins sean.higgins@ceqinstitute.org
 
 ** CHANGES
+**   05-16-2017 Fix command name mistake
 **   04-06-2017 Remove the warning about negative tax values
 **   03-08-2017 Remove the net in-kind transfers as a broad category in accordance with the instruction that users
 **				 supply net in-kind transfer variables to health/education/otherpublic options
@@ -106,8 +108,8 @@ end
 **********************
 ** For sheet E13. Marg. Contrib.
 // BEGIN ceqmarg (Higgins 2015)
-capture program drop ceqmargapr2
-program define ceqmargapr2, rclass 
+capture program drop ceqmarg
+program define ceqmarg, rclass 
 	version 13.0
 	#delimit ;
 	syntax 
@@ -127,7 +129,7 @@ program define ceqmargapr2, rclass
 			Pensions   (varlist)
 			DTRansfers (varlist)
 			DTAXes     (varlist) 
-			COntribs(varlist)
+			CONTribs(varlist)
 			SUbsidies  (varlist)
 			INDTAXes   (varlist)
 			HEALTH     (varlist)
