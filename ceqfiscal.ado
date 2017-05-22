@@ -1,7 +1,8 @@
 ** ADO FILE FOR FISCAL INTERVENTIONS SHEET OF CEQ OUTPUT TABLES
 
 ** VERSION AND NOTES (changes between versions described under CHANGES)
-*! v4.7 16may2017 For use with Oct 2016 version of Output Tables
+*! v4.8 22may2017 For use with Oct 2016 version of Output Tables
+** v4.7 16may2017 For use with Oct 2016 version of Output Tables
 ** v4.6 06apr2017 For use with Oct 2016 version of Output Tables
 ** v4.5 08mar2017 For use with Oct 2016 version of Output Tables
 ** v4.4 12jan2017 For use with Oct 2016 version of Output Tables
@@ -27,6 +28,7 @@
 *! (beta version; please report any bugs), written by Sean Higgins sean.higgins@ceqinstitute.org
 
 ** CHANGES
+**   05-22-2017 Mata calculation of fiscal incidence had a bug (pointed out by Esmeralda Shehaj)
 **   05-16-2017 Fix name of command mistake
 **   04-06-2017 Remove the temporary variables from the negative tax warning list 
 **   03-08-2017 Remove the net in-kind transfers as a broad category in accordance with the instruction that users
@@ -230,7 +232,7 @@ program define ceqfiscal, rclass
 	local dit display as text in smcl
 	local die display as error in smcl
 	local command ceqfiscal
-	local version 4.6
+	local version 4.8
 	`dit' "Running version `version' of `command' on `c(current_date)' at `c(current_time)'" _n "   (please report this information if reporting a bug to sean.higgins@ceqinstitute.org)"
 	
 	** income concepts
@@ -922,10 +924,10 @@ program define ceqfiscal, rclass
 					local ++col
 				}	
 				** fiscal incidence
-				mata: I`vrank'_fi_`vrank'_`x' = diag(I`vrank'_totLCU_`x'[.,`_`vrank'']:^-1)*I`vrank'_totLCU_`x' ///
-					- J(`=``x''+1',`cols',1) // subtract off 1 so no change is 0%
+				mata: I`vrank'_fi_`vrank'_`x' = diag(I`vrank'_totLCU_`x'[.,1]:^-1)*I`vrank'_totLCU_`x' 
+					// should be [.,1] not [,`_`vrank''] because first column of I`vrank'_totLCU_`x' has total `vrank' income
+					//  (fixed May 22, 2017)
 
-				** residual progression - leave for later
 				// Matrices from Mata to Stata
 				foreach ss in `supercols' fi_`vrank' {
 					mata: st_matrix("I`vrank'_`ss'_`x'",I`vrank'_`ss'_`x')

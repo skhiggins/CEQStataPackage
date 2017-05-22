@@ -1,7 +1,8 @@
 ** ADO FILE FOR EXTENDED INCOME CONCEPTS SHEET OF CEQ OUTPUT TABLES
 
 ** VERSION AND NOTES (changes between versions described under CHANGES)
-*! v4.7 08mar2017 For use with Oct 2016 version of Output Tables
+*! v4.8 22may2017 For use with Oct 2016 version of Output Tables
+** v4.7 08mar2017 For use with Oct 2016 version of Output Tables
 ** v4.6 12jan2017 For use with Oct 2016 version of Output Tables
 ** v4.5 30oct2016 For use with Jun 2016 version of Output Tables
 ** v4.4 30sep2016 For use with Jun 2016 version of Output Tables
@@ -29,6 +30,7 @@
 *! (beta version; please report any bugs), written by Sean Higgins sean.higgins@ceqinstitute.org
 
 ** CHANGES 
+**   05-22-2017 Mata calculation of fiscal incidence had a bug (pointed out by Esmeralda Shehaj)
 **   03-08-2017 Remove the net in-kind transfers as a broad category in accordance with the instruction that users
 **				 supply net in-kind transfer variables to health/education/otherpublic options
 ** 	 01-12-2017 Set the data type of all newly generated variables to be double
@@ -1412,8 +1414,7 @@ program define _ceqextend, rclass
 				foreach v of local alllist {
 					if "``v''"!="" {
 						// divide by the col vector of totals for a particular income using matrix operations
-						mata: E`y'_fi_`v'_`x' = diag(E`y'_totLCU_`x'[.,`_`v'']:^-1)*E`y'_totLCU_`x' ///
-							- J(`=``x''+1',`cols',1) // subtract off 1 so no change is 0%
+						mata: E`y'_fi_`v'_`x' = diag(E`y'_totLCU_`x'[.,1]:^-1)*E`y'_totLCU_`x'
 					}
 				}
 				** residual progression - leave for later
