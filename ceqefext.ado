@@ -1,13 +1,19 @@
 * ADO FILE FOR EFFECTIVENESS SHEET OF CEQ OUTPUT TABLES
 
 * VERSION AND NOTES (changes between versions described under CHANGES)
-*! v1.4 03Jan2016 For use with Feb 2016 version of Output Tables
+*! v1.5 21may2017 For use with Apr 2017 version of Output Tables
+** v1.4 03Jan2016 For use with Feb 2016 version of Output Tables
 *! (beta version; please report any bugs), written by Rodrigo Aranda raranda@tulane.edu
 
 * CHANGES
 *  v1.1 Added Poverty options as well as cleaned some bugs 
 *  v1.2 Added Beckerman Imervoll, FI/FGP indicators
 *  v1.3 Fixed bugs for Beckerman Imervoll and spending effectiveness
+*  v1.5 Add version print to excel MWB 
+*		Remove income concept from the result and title local since no result is produced for income concept itself
+*		Change the way fiscal impoverishemnt was calculated
+*		Remove the warning about negative tax values
+*		Option flexibilty 
 
 * NOTES
 * 
@@ -273,7 +279,7 @@ program define _ceqspend, rclass
 		local id_tax=0
 		local id_ben=0
 		*gini original
-		covgini `inc' `pw'
+		covgini `inc' [pw = `exp']
 		local g_orig=r(gini)
 		
 		*See if we are dealing with taxes or transfers
@@ -314,7 +320,7 @@ program define _ceqspend, rclass
 				gen `oi_`p''=`o_inc'
 				qui sum `oi_`p'' in `n`p''
 				replace `oi_`p''=r(mean) in 1/`n`p''
-				covgini `oi_`p'' `pw'
+				covgini `oi_`p'' [pw = `exp']
 				local g_`p'=r(gini)
 				drop `oi_`p''
 				local dif= `g_`p''-`g_orig'
@@ -335,7 +341,7 @@ program define _ceqspend, rclass
 				gen `oi_`p''=`o_inc'
 				qui sum `oi_`p'' in `p'
 				replace `oi_`p''=r(mean) in 1/`p'
-				covgini `oi_`p'' `pw'
+				covgini `oi_`p'' [pw = `exp']
 				local g_`p'=r(gini)
 				drop `oi_`p''
 				local dif= `g_`p''-`g_orig'
@@ -361,9 +367,9 @@ program define _ceqspend, rclass
 			if `id_ben'==1{
 			gen `gap'=`oi_`stop''-`o_inc'
 			}
-			qui sum `gap' `aw'
+			qui sum `gap' [aw = `exp']
 			local prime=r(sum)
-			qui sum `inter' `aw'
+			qui sum `inter' [aw = `exp']
 			local tot_inter=r(sum)
 		    if `tot_inter'<0{
 			local tot_inter=r(sum)*(-1)
@@ -398,7 +404,7 @@ program define ceqbensp, rclass
 		gen double `noben'=`startinc';
 		count;
 		local N=r(N);
-		sum `ben' `aw';
+		sum `ben' [aw = `exp'];
 		local totben=r(sum);
 		sort `noben' ;
 		
@@ -408,7 +414,7 @@ program define ceqbensp, rclass
 		else{;
 		local f=2;
 		};
-							forvalues fgt=1/`f'{;
+						forvalues fgt=1/`f'{;
 							tempvar n;
 							gen `n'=_n;
 							count;
@@ -427,13 +433,19 @@ program define ceqbensp, rclass
 								qui gen `fgt1_`p'' = max((`zz'-`oi_`p'')/`zz',0) ;// normalized povety gap of each individual;
 								qui gen `fgt2_`p'' = `fgt1_`p''^2 ;
 								
-								qui summ `fgt`fgt'_`p'' `aw', meanonly; // `if' `in' restrictions already taken care of by `touse' above;	
+								qui summ `fgt`fgt'_`p'' [aw = `exp'], meanonly; // `if' `in' restrictions already taken care of by `touse' above;	
 								local fgt`fgt'`p'=r(mean);
-								
+								noi summ `fgt1_`p'' `fgt2_`p'' [aw = `exp'], meanonly;
 								drop  `fgt1_`p'' `fgt2_`p'';
 								local dif= `fgt`fgt'`p''- `obj`fgt'';
+								//! Sean's feedback: calculate the ideal scenario 
 								
-								if `dif'<0{;//PErcentile where we have to settle;
+								if `dif'>0 & `p'==100 {;
+									local start = 99;
+									local stop = 100;
+								};
+								
+								if `dif'<0{;//PErcentile where we have to settle; //! What happens when we go all the way till the end and still not achieve?
 									local stop=`n`p'';
 									local start=`n`p''-round((`N'/100));
 									di `stop';
@@ -455,7 +467,7 @@ program define ceqbensp, rclass
 								qui gen `fgt1_`p'' = max((`zz'-`oi_`p'')/`zz',0) ;// normalized povety gap of each individual;
 								qui gen `fgt2_`p'' = `fgt1_`p''^2 ;
 								
-								qui summ `fgt`fgt'_`p'' `aw', meanonly; // `if' `in' restrictions already taken care of by `touse' above;	
+								qui summ `fgt`fgt'_`p'' [aw = `exp'], meanonly; // `if' `in' restrictions already taken care of by `touse' above;	
 								local fgt`fgt'_p'=r(mean);
 								
 								drop  `fgt1_`p'' `fgt2_`p'';
@@ -463,12 +475,12 @@ program define ceqbensp, rclass
 								if `dif'<0{;
 								
 
-								local stop=`p'-1;
-								continue,break;		
-							};		
-					};
+									local stop=`p'-1;
+									continue,break;		
+								};		
+							};
 							if `stop'==0{;
-							local stop=1;
+								local stop=1;
 							};
 							tempvar oi_`stop';
 							gen `oi_`stop''=`noben';
@@ -476,13 +488,13 @@ program define ceqbensp, rclass
 							replace `oi_`stop''=r(mean) in 1/`stop';
 							tempvar gap;
 							gen `gap'=`oi_`stop''-`noben';
-							qui sum `gap' `aw';
+							qui sum `gap' [aw = `exp'];
 							local prime=r(sum);
 							
 							local sp_ef_pov_`fgt'=`prime'/`totben';
 							
 			
-							};//end of fgt loop;			
+						};//end of fgt loop;			
 return scalar sp_ef_pov_1 =  `sp_ef_pov_1';//spending effectiveness indicator for FGT 1 or 2;
 if wordcount("`obj2'")>0{;
 return scalar sp_ef_pov_2 =  `sp_ef_pov_2';//spending effectiveness indicator for FGT 1 or 2;
@@ -581,9 +593,9 @@ program define _ceqmcid, rclass
 		
 		
 			*gini final income
-			covgini `inc' `pw'
+			covgini `inc' [pw = `exp']
 			local g_f=r(gini)
-			covgini `o_inc' `pw'
+			covgini `o_inc' [pw = `exp']
 			local g_o=r(gini)
 		
 			local mc=`g_o'-`g_f'
@@ -600,10 +612,10 @@ program define _ceqmcid, rclass
 			qui gen `pov1_f' = max((`pline'-`inc')/`pline',0) // normalized povety gap of each individual
 			qui gen `pov2_f' = `pov1_f'^2 
 			forvalues f=0/2{
-			qui sum `pov`f'_o' `aw'
+			qui sum `pov`f'_o' [aw = `exp']
 			local p`f'_o=r(mean)
 	
-			qui sum `pov`f'_f' `aw'
+			qui sum `pov`f'_f' [aw = `exp']
 			local p`f'_f=r(mean)
 			local mc`f'=`p`f'_o'-`p`f'_f'
 			return scalar mc_p`f'=`mc`f'' //Marginal Contribution of poverty fgt:`f'
@@ -653,13 +665,14 @@ gen `ben1'=0
 	local TB=`T'+`B'
 	
 	tempvar  d_fi d_fi_t d_fg d_fg_b
-	
-	qui gen `d_fi' = min(`startinc',`z') - min(`startinc',`endinc',`z')
-	qui gen `d_fi_t' = min(`notax',`z') - min(`notax',`endinc',`z')   //! Isn't `notax' exactly the same asm`startinc'?
-	qui gen `d_fg' = min(`endinc',`z') - min(`startinc',`endinc',`z')
+	 //lines below commented out by Rosie Li on May 16, 2017 after consulting with Rodrigo Aranda;
+	 
+	/* qui gen `d_fi' = min(`startinc',`z') - min(`startinc',`endinc',`z') */
+	qui gen `d_fi_t' = min(`notax',`z') - min(`notax',`endinc',`z')   
+	/* qui gen `d_fg' = min(`endinc',`z') - min(`startinc',`endinc',`z') */
 	qui gen `d_fg_b' = min(`endinc',`z') - min(`noben',`endinc',`z')
 	
-	foreach v in fi fi_t fg fg_b{
+	foreach v in /* fi */ fi_t /* fg */ fg_b{
 	qui summ `d_`v'' [`weight' `exp'], meanonly
 			local t_`v' = r(sum)
 			local pc_`v' = r(mean)
@@ -669,14 +682,14 @@ gen `ben1'=0
 	foreach m in t pc n{
 		if wordcount("`taxes'")>0{
 
-			local `m'_mc_t=``m'_fi'-``m'_fi_t'
+			local `m'_mc_t=/* ``m'_fi'- */ ``m'_fi_t'
 			local mceft_`m'=(`T'/`TB')*(1-(``m'_mc_t'/`T'))
 			local MCEF_`m'=`mceft_`m''
 			scalar MCEF_`m'=`mceft_`m''
 			return scalar MCEF_`m' = `mceft_`m''
 		}
 		if wordcount("`benef'")>0{
-			local `m'_mc_b=``m'_fg_b'-``m'_fg'
+			local `m'_mc_b=``m'_fg_b' /*-``m'_fg' */
 			local mcefb_`m'=(`B'/`TB')*((``m'_mc_b'/`B'))
 			local MCEF_`m'=`mcefb_`m''
 			scalar MCEF_`m'=`mcefb_`m''
@@ -726,7 +739,7 @@ version 13.0
 	local dit display as text in smcl
 	local die display as error in smcl
 	local command ceqefext
-	local version 1.4
+	local version 1.5
 	`dit' "Running version `version' of `command' on `c(current_date)' at `c(current_time)'" _n "   (please report this information if reporting a bug to raranda@tulane.edu)"
 	
 	** income concept options
@@ -822,7 +835,7 @@ program define _ceqefext, rclass
 			Pensions   (varlist)
 			DTRansfers (varlist)
 			DTAXes     (varlist) 
-			CONTribs(varlist)
+			COntribs(varlist)
 			SUbsidies  (varlist)
 			INDTAXes   (varlist)
 			HEALTH     (varlist)
@@ -1309,9 +1322,9 @@ program define _ceqefext, rclass
 			qui replace `pr' = -`pr' // replace doesnt matter since we restore at the end
 		}
 	}
-	if wordcount("`postax'")>0 {
+	/* if wordcount("`postax'")>0 {
 		`dit' "Taxes appear to be positive values for variable(s) `postax'; replaced with negative for calculations"
-	}
+	} */
 	
 	/*foreach y of local alllist {
 		local marg`y' ``y''
@@ -1327,6 +1340,9 @@ program define _ceqefext, rclass
 			scalar _d_``y'_`pr'' =  _d_`pr'
 			local marg`y' `marg`y'' ``y'_`pr''
 			local int`y' `int`y'' `o_`y'_`pr''
+			local id`o_`y'_`pr'' "ben"
+			qui gen ywo_`o_`y'_`pr'' = ``y''
+			qui gen yw_`o_`y'_`pr''  = ``y'' + `o_`y'_`pr''
 		}
 		foreach y in `mp__' `n__' `g__' `d__' `c__' `f__' { // t excluded bc unclear whether pensions included
 			tempvar `y'_`pr'
@@ -1336,6 +1352,9 @@ program define _ceqefext, rclass
 			scalar _d_``y'_`pr'' = _d_`pr'
 			local marg`y' `marg`y'' ``y'_`pr''
 			local int`y' `int`y'' `o_`y'_`pr''
+			local id`o_`y'_`pr'' "ben"
+			qui gen ywo_`o_`y'_`pr'' = ``y'' - `o_`y'_`pr''
+			qui gen yw_`o_`y'_`pr''  = ``y'' 
 		}
 	}
 	foreach pr in `dtransfers' `v_dtransfers' {
@@ -1347,6 +1366,9 @@ program define _ceqefext, rclass
 			scalar _d_``y'_`pr'' = _d_`pr' 
 			local marg`y' `marg`y'' ``y'_`pr''
 			local int`y' `int`y'' `o_`y'_`pr''
+			local id`o_`y'_`pr'' "ben"
+			qui gen ywo_`o_`y'_`pr'' = ``y''
+			qui gen yw_`o_`y'_`pr''  = ``y'' + `o_`y'_`pr''
 		}
 		foreach y in `g__' `d__' `c__' `f__' { // t excluded bc unclear whether dtransfers included
 			tempvar `y'_`pr'
@@ -1356,6 +1378,9 @@ program define _ceqefext, rclass
 			scalar _d_``y'_`pr'' = _d_`pr'
 			local marg`y' `marg`y'' ``y'_`pr''
 			local int`y' `int`y'' `o_`y'_`pr''
+			local id`o_`y'_`pr'' "ben"
+			qui gen ywo_`o_`y'_`pr'' = ``y'' - `o_`y'_`pr''
+			qui gen yw_`o_`y'_`pr''  = ``y'' 
 		}
 	}
 	foreach pr in `v_dtransfersp' {
@@ -1367,6 +1392,9 @@ program define _ceqefext, rclass
 			scalar _d_``y'_`pr'' = _d_`pr' 
 			local marg`y' `marg`y'' ``y'_`pr''
 			local int`y' `int`y'' `o_`y'_`pr''
+			local id`o_`y'_`pr'' "ben"
+			qui gen ywo_`o_`y'_`pr'' = ``y''
+			qui gen yw_`o_`y'_`pr''  = ``y'' + `o_`y'_`pr''
 		}
 		foreach y in `g__' `d__' `c__' `f__' { // t excluded bc unclear whether dtransfers included
 			tempvar `y'_`pr'
@@ -1376,6 +1404,9 @@ program define _ceqefext, rclass
 			scalar _d_``y'_`pr'' =_d_`pr'
 			local marg`y' `marg`y'' ``y'_`pr''	
 			local int`y' `int`y'' `o_`y'_`pr''
+			local id`o_`y'_`pr'' "ben"
+			qui gen ywo_`o_`y'_`pr'' = ``y'' - `o_`y'_`pr''
+			qui gen yw_`o_`y'_`pr''  = ``y'' 
 		}
 	}
 	foreach pr in `dtaxes' `v_dtaxes' `contribs' `v_contribs' `v_dtaxescontribs' {
@@ -1387,6 +1418,9 @@ program define _ceqefext, rclass
 			scalar _d_``y'_`pr'' =_d_`pr' // written as minus since taxes thought of as positive values
 			local marg`y' `marg`y'' ``y'_`pr''
 			local int`y' `int`y'' `o_`y'_`pr''
+			local id`o_`y'_`pr'' "tax"
+			qui gen ywo_`o_`y'_`pr'' = ``y''
+			qui gen yw_`o_`y'_`pr''  = ``y'' - `o_`y'_`pr''    
 		}
 		foreach y in `n__' `t__' `d__' `c__' `f__' {
 			tempvar `y'_`pr'
@@ -1396,6 +1430,9 @@ program define _ceqefext, rclass
 			scalar _d_``y'_`pr'' = _d_`pr'
 			local marg`y' `marg`y'' ``y'_`pr''
 			local int`y' `int`y'' `o_`y'_`pr''
+			local id`o_`y'_`pr'' "tax"
+			qui gen ywo_`o_`y'_`pr'' = ``y'' + `o_`y'_`pr''
+			qui gen yw_`o_`y'_`pr''  = ``y'' 
 		}
 	}
 	foreach pr in `subsidies' `v_subsidies' {
@@ -1407,6 +1444,9 @@ program define _ceqefext, rclass
 			scalar _d_``y'_`pr'' =_d_`pr'
 			local marg`y' `marg`y'' ``y'_`pr''
 			local int`y' `int`y'' `o_`y'_`pr''
+			local id`o_`y'_`pr'' "ben"
+			qui gen ywo_`o_`y'_`pr'' = ``y''
+			qui gen yw_`o_`y'_`pr''  = ``y'' + `o_`y'_`pr''
 		}
 		foreach y in `c__' `f__' {
 			tempvar `y'_`pr'
@@ -1416,6 +1456,9 @@ program define _ceqefext, rclass
 			scalar _d_``y'_`pr'' = _d_`pr'
 			local marg`y' `marg`y'' ``y'_`pr''
 			local int`y' `int`y'' `o_`y'_`pr''
+			local id`o_`y'_`pr'' "ben"
+			qui gen ywo_`o_`y'_`pr'' = ``y'' - `o_`y'_`pr''
+			qui gen yw_`o_`y'_`pr''  = ``y'' 
 		}
 	}
 	foreach pr in `indtaxes' `v_indtaxes' {
@@ -1427,6 +1470,9 @@ program define _ceqefext, rclass
 			scalar _d_``y'_`pr'' =  _d_`pr'
 			local marg`y' `marg`y'' ``y'_`pr''
 			local int`y' `int`y'' `o_`y'_`pr''
+			local id`o_`y'_`pr'' "tax"
+			qui gen ywo_`o_`y'_`pr'' = ``y''
+			qui gen yw_`o_`y'_`pr''  = ``y'' - `o_`y'_`pr'' 
 		}
 		foreach y in `c__' `f__' {
 			tempvar `y'_`pr'
@@ -1436,6 +1482,9 @@ program define _ceqefext, rclass
 			scalar _d_``y'_`pr'' = _d_`pr'
 			local marg`y' `marg`y'' ``y'_`pr''
 			local int`y' `int`y'' `o_`y'_`pr''
+			local id`o_`y'_`pr'' "tax"
+			qui gen ywo_`o_`y'_`pr'' = ``y'' + `o_`y'_`pr''
+			qui gen yw_`o_`y'_`pr''  = ``y'' 
 		}
 	}
 	foreach pr in `v_alltaxes' `v_alltaxescontribs' {
@@ -1447,6 +1496,9 @@ program define _ceqefext, rclass
 			scalar _d_``y'_`pr'' =  _d_`pr'
 			local marg`y' `marg`y'' ``y'_`pr''	
 			local int`y' `int`y'' `o_`y'_`pr''
+			local id`o_`y'_`pr'' "tax"
+			qui gen ywo_`o_`y'_`pr'' = ``y''
+			qui gen yw_`o_`y'_`pr''  = ``y'' - `o_`y'_`pr'' 
 		}
 		foreach y in `c__' `f__' {
 			tempvar `y'_`pr'
@@ -1456,6 +1508,9 @@ program define _ceqefext, rclass
 			scalar _d_``y'_`pr'' = _d_`pr'
 			local marg`y' `marg`y'' ``y'_`pr''
 			local int`y' `int`y'' `o_`y'_`pr''
+			local id`o_`y'_`pr'' "tax"
+			qui gen ywo_`o_`y'_`pr'' = ``y'' + `o_`y'_`pr''
+			qui gen yw_`o_`y'_`pr''  = ``y'' 
 		}
 	}
 	foreach pr in `health' `education' `otherpublic' ///
@@ -1468,6 +1523,9 @@ program define _ceqefext, rclass
 			scalar _d_``y'_`pr'' = _d_`pr'
 			local marg`y' `marg`y'' ``y'_`pr''
 			local int`y' `int`y'' `o_`y'_`pr''
+			local id`o_`y'_`pr'' "ben"
+			qui gen ywo_`o_`y'_`pr'' = ``y''
+			qui gen yw_`o_`y'_`pr''  = ``y'' + `o_`y'_`pr''
 		}
 		foreach y in `f__' {
 			tempvar `y'_`pr'
@@ -1477,6 +1535,9 @@ program define _ceqefext, rclass
 			scalar _d_``y'_`pr'' =  _d_`pr'
 			local marg`y' `marg`y'' ``y'_`pr''
 			local int`y' `int`y'' `o_`y'_`pr''
+			local id`o_`y'_`pr'' "ben"
+			qui gen ywo_`o_`y'_`pr'' = ``y'' - `o_`y'_`pr''
+			qui gen yw_`o_`y'_`pr''  = ``y'' 
 		}
 	}
 	foreach pr in `v_alltransfers' {
@@ -1488,6 +1549,9 @@ program define _ceqefext, rclass
 			scalar _d_``y'_`pr'' = _d_`pr'
 			local marg`y' `marg`y'' ``y'_`pr''	
 			local int`y' `int`y'' `o_`y'_`pr''
+			local id`o_`y'_`pr'' "ben"
+			qui gen ywo_`o_`y'_`pr'' = ``y''
+			qui gen yw_`o_`y'_`pr''  = ``y'' + `o_`y'_`pr''
 		}
 		foreach y in `f__' {
 			tempvar `y'_`pr'
@@ -1497,6 +1561,9 @@ program define _ceqefext, rclass
 			scalar _d_``y'_`pr'' = "`d_`y'' - " + _d_`pr'
 			local marg`y' `marg`y'' ``y'_`pr''	
 			local int`y' `int`y'' `o_`y'_`pr''
+			local id`o_`y'_`pr'' "ben"
+			qui gen ywo_`o_`y'_`pr'' = ``y'' - `o_`y'_`pr''
+			qui gen yw_`o_`y'_`pr''  = ``y'' 
 		}
 	}
 	foreach pr in `v_alltransfersp' {
@@ -1508,6 +1575,9 @@ program define _ceqefext, rclass
 			scalar _d_``y'_`pr'' =  _d_`pr'
 			local marg`y' `marg`y'' ``y'_`pr''	
 			local int`y' `int`y'' `o_`y'_`pr''
+			local id`o_`y'_`pr'' "ben"
+			qui gen ywo_`o_`y'_`pr'' = ``y''
+			qui gen yw_`o_`y'_`pr''  = ``y'' + `o_`y'_`pr''
 		}
 		foreach y in `f__' {
 			tempvar `y'_`pr'
@@ -1517,6 +1587,9 @@ program define _ceqefext, rclass
 			scalar _d_``y'_`pr'' =  _d_`pr'
 			local marg`y' `marg`y'' ``y'_`pr''	
 			local int`y' `int`y'' `o_`y'_`pr''
+			local id`o_`y'_`pr'' "ben"
+			qui gen ywo_`o_`y'_`pr'' = ``y'' - `o_`y'_`pr''
+			qui gen yw_`o_`y'_`pr''  = ``y'' 
 		}		
 	}
 	local maxlength = 0
@@ -1576,7 +1649,7 @@ program define _ceqefext, rclass
 			*Beckerman Imervoll Effectiveness Indicators;
 			matrix bi_`y'=J(28,`cols',.);
 			
-			local col = 0 /*1 */ ;
+			local col = 0 /*1 */ ;  //!
 			local colc=0;
 				foreach ext of local int`y' {;
 				local col=`col'+1;
@@ -1592,34 +1665,38 @@ program define _ceqefext, rclass
 				local is_ben=0;
 				*Generate variables with the individual tax or transfer;
 				*if `m_`ext''<`m_`y''{;
-					if `m_`ext''<0{;
+				if "`id`ext''"=="tax"{;
 					tempvar int_tax;
 					gen double `int_tax'=abs( `ext');
 					local is_tax=1;
 				
 				};
-				if `m_`ext''>0{;
+				if "`id`ext''"=="ben"{;
 					tempvar int_ben;
 					gen double `int_ben'=abs( `ext');
 					local is_ben=1;
 				};
-				if `m_`ext''==`m_`y''{; //IE AND SE are missing if intervention=0;
+				/* if `m_`ext''==`m_`y''{; //IE AND SE are missing if intervention=0;
 					matrix g_ie_`y'[1,`col'] =.;
 					matrix g_se_`y'[1,`col'] =.;
-				};
+				}; */
 					tempvar yo;
-					gen double `yo'=``y''-`ext'; ///without transfers (-) without tax (+);
+					gen double `yo'=ywo_`ext'; ///without transfers (-) without tax (+);
 				  tempvar `y'o_ppp;
 					 gen double ``y'o_ppp'=(`yo'/`divideby')*(1/`ppp_calculated');
+					 tempvar y1;
+					 gen double `y1' = yw_`ext';
+					 tempvar `y'1_ppp;
+					 gen double ``y'1_ppp'=(`y1'/`divideby')*(1/`ppp_calculated');
 					 
 					 
 				*for taxes;
 				if `is_tax'==1 {;
 
 					*****Gini********************;
-
+					
 					*Impact effectiveness;
-					ceqtaxstar [w=`w'], startinc(``y'') taxes(`int_tax');			
+					ceqtaxstar [w=`w'], startinc(`yo') taxes(`int_tax');			
 					tempvar ystar;
 					gen double `ystar'=____ytaxstar;
 					cap drop ____ytaxstar   ____id_taxstar;
@@ -1639,7 +1716,7 @@ program define _ceqefext, rclass
 
 					};
 					else{;
-						_ceqspend [w=`w'],inc(``y'') sptax(`int_tax');
+						_ceqspend [w=`w'],inc(`y1') sptax(`int_tax');
 						local spef=r(sp_ef);
 						matrix g_se_`y'[1,`col'] =`spef';
 
@@ -1659,47 +1736,47 @@ program define _ceqefext, rclass
 			
 					
 					if wordcount("`povlines'")>0 {; // otherwise produces inequality only;
-					foreach p in `plopts'  { ;// plopts includes all lines;
-						if "``p''"!="" {	;
-						if substr("`p'",1,2)=="pl" {; // these are the PPP lines;
-								local _pline = ``p'';
-								local vtouse1 ``y'_ppp';//1 is for original;
-								local vtouse2 ``y'o_ppp';//2 is for income without intervention;
-								local vtouse3 `ystar_ppp';//3 is for ideal income; 
-							};
-							else if _`p'_isscalar==1 { ;  // if pov line is scalar, // (note this local defined above);
-								local _pline = ``p''; // set `_pline' as that scalar and;
-								local vtouse1 ``y''   ;// use original income variable;
-								local vtouse2 `yo';//income without intervention;
-								local vtouse3 `ystar';//income with ideal intervention;
-							};
-							else if _`p'_isscalar==0 {; // if pov line is variable,;
-								tempvar `v'_normalized1 ; // create temporary variable that is income...;
-								tempvar `v'_normalized2 ; // create temporary variable that is income...;
-								tempvar `v'_normalized3 ; // create temporary variable that is income...;
+						foreach p in `plopts'  { ;// plopts includes all lines;
+							if "``p''"!="" {	;
+								if substr("`p'",1,2)=="pl" {; // these are the PPP lines;
+									local _pline = ``p'';
+									local vtouse1 ``y'1_ppp';//1 is for income with intervention;
+									local vtouse2 ``y'o_ppp';//2 is for income without intervention;
+									local vtouse3 `ystar_ppp';//3 is for ideal income; 
+								};
+								else if _`p'_isscalar==1 { ;  // if pov line is scalar, // (note this local defined above);
+									local _pline = ``p''; // set `_pline' as that scalar and;
+									local vtouse1 `y1'   ;// use income with intervention;
+									local vtouse2 `yo';//income without intervention;
+									local vtouse3 `ystar';//income with ideal intervention;
+								};
+								else if _`p'_isscalar==0 {; // if pov line is variable,;
+									tempvar `v'_normalized1 ; // create temporary variable that is income...;
+									tempvar `v'_normalized2 ; // create temporary variable that is income...;
+									tempvar `v'_normalized3 ; // create temporary variable that is income...;
 
-								qui gen ``v'_normalized1' = ``y''/``p'' ;// normalized by pov line;   //! changed from `y' to ``y'';
-								qui gen ``v'_normalized2' = `yo'/``p'' ;// normalized by pov line;
-								qui gen ``v'_normalized3' = `ystar'/``p'' ;// normalized by pov line;
+									qui gen ``v'_normalized1' = `y1'/``p'' ;// normalized by pov line;  
+									qui gen ``v'_normalized2' = `yo'/``p'' ;// normalized by pov line;
+									qui gen ``v'_normalized3' = `ystar'/``p'' ;// normalized by pov line;
 
-								local _pline = 1            ;           // and normalized pov line is 1;
-								local vtouse1 ``v'_normalized1'; // use normalized income in the calculations;
-								local vtouse2 ``v'_normalized2'; // use normalized income in the calculations;
-								local vtouse3 ``v'_normalized3'; // use normalized income in the calculations;
+									local _pline = 1            ;           // and normalized pov line is 1;
+									local vtouse1 ``v'_normalized1'; // use normalized income in the calculations;
+									local vtouse2 ``v'_normalized2'; // use normalized income in the calculations;
+									local vtouse3 ``v'_normalized3'; // use normalized income in the calculations;
 
-							};
+								};
 							
 							
-							tempvar zyzfgt1_1 zyzfgt2_1 zyzfgt1_2 zyzfgt2_2 zyzfgt1_3 zyzfgt2_3;
-							qui gen `zyzfgt1_1' = max((`_pline'-`vtouse1')/`_pline',0) ;// normalized povety gap of each individual;
-							qui gen `zyzfgt2_1' = `zyzfgt1_1'^2 ;                           // square of normalized poverty gap;
-							qui gen `zyzfgt1_2' = max((`_pline'-`vtouse2')/`_pline',0) ;// normalized povety gap of each individual;
-							qui gen `zyzfgt2_2' = `zyzfgt1_2'^2 ;                           // square of normalized poverty gap;
-							qui gen `zyzfgt1_3' = max((`_pline'-`vtouse3')/`_pline',0) ;// normalized povety gap of each individual;
-							qui gen `zyzfgt2_3' = `zyzfgt1_3'^2 ;                           // square of normalized poverty gap;
-							
-							
+								tempvar zyzfgt1_1 zyzfgt2_1 zyzfgt1_2 zyzfgt2_2 zyzfgt1_3 zyzfgt2_3;
+								qui gen `zyzfgt1_1' = max((`_pline'-`vtouse1')/`_pline',0) ;// normalized povety gap of each individual;
+								qui gen `zyzfgt2_1' = `zyzfgt1_1'^2 ;                           // square of normalized poverty gap;
+								qui gen `zyzfgt1_2' = max((`_pline'-`vtouse2')/`_pline',0) ;// normalized povety gap of each individual;
+								qui gen `zyzfgt2_2' = `zyzfgt1_2'^2 ;                           // square of normalized poverty gap;
+								qui gen `zyzfgt1_3' = max((`_pline'-`vtouse3')/`_pline',0) ;// normalized povety gap of each individual;
+								qui gen `zyzfgt2_3' = `zyzfgt1_3'^2 ;                           // square of normalized poverty gap;
 								
+							
+							
 							
 								qui summ `zyzfgt1_1' `aw', meanonly; // `if' `in' restrictions already taken care of by `touse' above;	
 								local p1_`y'_orig=r(mean);
@@ -1714,7 +1791,7 @@ program define _ceqefext, rclass
 								local p2_`y'_2=r(mean);
 								qui summ `zyzfgt2_3' `aw', meanonly; // `if' `in' restrictions already taken care of by `touse' above;	
 								local p2_`y'_3_st=r(mean);
-															drop `zyzfgt1_3' `zyzfgt1_2' `zyzfgt1_1' `zyzfgt2_3' `zyzfgt2_2' `zyzfgt2_1';
+								drop `zyzfgt1_3' `zyzfgt1_2' `zyzfgt1_1' `zyzfgt2_3' `zyzfgt2_2' `zyzfgt2_1';
 
 																****Poverty Impact effectiveness;
 
@@ -1726,81 +1803,77 @@ program define _ceqefext, rclass
 								
 								****For Impact effectiveness there can only be a negative effect, we use the harm formula Ch. 5 CEQ Handbook;
 								forval i=1/2 {;
-								if `mp_`i'_`p'_`y''<0{;
-								ceqtaxharm [w=`w'], endinc(``y'') taxes(`int_tax');			
-								tempvar yharm;
-								gen double `yharm'=____ytaxharm;
-								cap drop ____ytaxharm   ____id_taxharm;
-								tempvar yharm_ppp;
-								gen `yharm_ppp'=(`yharm'/`divideby')*(1/`ppp_calculated');
+									if `mp_`i'_`p'_`y''<0{;
+										ceqtaxharm [w=`w'], endinc(`y1') taxes(`int_tax');			
+										tempvar yharm;
+										gen double `yharm'=____ytaxharm;
+										cap drop ____ytaxharm   ____id_taxharm;
+										tempvar yharm_ppp;
+										gen `yharm_ppp'=(`yharm'/`divideby')*(1/`ppp_calculated');
+									
+									
+										if "``p''"!="" {	;
+											if substr("`p'",1,2)=="pl" {; // these are the PPP lines;
+												local _pline = ``p'';
+												local vtouseh `yharm_ppp';//h is for harm;
+											};
 								
-								
-								if "``p''"!="" {	;
-								if substr("`p'",1,2)=="pl" {; // these are the PPP lines;
-								local _pline = ``p'';
-								local vtouseh `yharm_ppp';//h is for harm;
-								};
-								
-								else if _`p'_isscalar==1 { ;  // if pov line is scalar, // (note this local defined above);
-								local _pline = ``p''; // set `_pline' as that scalar and;
-								local vtouseh `yharm'   ;
-								};
-								else if _`p'_isscalar==0 {; // if pov line is variable,;
-								tempvar `v'_normalizedh ; // create temporary variable that is income...;
-								qui gen ``v'_normalizedh' = `yharm'/``p'' ;// normalized by pov line;  //! changed from ``v'_normalized1' to ``v'_normalizedh';
-								local _pline = 1            ;           // and normalized pov line is 1;
-								local vtouseh ``v'_normalizedh'; // use normalized income in the calculations;					
-								};
+											else if _`p'_isscalar==1 { ;  // if pov line is scalar, // (note this local defined above);
+												local _pline = ``p''; // set `_pline' as that scalar and;
+												local vtouseh `yharm'   ;
+											};
+											else if _`p'_isscalar==0 {; // if pov line is variable,;
+												tempvar `v'_normalizedh ; // create temporary variable that is income...;
+												qui gen ``v'_normalizedh' = `yharm'/``p'' ;// normalized by pov line;  
+												local _pline = 1            ;           // and normalized pov line is 1;
+												local vtouseh ``v'_normalizedh'; // use normalized income in the calculations;					
+											};
+									
 							
-							
-								tempvar zyzfgt1_h zyzfgt2_h;
-								qui gen `zyzfgt1_h' = max((`_pline'-`vtouseh')/`_pline',0) ;// normalized povety gap of each individual;
-								qui gen `zyzfgt2_h' = `zyzfgt1_h'^2 ;                           // square of normalized poverty gap;							
+											tempvar zyzfgt1_h zyzfgt2_h;
+											qui gen `zyzfgt1_h' = max((`_pline'-`vtouseh')/`_pline',0) ;// normalized povety gap of each individual;
+											qui gen `zyzfgt2_h' = `zyzfgt1_h'^2 ;                           // square of normalized poverty gap;							
+											
+											
+											qui summ `zyzfgt`i'_h' `aw', meanonly; // `if' `in' restrictions already taken care of by `touse' above;	
+											local p`i'_h=r(mean);
+									
+											local mst_p`i'_h=`p`i'_`y'_3' - `p`i'_h';//Ideal MC with tax formula;
+											local eft_`i'_h=(`mp_`i'_`p'_`y''/`mst_p`i'_h')*(-1);
+										
 								
-								
-								qui summ `zyzfgt`i'_h' `aw', meanonly; // `if' `in' restrictions already taken care of by `touse' above;	
-								local p`i'_h=r(mean);
-								
-								local mst_p`i'_h=`p`i'_`y'_3' - `p`i'_h';//Ideal MC with tax formula;
-								if `mst_p`i'_h' == 0 {;   // Added on Mar28, 2017
-									local eft_`i'_h=0;
-									noi di "test"; //!;
-								};
-								else {;
-									local eft_`i'_h=(`mp_`i'_`p'_`y''/`mst_p`i'_h')*(-1);
-								};
-								*return scalar eft_`i'_h =  `eft_`i'_h';//Impact effectiveness indicator, v has the variable name of the transfer, y=income, p=poverty line ;
-								
-								local row=`row'+1;
-								matrix p_ie_`y'[`ref_`p'_`i'',`col'] = `eft_`i'_h';
-								matrix p_se_`y'[`ref_`p'_`i'',`col'] = .;
-								
+											*return scalar eft_`i'_h =  `eft_`i'_h';//Impact effectiveness indicator, v has the variable name of the transfer, y=income, p=poverty line ;
+									
+											local row=`row'+1;
+											matrix p_ie_`y'[`ref_`p'_`i'',`col'] = `eft_`i'_h';
+											matrix p_se_`y'[`ref_`p'_`i'',`col'] = .;
+										
 
-								/*local row=`row'+1;
-								matrix p_ie_`y'[`row',`col'] = `eft_2_h';
-								matrix p_se_`y'[`row',`col'] = .;*/
-								};
-								};
+										/*local row=`row'+1;
+										matrix p_ie_`y'[`row',`col'] = `eft_2_h';
+										matrix p_se_`y'[`row',`col'] = .;*/
+										};
+									};
 								
-								else{;
-								local row=`row'+1;
-								
+									else{;
+										local row=`row'+1;
+									
 
-								matrix p_ie_`y'[`ref_`p'_`i'',`col'] =.;
-								matrix p_se_`y'[`ref_`p'_`i'',`col'] = .;
+										matrix p_ie_`y'[`ref_`p'_`i'',`col'] =0;  
+										matrix p_se_`y'[`ref_`p'_`i'',`col'] =.;  //!;
 								
-								};
+									};
 						};
 						tempvar taxesef;
 							gen double `taxesef'=abs(`vtouse2'-`vtouse1');
 
-							_fifgpmc `aw',taxes(`taxesef')  startinc(`vtouse1') endinc(`vtouse2') z(`_pline');   //! mark
+							_fifgpmc `aw',taxes(`taxesef')  startinc(`vtouse2') endinc(`vtouse1') z(`_pline');    //startinc and endinc switched by Rosie Li on May 16, 2017 after consulting with Rodrigo Aranda;
 							local rfi=`rfi_`p'';
 							matrix fi_`y'[`rfi',`col']=MCEF_t;
 							local rfi=`rfi'+1;
-							matrix fi_`y'[`rfi',`col']=MCEF_pc;
+							matrix fi_`y'[`rfi',`col']=. /*MCEF_pc*/;
 							local rfi=`rfi'+1;
-							matrix fi_`y'[`rfi',`col']=MCEF_n;
+							matrix fi_`y'[`rfi',`col']=. /*MCEF_n*/;
 							*Beckerman Immervol NOT FOR TAXES SO MISSING VALUES;
 							 local rbk=`rbk_`p'';
 							 matrix bi_`y'[`rbk',`col']=.;//Vertical Expenditure Efficiency;
@@ -1824,7 +1897,7 @@ program define _ceqefext, rclass
 
 					*****Gini********************;
 					*Impact effectiveness;
-					ceqbenstar [w=`w'], startinc(``y'') ben(`int_ben');			
+					ceqbenstar [w=`w'], startinc(`yo') ben(`int_ben');		   // startinc changed from `yo' to `y' by Rosie Li on May 16, 2017 after consulting with Rodrigo Aranda;
 					tempvar ystar;
 					gen double `ystar'=____ybenstar;
 					cap drop  ____ybenstar ____id_benstar ;
@@ -1838,14 +1911,14 @@ program define _ceqefext, rclass
 					matrix g_ie_`y'[1,`col'] =`imef';
 
 					*Spending Effectiveness;
-					_ceqmcid `pw', inc(``y'') spben(`int_ben') ;
+					_ceqmcid `pw', inc(`y1') spben(`int_ben') ;
 					*If Marg. Cont. is negative, SE is missing;
 					if r(mc_ineq)<0{;
 						matrix g_se_`y'[1,`col'] =.;
 
 					};
 					else{;
-						_ceqspend [w=`w'],inc(``y'') spben(`int_ben');
+						_ceqspend [w=`w'],inc(`y1') spben(`int_ben');
 						local spef=r(sp_ef);
 						matrix g_se_`y'[1,`col'] =`spef';
 	
@@ -1864,24 +1937,24 @@ program define _ceqefext, rclass
 					if wordcount("`povlines'")>0 {; // otherwise produces inequality only;
 					foreach p in `plopts'  { ;// plopts includes all lines;
 						if "``p''"!="" {	;
-						if substr("`p'",1,2)=="pl" {; // these are the PPP lines;
+							if substr("`p'",1,2)=="pl" {; // these are the PPP lines;
 								local _pline = ``p'';
-								local vtouse1 ``y'_ppp';//1 is for original;
+								local vtouse1 ``y'1_ppp';//1 is for original;
 								local vtouse2 ``y'o_ppp';//2 is for income without intervention;
 								local vtouse3 `ystar_ppp';//3 is for ideal income; 
 							};
 							else if _`p'_isscalar==1 { ;  // if pov line is scalar, // (note this local defined above);
 								local _pline = ``p''; // set `_pline' as that scalar and;
-								local vtouse1 ``y''   ;// use original income variable;
+								local vtouse1 `y1'   ;// use original income variable;
 								local vtouse2 `yo';//income without intervention;
 								local vtouse3 `ystar';//income with ideal intervention;
 							};
 							else if _`p'_isscalar==0 {; // if pov line is variable,;
-								tempvar `v'_normalized4 ; // create temporary variable that is income...;   //! changed normaliezd1(2,3) to narmalized4(5,6) here and below;
+								tempvar `v'_normalized4 ; // create temporary variable that is income...;  
 								tempvar `v'_normalized5 ; // create temporary variable that is income...;
 								tempvar `v'_normalized6 ; // create temporary variable that is income...;
 
-								qui gen ``v'_normalized4' = ``y''/``p'' ;// normalized by pov line;  //! changed from `y' to ``y'';
+								qui gen ``v'_normalized4' = `y1'/``p'' ;// normalized by pov line;  
 								qui gen ``v'_normalized5' = `yo'/``p'' ;// normalized by pov line;
 								/*qui gen ``v'_normalized2' = `yo'/``p'' ;// normalized by pov line;*/
 								qui gen ``v'_normalized6' = `ystar'/``p'' ;// normalized by pov line;
@@ -1895,72 +1968,70 @@ program define _ceqefext, rclass
 							
 							
 							tempvar zyzfgt1_1 zyzfgt2_1 zyzfgt1_2 zyzfgt2_2 zyzfgt1_3 zyzfgt2_3;
-							qui gen `zyzfgt1_1' = max((`_pline'-`vtouse1')/`_pline',0) ;// normalized povety gap of each individual;
-							qui gen `zyzfgt2_1' = `zyzfgt1_1'^2 ;                           // square of normalized poverty gap;
-							qui gen `zyzfgt1_2' = max((`_pline'-`vtouse2')/`_pline',0) ;// normalized povety gap of each individual;
-							qui gen `zyzfgt2_2' = `zyzfgt1_2'^2 ;                           // square of normalized poverty gap;
-							qui gen `zyzfgt1_3' = max((`_pline'-`vtouse3')/`_pline',0) ;// normalized povety gap of each individual;
-							qui gen `zyzfgt2_3' = `zyzfgt1_3'^2 ;                           // square of normalized poverty gap;
+							qui gen double `zyzfgt1_1' = max((`_pline'-`vtouse1')/`_pline',0) ;// normalized povety gap of each individual;
+							qui gen double `zyzfgt2_1' = `zyzfgt1_1'^2 ;                           // square of normalized poverty gap;
+							qui gen double `zyzfgt1_2' = max((`_pline'-`vtouse2')/`_pline',0) ;// normalized povety gap of each individual;
+							qui gen double `zyzfgt2_2' = `zyzfgt1_2'^2 ;                           // square of normalized poverty gap;
+							qui gen double `zyzfgt1_3' = max((`_pline'-`vtouse3')/`_pline',0) ;// normalized povety gap of each individual;
+							qui gen double `zyzfgt2_3' = `zyzfgt1_3'^2 ;                           // square of normalized poverty gap;
 							
 
-								qui summ `zyzfgt1_1' `aw', meanonly; // `if' `in' restrictions already taken care of by `touse' above;	
-								local p1_`y'_orig=r(mean);
-								qui summ `zyzfgt1_2' `aw', meanonly; // `if' `in' restrictions already taken care of by `touse' above;	
-								local p1_`y'_2=r(mean);
-								qui summ `zyzfgt1_3' `aw', meanonly; // `if' `in' restrictions already taken care of by `touse' above;	
-								local p1_`y'_3_st=r(mean);
+							qui summ `zyzfgt1_1' `aw', meanonly; // `if' `in' restrictions already taken care of by `touse' above;	
+							local p1_`y'_orig=r(mean);
+							qui summ `zyzfgt1_2' `aw', meanonly; // `if' `in' restrictions already taken care of by `touse' above;	
+							local p1_`y'_2=r(mean);
+							qui summ `zyzfgt1_3' `aw', meanonly; // `if' `in' restrictions already taken care of by `touse' above;	
+							local p1_`y'_3_st=r(mean);
 								
-								qui summ `zyzfgt2_1' `aw', meanonly; // `if' `in' restrictions already taken care of by `touse' above;	
-								local p2_`y'_orig=r(mean);
-								qui summ `zyzfgt2_2' `aw', meanonly; // `if' `in' restrictions already taken care of by `touse' above;	
-								local p2_`y'_2=r(mean);
-								qui summ `zyzfgt2_3' `aw', meanonly; // `if' `in' restrictions already taken care of by `touse' above;	
-								local p2_`y'_3_st=r(mean);
+							qui summ `zyzfgt2_1' `aw', meanonly; // `if' `in' restrictions already taken care of by `touse' above;	
+							local p2_`y'_orig=r(mean);
+							qui summ `zyzfgt2_2' `aw', meanonly; // `if' `in' restrictions already taken care of by `touse' above;	
+							local p2_`y'_2=r(mean);
+							qui summ `zyzfgt2_3' `aw', meanonly; // `if' `in' restrictions already taken care of by `touse' above;	
+							local p2_`y'_3_st=r(mean);
 							
 								
-								//Marginal contributions for fgt 1,2;
-								local mp_1_`p'_`y'=`p1_`y'_2'-`p1_`y'_orig';//Observed MC;
-								local mp_1_`p'_`y'_s=`p1_`y'_2'-`p1_`y'_3_st';//Star MC;
-								local mp_2_`p'_`y'=`p2_`y'_2'-`p2_`y'_orig';//Observed MC;
-								local mp_2_`p'_`y'_s=`p2_`y'_2'-`p2_`y'_3_st';//Star MC;
-								forval i=1/2 {;
+							//Marginal contributions for fgt 1,2;
+							local mp_1_`p'_`y'=`p1_`y'_2'-`p1_`y'_orig';//Observed MC;
+							local mp_1_`p'_`y'_s=`p1_`y'_2'-`p1_`y'_3_st';//Star MC;
+							local mp_2_`p'_`y'=`p2_`y'_2'-`p2_`y'_orig';//Observed MC;
+							local mp_2_`p'_`y'_s=`p2_`y'_2'-`p2_`y'_3_st';//Star MC;
+							forval i=1/2 {;
 								****Poverty Impact effectiveness;
 								****For Impact effectiveness with Transfers there can only be a positive effect;
 								if `mp_`i'_`p'_`y''>0{;
-								*Impact effectiveness;
-								*Ystar already exists;
-								*local mst_p`i'_h=`p`i'_`y'_3' - `p`i'_h';//Ideal MC with tax formula;
-								scalar eft_`i' =  (`mp_`i'_`p'_`y''/`mp_`i'_`p'_`y'_s');//MC/MCstar;
+									*Impact effectiveness;
+									*Ystar already exists;
+									*local mst_p`i'_h=`p`i'_`y'_3' - `p`i'_h';//Ideal MC with tax formula;
+									scalar eft_`i' =  (`mp_`i'_`p'_`y''/`mp_`i'_`p'_`y'_s');//MC/MCstar;
 								
-								local row=`row'+1;
-								matrix p_ie_`y'[`ref_`p'_`i'',`col'] = eft_`i';
-								****Poverty Spending effectiveness;
-								tempvar bentouse;
-								gen double `bentouse'=abs(`vtouse1'-`vtouse2');
-								ceqbensp  [w=`w'], startinc(`vtouse2') ben(`bentouse') zz(`_pline') obj1(`p1_`y'_orig') obj2(`p2_`y'_orig');	
-								matrix p_se_`y'[`ref_`p'_`i'',`col'] = r(sp_ef_pov_`i');
-
+									local row=`row'+1;
+									matrix p_ie_`y'[`ref_`p'_`i'',`col'] = eft_`i';
+									****Poverty Spending effectiveness;
+									tempvar bentouse;
+									gen double `bentouse'=abs(`vtouse1'-`vtouse2');
+									ceqbensp  [w=`w'], startinc(`vtouse2') ben(`bentouse') zz(`_pline') obj1(`p1_`y'_orig') obj2(`p2_`y'_orig');	
+									matrix p_se_`y'[`ref_`p'_`i'',`col'] = r(sp_ef_pov_`i');  							
 
 								};
-			
 								else{;
-								local row=`row'+1;
+									local row=`row'+1;
 
-								
-								matrix p_ie_`y'[`ref_`p'_`i'',`col'] =.;
-								matrix p_se_`y'[`ref_`p'_`i'',`col'] =.;
+									
+									matrix p_ie_`y'[`ref_`p'_`i'',`col'] =0 /*.*/;
+									matrix p_se_`y'[`ref_`p'_`i'',`col'] =0 /*.*/;
 								};
 								
-								};
+							};
 						tempvar benef;
 							gen double `benef'=abs(`vtouse2'-`vtouse1');
-							_fifgpmc `aw',benef(`benef')  startinc(`vtouse1') endinc(`vtouse2') z(`_pline');
+							_fifgpmc `aw',benef(`benef')  startinc(`vtouse2') endinc(`vtouse1') z(`_pline');  //startinc and endinc switched by Rosie Li on May 16, 2017 after consulting with Rodrigo Aranda;
 							local rfi=`rfi_`p'';
 							matrix fi_`y'[`rfi',`col']=MCEF_t;
 							local rfi=`rfi'+1;
-							matrix fi_`y'[`rfi',`col']=MCEF_pc;
+							matrix fi_`y'[`rfi',`col']=. /*MCEF_pc*/;
 							local rfi=`rfi'+1;
-							matrix fi_`y'[`rfi',`col']=MCEF_n;
+							matrix fi_`y'[`rfi',`col']=. /*MCEF_n*/;
 							
 							
 							*Beckerman Immervol ;
@@ -2021,6 +2092,9 @@ program define _ceqefext, rclass
 
 		local titlecol = 1
 		local titlelist country surveyyear authors date 
+		
+		// Print version number on Excel sheet
+		local versionprint A4=("Results produced by version `version' of `command' on `c(current_date)' at `c(current_time)'")
 
 		foreach y of local alllist {
 			local startcol = `startcol_o'
