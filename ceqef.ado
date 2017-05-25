@@ -7,13 +7,7 @@
 *! (beta version; please report any bugs), written by Rodrigo Aranda raranda@tulane.edu
 
 ** CHANGES
-**  v1.2 Added Spending effectiveness, changes in Spillover so it shows in Excel, FI/FGP results available for all income concepts
-**  v1.3 Updated to produce no results for FI/FGP per capita and normalized per capita effectiveness indicator
-**		 Fix the national poverty line specification to include both variables and scalar condition for Beckerman
-**		 Add the weight local in subcommands
-**  v1.4 Add option flexibility for income concept and fiscal interventions
-
-** NOTES
+**  v1.2 Added Spending effectiveness, changes in Spillover so it shows in Excel, FI/FGP results available for all income concepts **  v1.3 Updated to produce no results for FI/FGP per capita and normalized per capita effectiveness indicator **		 Fix the national poverty line specification to include both variables and scalar condition for Beckerman **		 Add the weight local in subcommands **  v1.4 Add option flexibility for income concept and fiscal interventions ** NOTES
 ** No spending effectiveness. Results are not feasible for poverty using the whole system.
 
 ** TO DO
@@ -731,7 +725,7 @@ program define ceqef
 			Pensions   (varlist)
 			DTRansfers (varlist)
 			DTAXes     (varlist) 
-			COntribs(varlist)
+			CONTribs(varlist)
 			SUbsidies  (varlist)
 			INDTAXes   (varlist)
 			HEALTH     (varlist)
