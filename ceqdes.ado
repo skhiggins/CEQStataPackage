@@ -1,7 +1,8 @@
 ** ADO FILE FOR POPULATION SHEET OF CEQ OUTPUT TABLES
 
 ** VERSION AND NOTES (changes between versions described under CHANGES)
-*! v3.8 06apr2017 For use with Oct 2016 version of Output Tables
+*! v3.9 26may2017 For use with May 2017 version of Output Tables
+** v3.8 06apr2017 For use with Oct 2016 version of Output Tables
 ** v3.7 08mar2017 For use with Oct 2016 version of Output Tables
 ** v3.6 12jan2017 For use with Oct 2016 version of Output Tables
 ** v3.5 08nov2016 For use with Oct 2016 version of Output Tables
@@ -22,9 +23,9 @@
 ** v1.11 28may2015 was dII.ado, for use with Jan 8 2015 version of Disaggregated Tables
 ** ... // omitting version information since name of ado file changed
 ** v1.0 20oct2014 
-*! (beta version; please report any bugs), written by Sean Higgins sean.higgins@ceqinstitute.org
 
 ** CHANGES
+**   05-27-2017 Add additional options to print meta-information
 **   04-06-2017 Remove the temporary variables from the negative tax warning list 
 **   03-08-2017 Remove the net in-kind transfers as a broad category in accordance with the instruction that users
 **				 supply net in-kind transfer variables to health/education/otherpublic options
@@ -133,6 +134,9 @@ program define ceqdes, rclass
 			COUNtry(string)
 			SURVeyyear(string) /** string because could be range of years **/
 			AUTHors(string)
+			SCENario(string)
+			GRoup(string)
+			PROJect(string)
 			/** DROP MISSING VALUES **/
 			IGNOREMissing
 			/** EXPORTING TO CEQ MASTER WORKBOOK: **/
@@ -149,7 +153,7 @@ program define ceqdes, rclass
 	local dit display as text in smcl
 	local die display as error in smcl
 	local command ceqdes
-	local version 3.8
+	local version 3.9
 	`dit' "Running version `version' of `command' on `c(current_date)' at `c(current_time)'" _n "   (please report this information if reporting a bug to sean.higgins@ceqinstitute.org)"
 	
 	** income concepts
@@ -655,12 +659,13 @@ program define ceqdes, rclass
 		local titlesprint
 		local titlerow = 3
 		local titlecol = 1
-		local titlelist country surveyyear authors date // ppp baseyear cpibase cpisurvey ppp_calculated
+		local titlelist country surveyyear authors date ///
+			scenario group project // ppp baseyear cpibase cpisurvey ppp_calculated
 		foreach title of local titlelist {
 			returncol `titlecol'
 			if "``title''"!="" & "``title''"!="-1" ///
 				local  titlesprint `titlesprint' `r(col)'`titlerow'=("``title''")
-			local titlecol = `titlecol' + 2
+			local titlecol = `titlecol' + 1
 		}
 	
 		// Print version number on Excel sheet
@@ -672,10 +677,8 @@ program define ceqdes, rclass
 		
 		// Export to Excel (column titles)
 		local trow = `startrow' + `incomes'
-		local tcol = 1
 		local colscount = 0
 		foreach pr of local programcols {
-			returncol `tcol'
 			local titles `titles' A`trow'=("`d_`pr''")
 			local ++trow
 		}	
