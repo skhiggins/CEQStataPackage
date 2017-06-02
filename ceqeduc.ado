@@ -1,13 +1,15 @@
 ** ADO FILE FOR POPULATION SHEET OF CEQ Master Workbook Section E
 
 ** VERSION AND NOTES (changes between versions described under CHANGES)
-*! v1.3 27mar17 For use with Oct 2016 version of CEQ Master Workbook Section E
+*! v1.4 01jun17 For use with may 2017 version of CEQ Master Workbook Section E
+** v1.3 27mar17 For use with Oct 2016 version of CEQ Master Workbook Section E
 ** v1.2 12jan17 For use with Oct 2016 version of CEQ Master Workbook Section E
 ** v1.1 01dec16 For use with Oct 2016 version of CEQ Master Workbook Section E
 ** v1.0 29sep16 For use with Sep 2016 version of CEQ Master Workbook Section E
 *! (beta version; please report any bugs), written by Sean Higgins sean.higgins@ceqinstitute.org
 
 ** CHANGES
+**  06-01-2017  Add additional options to print meta-information
 **  03-27-2017  Adjust started row of warning messages (bug pointed out by Sandra Martinez)
 ** 	01-12-2017  Set the data type of all newly generated variables to be double
 ** 			    Add a check of the data type of income and fiscal variables and issue a warning if
@@ -86,6 +88,9 @@ program define ceqeduc, rclass
 			SURVeyyear(string) /* string because could be range of years */
 			AUTHors(string)
 			BASEyear(real -1)
+			SCENario(string)
+			GRoup(string)
+			PROJect(string)
 			/* DROP MISSING VALUES */
 			IGNOREMissing
 		]
@@ -481,12 +486,13 @@ program define ceqeduc, rclass
 		local titlesprint
 		local titlerow = 3
 		local titlecol = 1
-		local titlelist country surveyyear authors date ppp baseyear cpibase cpisurvey ppp_calculated
+		local titlelist country surveyyear authors date ppp baseyear cpibase cpisurvey ppp_calculated ///
+				scenario group project
 		foreach title of local titlelist {
 			returncol `titlecol'
 			if "``title''"!="" & "``title''"!="-1" ///
 				local  titlesprint `titlesprint' `r(col)'`titlerow'=("``title''")
-			local titlecol = `titlecol' + 2
+			local titlecol = `titlecol' + 1
 		}
 
 		// Print version number on Excel sheet

@@ -1,7 +1,8 @@
 ** ADO FILE FOR FISCAL INTERVENTIONS SHEET OF CEQ OUTPUT TABLES
 
 ** VERSION AND NOTES (changes between versions described under CHANGES)
-*! v4.8 22may2017 For use with Oct 2016 version of Output Tables
+*! v4.9 01jun2017 For use with May 2017 version of Output Tables
+** v4.8 22may2017 For use with Oct 2016 version of Output Tables
 ** v4.7 16may2017 For use with Oct 2016 version of Output Tables
 ** v4.6 06apr2017 For use with Oct 2016 version of Output Tables
 ** v4.5 08mar2017 For use with Oct 2016 version of Output Tables
@@ -28,6 +29,7 @@
 *! (beta version; please report any bugs), written by Sean Higgins sean.higgins@ceqinstitute.org
 
 ** CHANGES
+**   05-27-2017 Add additional options to print meta-information
 **   05-22-2017 Mata calculation of fiscal incidence had a bug (pointed out by Esmeralda Shehaj)
 **   05-16-2017 Fix name of command mistake
 **   04-06-2017 Remove the temporary variables from the negative tax warning list 
@@ -212,6 +214,9 @@ program define ceqfiscal, rclass
 			SURVeyyear(string) /** string because could be range of years */
 			AUTHors(string)
 			BASEyear(real -1)
+			SCENario(string)
+			GRoup(string)
+			PROJect(string)
 			/** OTHER OPTIONS */
 			NODecile
 			NOGroup
@@ -1033,12 +1038,13 @@ program define ceqfiscal, rclass
 		local titlesprint
 		local titlerow = 3
 		local titlecol = 1
-		local titlelist country surveyyear authors date ppp baseyear cpibase cpisurvey ppp_calculated
+		local titlelist country surveyyear authors date ppp baseyear cpibase cpisurvey ppp_calculated ///
+				scenario group project
 		foreach title of local titlelist {
 			returncol `titlecol'
 			if "``title''"!="" & "``title''"!="-1" ///
 				local  titlesprint `titlesprint' `r(col)'`titlerow'=("``title''")
-			local titlecol = `titlecol' + 2
+			local titlecol = `titlecol' + 1
 		}
 
 		// Print version number on Excel sheet

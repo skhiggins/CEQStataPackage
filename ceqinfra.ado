@@ -1,12 +1,14 @@
 ** ADO FILE FOR FISCAL INTERVENTIONS SHEET OF CEQ MASTER WORKBOOK SECTION E
 
 ** VERSION AND NOTES (changes between versions described under CHANGES)
-*! v1.2 12jan2017 For use with Oct 2016 version of CEQ Master Workbook 
+*! v1.3 02jun2017 For use with May 2017 version of CEQ Master Workbook 
+** v1.2 12jan2017 For use with Oct 2016 version of CEQ Master Workbook 
 ** v1.1 30sep2016 For use with Jun 2016 version of CEQ Master Workbook
 ** v1.0 25sep2016 For use with Jun 2016 version of CEQ Master Workbook
 *! (beta version; please report any bugs), written by Sean Higgins sean.higgins@ceqinstitute.org
 
 ** CHANGES
+**   06-01-2017 Add additional options to print meta-information
 ** 	 1-12-2017 Set the data type of all newly generated variables to be double
 ** 			   Add a check of the data type of income and fiscal variables and issue a warning if
 **				 they are not double
@@ -75,6 +77,9 @@ program define ceqinfra, rclass
 			SURVeyyear(string) /* string because could be range of years */
 			AUTHors(string)
 			BASEyear(real -1)
+			SCENario(string)
+			GRoup(string)
+			PROJect(string)
 			/* OTHER OPTIONS */
 			NODecile
 			NOGroup
@@ -570,12 +575,13 @@ program define ceqinfra, rclass
 		local titlesprint
 		local titlerow = 3
 		local titlecol = 1
-		local titlelist country surveyyear authors date ppp baseyear cpibase cpisurvey ppp_calculated
+		local titlelist country surveyyear authors date ppp baseyear cpibase cpisurvey ppp_calculated ///
+				scenario group project
 		foreach title of local titlelist {
 			returncol `titlecol'
 			if "``title''"!="" & "``title''"!="-1" ///
 				local  titlesprint `titlesprint' `r(col)'`titlerow'=("``title''")
-			local titlecol = `titlecol' + 2
+			local titlecol = `titlecol' + 1
 		}
 
 		// Print version number on Excel sheet

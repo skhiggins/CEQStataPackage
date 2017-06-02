@@ -1,7 +1,8 @@
 ** ADO FILE FOR POPULATION SHEET OF CEQ OUTPUT TABLES
 
 ** VERSION AND NOTES (changes between versions described under CHANGES)
-*! v3.2 12jan2017 For use with Oct 2016 version of Output Tables
+*! v3.3 02jun2017 For use with May 2017 version of Output Tables
+** v3.2 12jan2017 For use with Oct 2016 version of Output Tables
 ** v3.1 01oct2016 For use with Jun 2016 version of Output Tables
 ** v3.0 20aug2016 For use with Jun 2016 version of Output Tables
 ** v2.9 9aug2016 For use with Jun 2016 version of Output Tables
@@ -17,9 +18,10 @@
 ** v1.11 28may2015 was dII.ado, for use with Jan 8 2015 version of Disaggregated Tables
 ** ... // omitting version information since name of ado file changed
 ** v1.0 20oct2014 
-*! (beta version; please report any bugs), written by Sean Higgins sean.higgins@ceqinstitute.org
+** (beta version; please report any bugs), written by Sean Higgins sean.higgins@ceqinstitute.org
 
 ** CHANGES
+**   06-01-2017 Add additional options to print meta-information
 ** 	 01-12-2017 Set the data type of all newly generated variables to be double
 ** 				Add a check of the data type of income and fiscal variables and issue a warning if
 **				 they are not double
@@ -114,6 +116,9 @@ program define ceqpop, rclass
 			SURVeyyear(string) /** string because could be range of years */
 			AUTHors(string)
 			BASEyear(real -1)
+			SCENario(string)
+			GRoup(string)
+			PROJect(string)
 			/** OTHER OPTIONS */
 			NODecile
 			NOGroup
@@ -512,12 +517,13 @@ program define ceqpop, rclass
 	local titlesprint
 	local titlerow = 3
 	local titlecol = 1
-	local titlelist country surveyyear authors date ppp baseyear cpibase cpisurvey ppp_calculated
+	local titlelist country surveyyear authors date ppp baseyear cpibase cpisurvey ppp_calculated ///
+			scenario group project
 	foreach title of local titlelist {
 		returncol `titlecol'
 		if "``title''"!="" & "``title''"!="-1" ///
 			local  titlesprint `titlesprint' `r(col)'`titlerow'=("``title''")
-		local titlecol = `titlecol' + 2
+		local titlecol = `titlecol' + 1
 	}
 
 	// Print version number on Excel sheet

@@ -1,12 +1,14 @@
 ** ADO FILE FOR EFFECTIVENESS SHEET OF CEQ OUTPUT TABLES
 
 ** VERSION AND NOTES (changes between versions described under CHANGES)
-*! v1.4 21may2017 For use with Apr 2017 version of Output Tables
-*! v1.3 03may2017 For use with Jul 2016 version of Output Tables
+*! v1.5 01jun2017 For use with May 2017 version of Output Tables
+** v1.4 21may2017 For use with Apr 2017 version of Output Tables
+** v1.3 03may2017 For use with Jul 2016 version of Output Tables
 ** v1.2 03jan2016 For use with Jul 2016 version of Output Tables
-*! (beta version; please report any bugs), written by Rodrigo Aranda raranda@tulane.edu
+** (beta version; please report any bugs), written by Rodrigo Aranda raranda@tulane.edu
 
 ** CHANGES
+**  06-01-2017  Add additional options to print meta-information
 **  v1.2 Added Spending effectiveness, changes in Spillover so it shows in Excel, FI/FGP results available for all income concepts **  v1.3 Updated to produce no results for FI/FGP per capita and normalized per capita effectiveness indicator **		 Fix the national poverty line specification to include both variables and scalar condition for Beckerman **		 Add the weight local in subcommands **  v1.4 Add option flexibility for income concept and fiscal interventions ** NOTES
 ** No spending effectiveness. Results are not feasible for poverty using the whole system.
 
@@ -764,8 +766,10 @@ program define ceqef
 			COUNtry(string)
 			SURVeyyear(string) /* string because could be range of years */
 			AUTHors(string)
-			
 			BASEyear(real -1)*
+			SCENario(string)
+			GRoup(string)
+			PROJect(string)
 		]
 	;
 
@@ -1924,13 +1928,14 @@ program define ceqef
 		local titlesprint;
 		local titlerow = 3;
 		local titlecol = 1;
-		local titlelist country surveyyear authors date ppp baseyear cpibase cpisurvey ppp_calculated;
+		local titlelist country surveyyear authors date ppp 
+				baseyear cpibase cpisurvey ppp_calculated scenario group project;
 
 		foreach title of local titlelist {;
 			returncol `titlecol';
 			if "``title''"!="" & "``title''"!="-1" 
 				local  titlesprint `titlesprint' `r(col)'`titlerow'=("``title''");
-			local titlecol = `titlecol' + 2;
+			local titlecol = `titlecol' + 1;
 		};
 				qui putexcel `titlesprint'  using `"`using'"', modify keepcellformat sheet("`sheet'");
 

@@ -1,7 +1,8 @@
 ** ADO FILE FOR FISCAL INTERVENTIONS SHEET OF CEQ MASTER WORKBOOK SECTION E
 
 ** VERSION AND NOTES (changes between versions described under CHANGES)
-*! v1.7 02apr2017 For use with Oct 2016 version of CEQ Master Workbook 2016
+*! v1.8 01jun2017 For use with May 2017 version of CEQ Master Workbook 2016
+** v1.7 02apr2017 For use with Oct 2016 version of CEQ Master Workbook 2016
 ** v1.6 08mar2017 For use with Oct 2016 version of CEQ Master Workbook 2016
 ** v1.5 06feb2017 For use with Sep 2016 version of CEQ Master Workbook 2016
 ** v1.4 12jan2017 For use with Oct 2016 version of CEQ Master Workbook 2016
@@ -12,6 +13,7 @@
 *! (beta version; please report any bugs), written by Sean Higgins sean.higgins@ceqinstitute.org
 
 ** CHANGES
+**	 06-01-2017 Add additional options to print meta-information
 **   04-02-2017 Remove the temporary variables from the negative tax warning list 
 **   03-08-2017 Remove the net in-kind transfers as a broad category in accordance with the instruction that users
 **				 supply net in-kind transfer variables to health/education/otherpublic options
@@ -123,6 +125,9 @@ program define ceqcoverage, rclass
 			SURVeyyear(string) /* string because could be range of years */
 			AUTHors(string)
 			BASEyear(real -1)
+			SCENario(string)
+			GRoup(string)
+			PROJect(string)
 			/* OTHER OPTIONS */
 
 			/* VARIABLE MODIFICATON */
@@ -1092,12 +1097,13 @@ program define ceqcoverage, rclass
 		local titlesprint
 		local titlerow = 3
 		local titlecol = 1
-		local titlelist country surveyyear authors date ppp baseyear cpibase cpisurvey ppp_calculated
+		local titlelist country surveyyear authors date ppp baseyear cpibase cpisurvey ppp_calculated ///
+				scenario group project
 		foreach title of local titlelist {
 			returncol `titlecol'
 			if "``title''"!="" & "``title''"!="-1" ///
 				local  titlesprint `titlesprint' `r(col)'`titlerow'=("``title''")
-			local titlecol = `titlecol' + 2
+			local titlecol = `titlecol' + 1
 		}
 
 		// Print version number on Excel sheet

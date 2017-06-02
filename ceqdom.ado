@@ -1,14 +1,17 @@
 * ADO FILE FOR DOMINANCE SHEET OF CEQ OUTPUT TABLES
 
 * VERSION AND NOTES (changes between versions described under CHANGES)
-*! v1.3 29OCT2016 For use with Jul 2016 version of Output Tables
-*! (beta version; please report any bugs), written by Rodrigo Aranda raranda@tulane.edu
+*! v1.4 01jun2017 For use with May 2017 version of Output Tables
+** v1.3 29OCT2016 For use with Jul 2016 version of Output Tables
+** (beta version; please report any bugs), written by Rodrigo Aranda raranda@tulane.edu
 
 * CHANGES
+** 06-01-2017 Add additional options to print meta-information
 * v1.1 added Version 13.0 for putexcel and fixed reps option bug
 * v1.2 Fixed bootstrapp test for no crossings
 * v1.3 Add set type double and data format check
 *      Change bootstrap ksmirnov to ksmorniv 
+
 
 * NOTES
 * Uses uses domineq command from DASP to see number of intersections between concentration/lorenz curves, if 
@@ -425,6 +428,9 @@ program define ceqdom, rclass sortpreserve;//General program for dominance;
 			COUNtry(string)
 			SURVeyyear(string) /* string because could be range of years */
 			AUTHors(string)
+			SCENario(string)
+			GRoup(string)
+			PROJect(string) 
 			*
 		];
 	
@@ -786,13 +792,14 @@ program define ceqdom, rclass sortpreserve;//General program for dominance;
 		local titlesprint;
 		local titlerow = 3;
 		local titlecol = 1;
-		local titlelist country surveyyear authors date ppp baseyear cpibase cpisurvey ppp_calculated;
+		local titlelist country surveyyear authors date ppp baseyear 
+				cpibase cpisurvey ppp_calculated scenario group project ;
 
 		foreach title of local titlelist {;
 			returncol `titlecol';
 			if "``title''"!="" & "``title''"!="-1" 
 				local  titlesprint `titlesprint' `r(col)'`titlerow'=("``title''");
-			local titlecol = `titlecol' + 2;
+			local titlecol = `titlecol' + 1;
 		};
 				qui putexcel `titlesprint'  using `"`using'"', modify keepcellformat sheet("`sheet'");
 

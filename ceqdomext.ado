@@ -1,13 +1,15 @@
 * ADO FILE FOR EXTENDED INCOME CONCEPTS DOMINANCE SHEET OF CEQ OUTPUT TABLES
 
 ** VERSION AND NOTES (changes between versions described under CHANGES)
-*! v1.5 06apr2017 For use with Oct 2016 version of Output Tables
+*! v1.6 01jun2017 For use with May 2017 version of Output Tables
+** v1.5 06apr2017 For use with Oct 2016 version of Output Tables
 ** v1.4 18mar2017 For use with Oct 2016 version of Output Tables
 ** v1.3 12jan2017 For use with Oct 2016 version of Output Tables
 ** v1.2 30sep2016 
-*! (beta version; please report any bugs), written by Rodrigo Aranda raranda@tulane.edu
+** (beta version; please report any bugs), written by Rodrigo Aranda raranda@tulane.edu
 
 ** CHANGES
+**   06-01-2017 Add additional options to print meta-information and including title inputs
 **   04-06-2017 Remove the warning about negative tax values
 **   03-18-2017 Change bootstrap ksmirnov to ksmorniv 
 ** 	 01-12-2017 Set the data type of all newly generated variables to be double
@@ -610,6 +612,9 @@ program define _ceqdomext, rclass
 			SURVeyyear(string) /** string because could be range of years */
 			AUTHors(string)		
 			BASEyear(real -1)
+			SCENario(string)
+			GRoup(string)
+			PROJect(string)
 			/** OTHER OPTIONS */			
 			NODIsplay
 			_version(string)
@@ -1278,7 +1283,15 @@ program define _ceqdomext, rclass
 		local trow = 7
 
 		local titlecol = 1
-		local titlelist country surveyyear authors date 
+		local titlelist country surveyyear authors date scenario group project
+
+		foreach title of local titlelist {;
+			returncol `titlecol';
+			if "``title''"!="" & "``title''"!="-1" 
+				local  titlesprint `titlesprint' `r(col)'`titlerow'=("``title''");
+			local titlecol = `titlecol' + 1;
+		};
+				qui putexcel `titlesprint'  using `"`using'"', modify keepcellformat sheet("`sheet'");
 
 		foreach y of local alllist {
 			local startcol = `startcol_o'

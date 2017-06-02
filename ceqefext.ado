@@ -1,9 +1,10 @@
 * ADO FILE FOR EFFECTIVENESS SHEET OF CEQ OUTPUT TABLES
 
 * VERSION AND NOTES (changes between versions described under CHANGES)
-*! v1.5 21may2017 For use with Apr 2017 version of Output Tables
+*! v1.6 01jun2017 For use with May 2017 version of Output Tables
+** v1.5 21may2017 For use with Apr 2017 version of Output Tables
 ** v1.4 03Jan2016 For use with Feb 2016 version of Output Tables
-*! (beta version; please report any bugs), written by Rodrigo Aranda raranda@tulane.edu
+** (beta version; please report any bugs), written by Rodrigo Aranda raranda@tulane.edu
 
 * CHANGES
 *  v1.1 Added Poverty options as well as cleaned some bugs 
@@ -14,7 +15,10 @@
 *		Change the way fiscal impoverishemnt was calculated
 *		Remove the warning about negative tax values
 *		Option flexibilty 
-
+*  v1.6 Add additional options to print meta-information
+*		Removed  titlelist at 2094 , title col at 2093,
+*		, titlerow at 2087, and titlesprint at 2086
+*		because they are never used and regenerated further down.		
 * NOTES
 * 
 
@@ -883,6 +887,9 @@ program define _ceqefext, rclass
 			AUTHors(string)
 			
 			BASEyear(real -1)
+			SCENario(string)
+			GRoup(string)
+			PROJect(string)
 			/* OTHER OPTIONS 
 			NODecile
 			NOGroup
@@ -2083,16 +2090,11 @@ program define _ceqefext, rclass
 
 		// Print information
 		local date `c(current_date)'
-		local titlesprint
-		local titlerow = 7
 		local trow1 = 9
 		local trow2 = 27
 		local trow3 = 45
 		local trow4 =82
 
-		local titlecol = 1
-		local titlelist country surveyyear authors date 
-		
 		// Print version number on Excel sheet
 		local versionprint A4=("Results produced by version `version' of `command' on `c(current_date)' at `c(current_time)'")
 
@@ -2129,13 +2131,14 @@ program define _ceqefext, rclass
 				local titlesprint;
 				local titlerow = 3;
 				local titlecol = 1;
-				local titlelist country surveyyear authors date ppp baseyear cpibase cpisurvey ppp_calculated;
+				local titlelist country surveyyear authors date ppp 
+				baseyear cpibase cpisurvey ppp_calculated scenario group scenario ;
 
 				foreach title of local titlelist {;
 				returncol `titlecol';
 				if "``title''"!="" & "``title''"!="-1" 
 				local  titlesprint `titlesprint' `r(col)'`titlerow'=("``title''");
-				local titlecol = `titlecol' + 2;
+				local titlecol = `titlecol' + 1;
 				};
 				qui putexcel `titlesprint'  `versionprint' `titles1`y'' `titles2`y'' `titles3`y'' `titles4`y'' using `"`using'"', modify keepcellformat sheet("`sheet`y''");
 

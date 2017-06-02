@@ -1,7 +1,8 @@
 ** ADO FILE FOR EXTENDED INCOME CONCEPTS SHEET OF CEQ MASTER WORKBOOK SECTION E
 
 ** VERSION AND NOTES (changes between versions described under CHANGES)
-*! v1.6 06apr2017 For use with Oct 2016 version of CEQ Master Workbook 
+*! v1.7 01jun2017 For use with May 2017 version of CEQ Master Workbook 
+** v1.6 06apr2017 For use with Oct 2016 version of CEQ Master Workbook 
 ** v1.5 08mar2017 For use with Oct 2016 version of CEQ Master Workbook 
 ** v1.4 12jan2017 For use with Oct 2016 version of CEQ Master Workbook
 ** v1.3 13nov2016 For use with Oct 2016 version of CEQ Master Workbook
@@ -11,6 +12,7 @@
 *! (beta version; please report any bugs), written by Sean Higgins sean.higgins@ceqinstitute.org
 
 ** CHANGES
+**   06-01-2017 Add additional options to print meta-information
 **   04-06-2017 Remove the warning about negative tax values
 **   03-08-2017 Remove the net in-kind transfers as a broad category in accordance with the instruction that users
 **				 supply net in-kind transfer variables to health/education/otherpublic options
@@ -262,6 +264,9 @@ program define _ceqextsig, rclass
 			AUTHors(string)
 			
 			BASEyear(real -1)
+			SCENario(string)
+			GRoup(string)
+			PROJect(string)
 			/** OTHER OPTIONS */
 			NODecile
 			NOGroup
@@ -1136,12 +1141,13 @@ program define _ceqextsig, rclass
 		local titlesprint
 		local titlerow = 3
 		local titlecol = 1
-		local titlelist country surveyyear authors date ppp baseyear cpibase cpisurvey ppp_calculated
+		local titlelist country surveyyear authors date ppp baseyear cpibase cpisurvey ppp_calculated ///
+				scenario group project
 		foreach title of local titlelist {
 			returncol `titlecol'
 			if "``title''"!="" & "``title''"!="-1" ///
 				local  titlesprint `titlesprint' `r(col)'`titlerow'=("``title''")
-			local titlecol = `titlecol' + 2
+			local titlecol = `titlecol' + 1
 		}
 		
 		// Export to Excel column titles

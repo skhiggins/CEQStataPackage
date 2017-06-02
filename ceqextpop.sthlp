@@ -78,6 +78,9 @@ for sheet "E2b. Population" of the CEQ Master Workbook 2016
 {synopt :{opth surv:eyyear(string)}}Year of survey{p_end}
 {synopt :{opth auth:ors(string)}}Authors of study{p_end}
 {synopt :{opth base:year(real)}}Base year of PPP conversion (e.g., 2005, 2011){p_end}
+{synopt :{opth scen:ario(string)}}Scenario{p_end}
+{synopt :{opth gr:oup(string)}}Group{p_end}
+{synopt :{opth proj:ect(string)}}Project{p_end}
 {synopt :{opth sheetm(string)}}Name of sheet to write results ranking by market income. Default is "E2b.m Ext. Population"{p_end}
 {synopt :{opth sheetmp(string)}}Name of sheet to write results ranking by market income plus pensions. Default is "E2b.m+p Ext. Population"{p_end}
 {synopt :{opth sheetn(string)}}Name of sheet to write results ranking by net market income. Default is "E2b.n Ext. Population"{p_end}

@@ -1,7 +1,8 @@
 ** ADO FILE FOR GRAPHS IN CEQ MASTER WORKBOOK SECTION E
 
 ** VERSION AND NOTES (changes between versions described under CHANGES)
-*!  v2.2 08mar2017 
+*!  v2.3 01jun2017 
+**  v2.2 08mar2017 
 **  v2.1 12jan2017 
 **  v2.0 30oct2016 
 **  v1.9 29sep2016 
@@ -14,9 +15,10 @@
 **  v1.2 10oct2015 
 **  v1.1 06oct2015 
 **  v1.0 12sep2015 
-*! (beta version; please report any bugs), written by Sean Higgins sean.higgins@ceqinstitute.org
+** (beta version; please report any bugs), written by Sean Higgins sean.higgins@ceqinstitute.org
 
 ** CHANGES
+**  06-01-2017 Add additional options to print meta-information
 **  03-08-2017 Remove the net in-kind transfers as a broad category in accordance with the instruction that users
 **				 supply net in-kind transfer variables to health/education/otherpublic options in ceqgraph_conc
 ** 	01-12-2017 Set the data type of all newly generated variables to be double

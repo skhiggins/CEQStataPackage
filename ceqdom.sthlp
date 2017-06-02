@@ -38,6 +38,9 @@
 {synopt :{opth coun:try(string)}}Country{p_end}
 {synopt :{opth surv:eyyear(string)}}Year of survey{p_end}
 {synopt :{opth auth:ors(string)}}Authors of study{p_end}
+{synopt :{opth scen:ario(string)}}Scenario{p_end}
+{synopt :{opth Gr:oup(string)}}Group{p_end}
+{synopt :{opth proj:ect(string)}}Project{p_end}
 {synopt :{opt open}}Automatically open CEQ Master Workbook with new results added{p_end}
 {synoptline}		
 {p 4 6 2}

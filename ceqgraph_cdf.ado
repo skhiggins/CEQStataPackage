@@ -54,6 +54,9 @@ capture program define ceqgraph_cdf
 			SURVeyyear(string) /** string because could be range of years **/
 			AUTHors(string)
 			BASEyear(real -1)
+			SCENario(string)
+			GRoup(string)
+			PROJect(string)
 			/** EXPORTING TO CEQ MASTER WORKBOOK: */
 			sheet(string)
 			OPEN
@@ -407,12 +410,13 @@ capture program define ceqgraph_cdf
 			local titlesprint
 			local titlerow = 3
 			local titlecol = 1
-			local titlelist country surveyyear authors date ppp baseyear cpibase cpisurvey ppp_calculated
+			local titlelist country surveyyear authors date ppp baseyear cpibase cpisurvey ppp_calculated ///
+					scenario group project
 			foreach title of local titlelist {
 				returncol `titlecol'
 				if "``title''"!="" & "``title''"!="-1" ///
 					local  titlesprint `titlesprint' `r(col)'`titlerow'=("``title''")
-				local titlecol = `titlecol' + 2
+				local titlecol = `titlecol' + 1
 			}
 		
 				

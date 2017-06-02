@@ -1,7 +1,8 @@
 ** ADO FILE FOR FISCAL INTERVENTIONS SHEET OF CEQ MASTER WORKBOOK SECTION E
 
 ** VERSION AND NOTES (changes between versions described under CHANGES)
-*! v2.0 23apr2017 For use with Oct 2016 version of CEQ Master Workbook 2017
+*! v2.1 02jun2017 For use with May 2017 version of CEQ Master Workbook 2017
+** v2.0 23apr2017 For use with Oct 2016 version of CEQ Master Workbook 2017
 ** v1.7 06apr2017 For use with Oct 2016 version of CEQ Master Workbook 2017
 ** v1.6 03mar2017 For use with Sep 2016 version of CEQ Master Workbook 2016
 ** v1.5 06feb2017 For use with Sep 2016 version of CEQ Master Workbook 2016
@@ -13,6 +14,7 @@
 *! (beta version; please report any bugs), written by Sean Higgins sean.higgins@ceqinstitute.org
 
 ** CHANGES
+**   06-01-2017 Add additional options to print meta-information
 **   04-23-2017 Change variable used to calculate beneficiary household and direct and indirect beneficiaries
 **				Change the if condition for target from == 1 to >0 to account for household-level data
 **   04-06-2017 Add warning that users need to specify fiscal intervention option for target results
@@ -138,6 +140,9 @@ program define ceqtarget, rclass
 			SURVeyyear(string) /* string because could be range of years */
 			AUTHors(string)
 			BASEyear(real -1)
+			SCENario(string)
+			GRoup(string)
+			PROJect(string)
 			/* OTHER OPTIONS */
 
 			/* VARIABLE MODIFICATON */
@@ -1553,12 +1558,13 @@ program define ceqtarget, rclass
 		local titlesprint
 		local titlerow = 3
 		local titlecol = 1
-		local titlelist country surveyyear authors date ppp baseyear cpibase cpisurvey ppp_calculated
+		local titlelist country surveyyear authors date ppp baseyear cpibase cpisurvey ppp_calculated ///
+				scenario group project
 		foreach title of local titlelist {
 			returncol `titlecol'
 			if "``title''"!="" & "``title''"!="-1" ///
 				local  titlesprint `titlesprint' `r(col)'`titlerow'=("``title''")
-			local titlecol = `titlecol' + 2
+			local titlecol = `titlecol' + 1
 		}
 
 		// Print version number on Excel sheet

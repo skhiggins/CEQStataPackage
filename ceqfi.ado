@@ -2,7 +2,8 @@
 **  OF CEQ MASTER WORKBOOK PART II
 
 ** VERSION AND NOTES (changes between versions described under CHANGES)
-*! v3.2 28mar2017 For use with Oct 2016 version of Output Tables
+*! v3.3 01jun2017 For use with May 2017 version of Output Tables
+** v3.2 28mar2017 For use with Oct 2016 version of Output Tables
 ** v3.1 06feb2017 For use with Oct 2016 version of Output Tables
 ** v3.0 03feb2017 For use with Oct 2016 version of Output Tables
 ** v2.6 12jan2017 For use with Oct 2016 version of Output Tables
@@ -172,6 +173,9 @@ program define ceqfi, rclass
 			SURVeyyear(string) /** string because could be range of years */
 			AUTHors(string)
 			BASEyear(real -1)
+			SCENario(string)
+			GRoup(string)
+			PROJect(string)
 			/** OTHER OPTIONS (left all even though NOBin is only relevant one, 
 				just to avoid error message if they accidentally specify others as well) */
 			NODecile
@@ -673,12 +677,13 @@ program define ceqfi, rclass
 		local titlesprint
 		local titlerow = 3
 		local titlecol = 1
-		local titlelist country surveyyear authors date ppp baseyear cpibase cpisurvey ppp_calculated
+		local titlelist country surveyyear authors date ppp baseyear cpibase cpisurvey ppp_calculated ///
+				scenario group project
 		foreach title of local titlelist {
 			returncol `titlecol'
 			if "``title''"!="" & "``title''"!="-1" ///
 				local  titlesprint `titlesprint' `r(col)'`titlerow'=("``title''")
-			local titlecol = `titlecol' + 2
+			local titlecol = `titlecol' + 1
 		}
 
 		// Print version number on Excel sheet
