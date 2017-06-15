@@ -222,7 +222,7 @@ program define ceqextend
 			Consumable(varname)
 			Final(varname)
 			OPEN
-			*
+			* 
 		]
 	;
 	#delimit cr
@@ -397,15 +397,13 @@ program define _ceqextend, rclass
 			
 			BASEyear(real -1)
 			SCENario(string)
-			GRoup(string)
+			GROUp(string)
 			PROJect(string)
-			/** OTHER OPTIONS */
-			NODecile
-			NOGroup
-			NOCentile
-			NOBin
 			
-			NODIsplay
+			/** OTHER OPTIONS */
+			
+			// Other options from old program move to second syntax line
+			
 			_version(string)
 			/** DROP MISSING VALUES */
 			/*IGNOREMissing in the aditional options below to avoid too many options problem*/
@@ -416,7 +414,8 @@ program define _ceqextend, rclass
 	if "`exp'"!="" local pw "[`weight'=`exp']"  // tp get around Stata option limit
 	if `"`using'"'!="" local using "`using'"
 	local 0  `"`using' `if' `in' `pw', `options'"'   //" 
-    syntax [if] [in] [using/] [pweight/] [, IGNOREMissing OPEN NEGATIVES]
+	di `"`options'"'
+    syntax [if] [in] [using/] [pweight/] [, IGNOREMissing OPEN NEGATIVES NODecile NOGroup NOCentile NOBin NODIsplay]
 	
 	***********
 	** LOCALS *
@@ -836,7 +835,7 @@ program define _ceqextend, rclass
 		** exit 198
 	** }
 	if "`nodecile'"=="" local _dec dec
-	if "`nogroup'"=="" & (`_ppp') local _group group
+	if "`nogroup'"=="" & (`_ppp') local _group2 group2
 	if "`nocentile'"=="" local _cent cent
 	if "`nobin'"=="" & (`_ppp') local _bin bin
 	
@@ -1116,13 +1115,13 @@ program define _ceqextend, rclass
 					qui replace ``v'_bin' = 1 if ``v'_ppp' < 0
 				}
 				if "`nogroup'"=="" {
-					tempvar `v'_group
-					qui gen double ``v'_group' = . 
+					tempvar `v'_group2
+					qui gen double ``v'_group2' = . 
 					forval gp=1/6 {
-						qui replace ``v'_group' = `gp' if ``v'_ppp'>=`cut`=`gp'-1'' & ``v'_ppp'<`cut`gp''
+						qui replace ``v'_group2' = `gp' if ``v'_ppp'>=`cut`=`gp'-1'' & ``v'_ppp'<`cut`gp''
 						// this works because I set `cut0' = 0 and `cut6' = infinity
 					}
-					qui replace ``v'_group' = 1 if ``v'_ppp' < 0
+					qui replace ``v'_group2' = 1 if ``v'_ppp' < 0
 				}
 			}
 			
@@ -1160,13 +1159,13 @@ program define _ceqextend, rclass
 					qui replace ``v'_bin' = 1 if ``v'_ppp' < 0
 				}
 				if "`nogroup'"=="" {
-					tempvar `v'_group
-					qui gen ``v'_group' = . 
+					tempvar `v'_group2
+					qui gen ``v'_group2' = . 
 					forval gp=1/6 {
-						qui replace ``v'_group' = `gp' if ``v'_ppp'>=`cut`=`gp'-1'' & ``v'_ppp'<`cut`gp''
+						qui replace ``v'_group2' = `gp' if ``v'_ppp'>=`cut`=`gp'-1'' & ``v'_ppp'<`cut`gp''
 						// this works because I set `cut0' = 0 and `cut6' = infinity
 					}
-					qui replace ``v'_group' = 1 if ``v'_ppp' < 0
+					qui replace ``v'_group2' = 1 if ``v'_ppp' < 0
 				}
 			}
 			
@@ -1177,7 +1176,7 @@ program define _ceqextend, rclass
 		}
 	}
 	
-	local group = 6
+	local group2 = 6
 	local dec = 10
 	local cent = 100
 	if `_ppp' & "`nobin'"=="" local bin = `count_bins' // need if condition here b/c o.w. `count_bins' doesn't exist	
@@ -1186,7 +1185,7 @@ program define _ceqextend, rclass
 	** CALCULATE RESULTS *
 	**********************
 	// Preliminary matrices 
-	foreach x in `_dec' `_group' `_cent' `_bin' { 
+	foreach x in `_dec' `_group2' `_cent' `_bin' { 
 		mata: J`x' = J(1,``x'',1) // row vector of 1s to get column sums 
 		mata: tri`x' = lowertriangle(J(`=``x''+1',`=``x''+1',1)) // for cumulative shares
 		mata: L_totLCU_`x' = J(``x'',`incomes',.)
@@ -1367,7 +1366,7 @@ program define _ceqextend, rclass
 
 			// Rest of sheet
 			// Note: mata used in some places below to vectorize things and increase efficiency
-			foreach x in `_dec' `_group' {
+			foreach x in `_dec' `_group2' {
 				** create empty mata matrices for results
 				foreach ss in totLCU pcLCU totPPP pcPPP {
 					mata: E`y'_`ss'_`x' = J(``x'',`cols',.)
@@ -1470,7 +1469,7 @@ program define _ceqextend, rclass
 		local titlesprint
 		local titlerow = 3
 		local titlecol = 1
-		local titlelist country surveyyear authors date ppp baseyear cpibase cpisurvey ppp_calculated ///
+		local titlelist country surveyyear authors date ppp baseyear cpibase cpisurvey ppp_calculated  ///
 				scenario group project
 		foreach title of local titlelist {
 			returncol `titlecol'
@@ -1490,8 +1489,8 @@ program define _ceqextend, rclass
 		local rfrontmatter = 9
 		local rconccoef = 52
 		local rdec   = 62 // row where decile results start
-		local rgroup = `rdec' + `dec' + `vertincrement'
-		local rcent  = `rgroup' + `group' + `vertincrement'
+		local rgroup2 = `rdec' + `dec' + `vertincrement'
+		local rcent  = `rgroup2' + `group2' + `vertincrement'
 		local rbin   = `rcent' + `cent' + `vertincrement'
 		local startpop = `startcol_o'
 		foreach y of local alllist {
@@ -1499,7 +1498,7 @@ program define _ceqextend, rclass
 				returncol `startpop'
 				local resultset`y' `resultset`y'' `r(col)'`rfrontmatter'=matrix(frontmatter`y')
 				local resultset`y' `resultset`y'' `r(col)'`rconccoef'=matrix(conccoef`y')
-				foreach x in `_dec' `_group' {
+				foreach x in `_dec' `_group2' {
 					local startcol = `startcol_o'
 					foreach ss of local supercols {
 						cap confirm matrix E`y'_`ss'_`x' // to deal with fi_`v' for ``v''==""
@@ -1531,7 +1530,7 @@ program define _ceqextend, rclass
 			local _`x'col `r(col)'
 		}
 		forval i=1/6 {
-			local therow = `rgroup' + `i' - 1
+			local therow = `rgroup2' + `i' - 1
 			if `i'==1 { 
 				local cutoffs `cutoffs' `_hicol'`therow'=(`cut`i'')
 			}
@@ -1579,7 +1578,7 @@ program define _ceqextend, rclass
 		}	
 		foreach v of local alllist {
 			if "``v''"!="" {
-				foreach x in `_dec' `_group' {
+				foreach x in `_dec' `_group2' {
 					local startcol = `startcol_o'
 					local mattitles`v'
 					local mattrow = `r`x'' - 1 // one row above where the results start
@@ -1604,6 +1603,7 @@ program define _ceqextend, rclass
 		// putexcel
 		foreach y of local alllist {
 			if "``y''"!="" {
+				di `" `titlesprint' "'
 				qui putexcel `titlesprint' `versionprint' `titles`y'' `mattitles`y'' `resultset`y'' `cutoffs' `warningprint' using `"`using'"', modify keepcellformat sheet("`sheet`y''")
 				qui di "
 			}

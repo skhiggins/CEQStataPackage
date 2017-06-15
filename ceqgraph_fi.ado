@@ -113,7 +113,7 @@ capture program define ceqgraph_fi
 			AUTHors(string)
 			BASEyear(real -1)
 			SCENario(string)
-			GRoup(string)
+			GROUp(string)
 			PROJect(string)
 			/** EXPORTING TO CEQ MASTER WORKBOOK: */
 			sheet(string)

@@ -613,7 +613,7 @@ program define _ceqdomext, rclass
 			AUTHors(string)		
 			BASEyear(real -1)
 			SCENario(string)
-			GRoup(string)
+			GROUp(string)
 			PROJect(string)
 			/** OTHER OPTIONS */			
 			NODIsplay
@@ -1170,9 +1170,9 @@ program define _ceqdomext, rclass
 	
 	*****Lorenz curves;
 	local rowc=0;
-	noisily di in red "`alllist'";
+	*noisily di in red "`alllist'";
 	foreach y of local alllist {;
-	noisily di in red "``y''";
+	*noisily di in red "``y''";
 	};
 
 	foreach y of local alllist {;
@@ -1186,12 +1186,12 @@ program define _ceqdomext, rclass
 				foreach ext of local marg`y' {;
 			local col=`col'+1;
 				local row = `row'+1;			
-				noisily di in red "``y'' `ext'";
-				noisily sum ``y'' `ext';
+				*noisily di in red "``y'' `ext'";
+				qui sum ``y'' `ext';
 				
 				*Estimates for INCOME;
 				
-				noisily domineq ``y'' `ext', rank1(``y'') rank2(`ext');
+				qui domineq ``y'' `ext', rank1(``y'') rank2(`ext');
 				matrix inc_`y'[1,`col'] = r(inters);
 				local col=`col'+1;
 				
@@ -1219,7 +1219,7 @@ program define _ceqdomext, rclass
 				else{;
 					matrix inc_`y'[1,`col']= .;
 				};
-				noisily matrix list inc_`y';
+				*noisily matrix list inc_`y';
 			};
 			
 				*Results for CONCENTRATION CURVES;
@@ -1259,8 +1259,8 @@ program define _ceqdomext, rclass
 							matrix conc_`y'[`rowc',`colc']= .;
 
 						};
-						di in red "INCOMEE `y', row `rowc' col `colc' z `z'";
-				noisily matrix list conc_`y';
+						*di in red "INCOMEE `y', row `rowc' col `colc' z `z'";
+				*noisily matrix list conc_`y';
 				};
 				};
 			};
@@ -1279,26 +1279,25 @@ program define _ceqdomext, rclass
 		// Print information
 		local date `c(current_date)'
 		local titlesprint
-		local titlerow = 7
+		local titlerow = 3
 		local trow = 7
-
 		local titlecol = 1
 		local titlelist country surveyyear authors date scenario group project
-
-		foreach title of local titlelist {;
-			returncol `titlecol';
-			if "``title''"!="" & "``title''"!="-1" 
-				local  titlesprint `titlesprint' `r(col)'`titlerow'=("``title''");
-			local titlecol = `titlecol' + 1;
-		};
-				qui putexcel `titlesprint'  using `"`using'"', modify keepcellformat sheet("`sheet'");
-
+		
+		foreach title of local titlelist {
+			returncol `titlecol'
+			if "``title''"!="" & "``title''"!="-1"  ///
+				local  titlesprint `titlesprint' `r(col)'`titlerow'=("``title''")
+			local titlecol = `titlecol' + 1
+			
+		}
+		
 		foreach y of local alllist {
 			local startcol = `startcol_o'
 			local titles`y'
 			if "``y''"!="" {
-				noisily matrix list inc_`y'
-				noisily matrix list conc_`y'
+				*noisily matrix list inc_`y'
+				*noisily matrix list conc_`y'
 
 				putexcel B9=matrix(inc_`y') using `"`using'"',keepcellformat modify sheet("`sheet`y''")
 				
@@ -1314,7 +1313,7 @@ program define _ceqdomext, rclass
 						local startcol=`startcol'+1
 					}
 				#delimit;
-				set trace on;
+				*di `" `titlesprint' `versionprint' `titles`y'' "' ;
 				qui putexcel `titlesprint' `versionprint' `titles`y'' 
 				using `"`using'"', modify keepcellformat sheet("`sheet`y''");
 				#delimit cr

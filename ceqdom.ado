@@ -429,7 +429,7 @@ program define ceqdom, rclass sortpreserve;//General program for dominance;
 			SURVeyyear(string) /* string because could be range of years */
 			AUTHors(string)
 			SCENario(string)
-			GRoup(string)
+			GROUp(string)
 			PROJect(string) 
 			*
 		];
@@ -629,13 +629,14 @@ program define ceqdom, rclass sortpreserve;//General program for dominance;
 	};
 	
 	* negative incomes;
+	*set trace on
 	foreach v of local alllist {;
 		if "``v''"!="" {;
 			qui count if ``v''<0; 
 			if r(N) noisily `dit' "Warning: `r(N)' negative values of ``v''";
 		};
 	};	
-	
+	*set trace off
 			*******General Options*********;
 	if `"`weight'"' != "" {;
 		local wgt `"[`weight'`exp']"';
@@ -678,10 +679,11 @@ program define ceqdom, rclass sortpreserve;//General program for dominance;
 	foreach y of local 	alllist{;
 	local a=`a'+1;
 	local b=0;
+		if "``y''"!=""{;
 		foreach z of local alllist{;
 			if `_`y''>`_`z''{;
 			local b=`b'+1;
-			if "`z'"!=""{;
+			if "``z''"!=""{;
 			domineq ``y'' ``z'', rank1(``y'') rank2(``z'');
 			matrix inc_cross[`_`y'',`_`z''] = r(inters);
 			
@@ -709,12 +711,12 @@ program define ceqdom, rclass sortpreserve;//General program for dominance;
 			*};
 			};
 			};
+		} ;
 		};
 		};
 	
 	
 	};
-	
 	*****Concentration curves;
 	local a=0;
 	
@@ -722,10 +724,11 @@ program define ceqdom, rclass sortpreserve;//General program for dominance;
 	foreach y of local 	alllist{;
 	local a=`a'+1;
 	local b=0;
+	if "``y''"!=""{;
 		foreach z of local alllist{;
 		if `_`y''>`_`z''{;
 			local b=`b'+1;
-			if "`z'"!=""{;
+			if "``z''"!=""{;
 			domineq ``y'' ``z'', rank1(``w'') rank2(``w'');
 			matrix `w'_cross[`_`y'',`_`z''] = r(inters);
 			
@@ -754,6 +757,7 @@ program define ceqdom, rclass sortpreserve;//General program for dominance;
 				};
 			*};
 			};
+		};
 		};
 		};
 	
@@ -826,6 +830,6 @@ program define ceqdom, rclass sortpreserve;//General program for dominance;
 	************;
 	quietly putexcel clear;
 	restore;
-};
+
 	
 	end;	// END ceqdom;

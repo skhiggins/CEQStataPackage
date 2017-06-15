@@ -174,7 +174,7 @@ program define ceqfi, rclass
 			AUTHors(string)
 			BASEyear(real -1)
 			SCENario(string)
-			GRoup(string)
+			GROUp(string)
 			PROJect(string)
 			/** OTHER OPTIONS (left all even though NOBin is only relevant one, 
 				just to avoid error message if they accidentally specify others as well) */
@@ -335,7 +335,7 @@ program define ceqfi, rclass
 	}
 	
 	if "`nodecile'"=="" local _dec dec
-	if "`nogroup'"=="" local _group group
+	if "`nogroup'"=="" local _group2 group2
 	if "`nocentile'"=="" local _cent cent
 	if "`nobin'"=="" local _bin bin
 	
@@ -534,7 +534,7 @@ program define ceqfi, rclass
 		}
 	}
 	
-	local group = 6
+	local group2 = 6
 	if `_ppp' & "`nobin'"=="" local bin = `count_bins' // need if condition here b/c o.w. `count_bins' doesn't exist	
 	
 	**********************

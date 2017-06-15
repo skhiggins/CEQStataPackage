@@ -89,7 +89,7 @@ program define ceqeduc, rclass
 			AUTHors(string)
 			BASEyear(real -1)
 			SCENario(string)
-			GRoup(string)
+			GROUp(string)
 			PROJect(string)
 			/* DROP MISSING VALUES */
 			IGNOREMissing
@@ -279,7 +279,7 @@ program define ceqeduc, rclass
 		exit 198
 	}
 	if "`nodecile'"=="" local _dec dec
-	if "`nogroup'"=="" local _group group
+	if "`nogroup'"=="" local _group2 group2
 	if "`nocentile'"=="" local _cent cent
 	if "`nobin'"=="" local _bin bin
 	
@@ -412,18 +412,18 @@ program define ceqeduc, rclass
 		if "``v''"!="" {
 			** groups
 			if `_ppp' {
-				tempvar `v'_group
-				qui gen ``v'_group' = . 
+				tempvar `v'_group2
+				qui gen ``v'_group2' = . 
 				forval gp=1/6 {
-					qui replace ``v'_group' = `gp' if ``v'_ppp'>=`cut`=`gp'-1'' & ``v'_ppp'<`cut`gp''
+					qui replace ``v'_group2' = `gp' if ``v'_ppp'>=`cut`=`gp'-1'' & ``v'_ppp'<`cut`gp''
 					// this works because I set `cut0' = 0 and `cut6' = infinity
 				}
-				qui replace ``v'_group' = 1 if ``v'_ppp' < 0
+				qui replace ``v'_group2' = 1 if ``v'_ppp' < 0
 			}
 		}
 	}
 	
-	local group = 6
+	local group2 = 6
 
 	**********************
 	** CALCULATE RESULTS *
@@ -445,13 +445,13 @@ program define ceqeduc, rclass
 					if "``educ''"=="" continue
 					
 					// Target population
-					qui summ `one' if ``educ'age'==1 & ``v'_group'==`gp' `aw'
+					qui summ `one' if ``educ'age'==1 & ``v'_group2'==`gp' `aw'
 					matrix ``v'_target'[`ee',`gp'] = r(sum)
 					
 					// Total attending public/private
 					forval pp=0/1 {
 						qui summ `one' if ``educ''==1 & `public'==`pp' ///
-							& ``v'_group'==`gp' `aw'
+							& ``v'_group2'==`gp' `aw'
 						matrix ``v'_total_`_`pp'_''[`ee',`gp'] = r(sum)
 							// `_`pp'_' is "pri" or "pub"
 					}
@@ -459,7 +459,7 @@ program define ceqeduc, rclass
 					// Target attending public/private
 					forval pp=0/1 {
 						qui summ `one' if ``educ'age'==1 & `public'==`pp' /// 
-							& ``v'_group'==`gp'  & ``educ''==1  `aw' 
+							& ``v'_group2'==`gp'  & ``educ''==1  `aw' 
 						matrix ``v'_target_`_`pp'_''[`ee',`gp'] = r(sum)
 					}
 					

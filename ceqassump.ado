@@ -180,7 +180,7 @@ program define ceqassump, rclass
 			AUTHors(string)
 			BASEyear(real -1)
 			SCENario(string)
-			GRoup(string)
+			GROUp(string)
 			PROJect(string)
 			/* OTHER OPTIONS */
 			NODecile
@@ -495,10 +495,10 @@ program define ceqassump, rclass
 		** groups
 		if `_ppp' {
 			if "`nogroup'"=="" {
-				tempvar `v'_group
-				qui gen ``v'_group' = . 
+				tempvar `v'_group2
+				qui gen ``v'_group2' = . 
 				forval gp=1/6 {
-					qui replace ``v'_group' = `gp' if ``v'_ppp'>=`cut`=`gp'-1'' & ``v'_ppp'<`cut`gp''
+					qui replace ``v'_group2' = `gp' if ``v'_ppp'>=`cut`=`gp'-1'' & ``v'_ppp'<`cut`gp''
 					// this works because I set `cut0' = 0 and `cut6' = infinity
 				}
 			}
@@ -509,7 +509,7 @@ program define ceqassump, rclass
 		if "`nodecile'"==""  qui quantiles `v' `aw', gen(``v'_dec') n(10)   stable
 	}
 	
-	local group = 6
+	local group2 = 6
 	local dec = 10
 	
 	**********************
@@ -599,7 +599,7 @@ program define ceqassump, rclass
 	
 	// Rest of sheet
 	// Note: mata used in some places below to vectorize things and increase efficiency
-	foreach x in `_dec' `_group' { // separated _dec _group from _bin _centile since we decided to only have LCU total by bin and centile
+	foreach x in `_dec' `_group2' { // separated _dec _group from _bin _centile since we decided to only have LCU total by bin and centile
 		mata: J`x' = J(1,``x'',1) // row vector of 1s to get column sums
 		** create empty mata matrices for results
 		foreach ss in totLCU {
@@ -629,7 +629,7 @@ program define ceqassump, rclass
 	** PRINT RESULTS **
 	*******************
 	local mat_list "frontmatter" 
-	foreach x in `_dec' `_group' {
+	foreach x in `_dec' `_group2' {
 		local mat_list `mat_list' L_totLCU_`x'
 	}
 	local colname_list ""
@@ -673,11 +673,11 @@ program define ceqassump, rclass
 		local resultset
 		local rfrontmatter = 9
 		local rdec   = 43 // row where decile results start
-		local rgroup = `rdec' + `dec' + `vertincrement' + 1
+		local rgroup2 = `rdec' + `dec' + `vertincrement' + 1
 		local startpop = `startcol_o'
 		returncol `startpop'
 		local resultset `resultset' `r(col)'`rfrontmatter'=matrix(frontmatter)
-		foreach x in `_dec' `_group' {
+		foreach x in `_dec' `_group2' {
 			local startcol = `startcol_o'
 			foreach ss in totLCU {
 				returncol `startcol'
@@ -705,7 +705,7 @@ program define ceqassump, rclass
 			local _`x'col `r(col)'
 		}
 		forval i=1/6 {
-			local therow = `rgroup' + `i'  
+			local therow = `rgroup2' + `i'  
 			local cutoffs `cutoffs' `_lowcol'`therow'=(`cut`=`i'-1'') `_hicol'`therow'=(`cut`i'')
 		}
 		local rpovlines = 16 
@@ -736,7 +736,7 @@ program define ceqassump, rclass
 	
 	// In return list
 	return matrix frontmatter = frontmatter
-	foreach x in `_dec' `_group' {
+	foreach x in `_dec' `_group2' {
 		foreach ss in totLCU {
 			cap confirm matrix L_`ss'_`x'
 			if !_rc {

@@ -178,7 +178,7 @@ program define ceqconc, rclass
 			AUTHors(string)
 			BASEyear(real -1)
 			SCENario(string)
-			GRoup(string)
+			GROUp(string)
 			PROJect(string)
 			/** OTHER OPTIONS */
 			NODecile
@@ -431,7 +431,7 @@ program define ceqconc, rclass
 		exit 198
 	}
 	if "`nodecile'"=="" local _dec dec
-	if "`nogroup'"=="" & (`_ppp') local _group group
+	if "`nogroup'"=="" & (`_ppp') local _group2 group2
 	if "`nocentile'"=="" local _cent cent
 	if "`nobin'"=="" & (`_ppp') local _bin bin
 	
@@ -520,13 +520,13 @@ program define ceqconc, rclass
 					qui replace ``v'_bin' = 1 if ``v'_ppp' < 0
 				}
 				if "`nogroup'"=="" {
-					tempvar `v'_group
-					qui gen ``v'_group' = . 
+					tempvar `v'_group2
+					qui gen ``v'_group2' = . 
 					forval gp=1/6 {
-						qui replace ``v'_group' = `gp' if ``v'_ppp'>=`cut`=`gp'-1'' & ``v'_ppp'<`cut`gp''
+						qui replace ``v'_group2' = `gp' if ``v'_ppp'>=`cut`=`gp'-1'' & ``v'_ppp'<`cut`gp''
 						// this works because I set `cut0' = 0 and `cut6' = infinity
 					}
-					qui replace ``v'_group' = 1 if ``v'_ppp' < 0
+					qui replace ``v'_group2' = 1 if ``v'_ppp' < 0
 				}
 			}
 			
@@ -537,7 +537,7 @@ program define ceqconc, rclass
 		}
 	}
 	
-	local group = 6
+	local group2 = 6
 	local dec = 10
 	local cent = 100
 	if `_ppp' & "`nobin'"=="" local bin = `count_bins' // need if condition here b/c o.w. `count_bins' doesn't exist	
@@ -626,13 +626,13 @@ program define ceqconc, rclass
 	
 	// Rest of sheet
 	// Note: mata used in some places below to vectorize things and increase efficiency
-	foreach x in `_dec' `_group' `_cent' `_bin' {
+	foreach x in `_dec' `_group2' `_cent' `_bin' {
 		mata: J`x' = J(1,``x'',1) // row vector of 1s to get column sums
 		mata: tri`x' = lowertriangle(J(`=``x''+1',`=``x''+1',1)) // for cumulative shares
 	}
 	foreach vrank of local alllist {
 		if "``vrank''"!="" {
-			foreach x in `_dec' `_group' {
+			foreach x in `_dec' `_group2' {
 				** create empty mata matrices for results
 				foreach ss in totLCU pcLCU totPPP pcPPP {
 					mata: C`vrank'_`ss'_`x' = J(``x'',`cols',.)
@@ -641,11 +641,11 @@ program define ceqconc, rclass
 					mata: C`vrank'_`ss'_`x' = J(`=``x''+1',`cols',.)
 				}
 				foreach v of local alllist {
-					if "``v''"!="" {	
+					if "``v''"!=""  {	
 						forval i=1/``x'' { // 1/100 for centiles, etc.
 							** LORENZ
 							// Lorenz LCU
-							qui summ ``v'' if ``vrank'_`x''==`i' `aw'
+							qui summ ``v'' if ``vrank'_`x'' == `i' `aw'
 							if r(sum)==0 local mean = 0
 							else local mean = `r(mean)'
 							mata: C`vrank'_totLCU_`x'[`i',`_`v''] = `r(sum)'
@@ -656,7 +656,8 @@ program define ceqconc, rclass
 								if r(sum)==0 local mean = 0
 								else local mean = `r(mean)'
 								mata: C`vrank'_totPPP_`x'[`i',`_`v''] = `r(sum)'
-								mata:  C`vrank'_pcPPP_`x'[`i',`_`v''] = `mean'						
+								mata:  C`vrank'_pcPPP_`x'[`i',`_`v''] = `mean'	
+								
 							}
 						}				
 					}
@@ -713,7 +714,6 @@ program define ceqconc, rclass
 			}
 		}
 	}
-
 	*****************
 	** SAVE RESULTS *
 	*****************
@@ -730,8 +730,8 @@ program define ceqconc, rclass
 		local rfrontmatter_constant = 9
 		local rfrontmatter_specific = `rfrontmatter_constant' + 3
 		local rdec   = 18 // row where decile results start
-		local rgroup = `rdec' + `dec' + `vertincrement'
-		local rcent  = `rgroup' + `group' + `vertincrement'
+		local rgroup2 = `rdec' + `dec' + `vertincrement'
+		local rcent  = `rgroup2' + `group2' + `vertincrement'
 		local rbin   = `rcent' + `cent' + `vertincrement'
 		foreach vrank of local alllist {
 			if "``vrank''"!="" {
@@ -739,7 +739,7 @@ program define ceqconc, rclass
 				returncol `startpop'
 				local resultset`vrank' `resultset`vrank'' `r(col)'`rfrontmatter_constant'=matrix(frontmatter_constant)
 				local resultset`vrank' `resultset`vrank'' `r(col)'`rfrontmatter_specific'=matrix(frontmatter`vrank')
-				foreach x in `_dec' `_group' {
+				foreach x in `_dec' `_group2' {
 					local startcol = `startcol_o'
 					foreach ss in `supercols' fi_`vrank' {
 						cap confirm matrix C`vrank'_`ss'_`x' // to deal with fi_`v' for ``v''==""
@@ -788,7 +788,7 @@ program define ceqconc, rclass
 			local _`x'col `r(col)'
 		}
 		forval i=1/6 {
-			local therow = `rgroup' + `i' - 1
+			local therow = `rgroup2' + `i' - 1
 			returncol `lowcol'
 			if `i'==1 { 
 				local cutoffs `cutoffs' `_hicol'`therow'=(`cut`i'')
@@ -825,7 +825,7 @@ program define ceqconc, rclass
 	// In return list
 	foreach vrank of local alllist {
 		if "``vrank''"!="" {
-			foreach x in `_dec' `_group' {
+			foreach x in `_dec' `_group2' {
 				foreach ss in `supercols' fi_`vrank' {
 					return matrix C`vrank'_`ss'_`x' = C`vrank'_`ss'_`x'
 					cap matrix drop C`vrank'_`ss'_`x'

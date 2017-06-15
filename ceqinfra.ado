@@ -78,7 +78,7 @@ program define ceqinfra, rclass
 			AUTHors(string)
 			BASEyear(real -1)
 			SCENario(string)
-			GRoup(string)
+			GROUp(string)
 			PROJect(string)
 			/* OTHER OPTIONS */
 			NODecile
@@ -395,7 +395,7 @@ program define ceqinfra, rclass
 		exit 198
 	}
 	if "`nodecile'"=="" local _dec dec
-	if "`nogroup'"=="" local _group group
+	if "`nogroup'"=="" local _group2 group2
 	if "`nocentile'"=="" local _cent cent
 	if "`nobin'"=="" local _bin bin
 	
@@ -451,18 +451,18 @@ program define ceqinfra, rclass
 		if "``v''"!="" {
 			** bins and groups
 			if `_ppp' {
-				tempvar `v'_group
-				qui gen ``v'_group' = . 
+				tempvar `v'_group2
+				qui gen ``v'_group2' = . 
 				forval gp=1/6 {
-					qui replace ``v'_group' = `gp' if ``v'_ppp'>=`cut`=`gp'-1'' & ``v'_ppp'<`cut`gp''
+					qui replace ``v'_group2' = `gp' if ``v'_ppp'>=`cut`=`gp'-1'' & ``v'_ppp'<`cut`gp''
 					// this works because I set `cut0' = 0 and `cut6' = infinity
 				}
-				qui replace ``v'_group' = 1 if ``v'_ppp' < 0 // negatives go in <`cut1' group
+				qui replace ``v'_group2' = 1 if ``v'_ppp' < 0 // negatives go in <`cut1' group
 			}
 		}
 	}
 	
-	local group = 6
+	local group2 = 6
 	
 	**********************
 	** CALCULATE RESULTS *
@@ -480,10 +480,10 @@ program define ceqinfra, rclass
 			local row = 1
 			foreach char of local infrastructures { // already varnames
 				forval gp=1/6 {
-					qui summ `char' if ``v'_group'==`gp' [aw=`exp']
+					qui summ `char' if ``v'_group2'==`gp' [aw=`exp']
 					matrix results_hh`v'[`row',`gp'] = r(sum)
 					
-					qui summ `char' if ``v'_group'==`gp' `aw'
+					qui summ `char' if ``v'_group2'==`gp' `aw'
 					matrix results_ind`v'[`row',`gp'] = r(sum)
 				}
 				qui summ `char' [aw=`exp']
@@ -498,10 +498,10 @@ program define ceqinfra, rclass
 			// Total number of households/individuals row
 			local row = 9 // since fixed 8 rows for infrastructure vars
 			forval gp=1/6 {
-				qui summ `one' if ``v'_group'==`gp' [aw=`exp']
+				qui summ `one' if ``v'_group2'==`gp' [aw=`exp']
 				matrix results_hh`v'[`row',`gp'] = r(sum)
 				
-				qui summ `one' if ``v'_group'==`gp' `aw'
+				qui summ `one' if ``v'_group2'==`gp' `aw'
 				matrix results_ind`v'[`row',`gp'] = r(sum)
 			}
 			qui summ `one' [aw=`exp']
@@ -514,7 +514,7 @@ program define ceqinfra, rclass
 			
 			// Total income row
 			forval gp=1/6 {
-				qui summ ``v'' if ``v'_group'==`gp' `aw'
+				qui summ ``v'' if ``v'_group2'==`gp' `aw'
 				matrix results_hh`v'[`row',`gp'] = r(sum)
 				matrix results_ind`v'[`row',`gp'] = r(sum)
 			}

@@ -19,7 +19,6 @@
 * PRELIMINARY PROGRAMS *
 ************************
 
-#delimit cr
 // BEGIN returncol (Higgins 2015) 
 //  Returns Excel column corresponding to a number
 cap program drop returncol
@@ -471,15 +470,21 @@ program define _ceqspend, rclass
 				gen `oi_`p''=`o_inc'
 				qui sum `oi_`p'' in `n`p''
 				replace `oi_`p''=r(mean) in 1/`n`p''
+				adi `oi_`p''
 				covgini `oi_`p'' [pw = `exp']
 				local g_`p'=r(gini)
 				drop `oi_`p''
 				local dif= `g_`p''-`g_orig'
+				di `dif'
+				adi `dif'
+				adi `n'
+				adi `p'
+				adi `tot'
 				if `dif'<0{;//PErcentile where we have to settle
 					local stop=`n`p''
 					local start=`n`p''-round((`tot'/100))
-					di `stop'
-					di `start'
+					adi `stop'
+					adi `start'
 					continue,break
 				}
 		
@@ -589,7 +594,10 @@ program define ceqbensp, rclass
 								
 								drop  `fgt1_`p'' `fgt2_`p'';
 								local dif= `fgt`fgt'`p''- `obj`fgt'';
-								
+								adi `dif' ;
+								adi `n' ;
+								adi `p' ;
+								adi `N' ;
 								if `dif'<0{;//PErcentile where we have to settle;
 									local stop=`n`p'';
 									local start=`n`p''-round((`N'/100));
@@ -768,7 +776,7 @@ program define ceqef
 			AUTHors(string)
 			BASEyear(real -1)*
 			SCENario(string)
-			GRoup(string)
+			GROUp(string)
 			PROJect(string)
 		]
 	;
@@ -985,10 +993,18 @@ program define ceqef
 		`die' "{bf:daily}, {bf:monthly}, and {bf:yearly} options are exclusive"
 		exit 198
 	}
-	if ("`daily'"!="")        local divideby = 1
-	else if ("`monthly'"!="") local divideby = 365/12
-	else if ("`yearly'"!="")  local divideby = 365
-
+	if ("`daily'"!="") {
+		local divideby = 1
+		}
+	else if ("`monthly'"!="") {
+		 local divideby = 365/12
+		}
+		
+	else if ("`yearly'"!="") {
+		 local divideby = 365
+		}
+	adi `divideby'
+	
 	* transfer and tax categories
 	local taxlist dtaxes contribs indtaxes
 	local transferlist pensions dtransfers subsidies health education otherpublic
@@ -1364,6 +1380,7 @@ program define ceqef
 		foreach v of local alllist {
 			tempvar `v'_ppp
 			if "``v''"!="" {
+				adi `divideby' ;
 				qui gen ``v'_ppp' = (``v''/`divideby')*(1/`ppp_calculated')
 			}
 		}	
@@ -1482,12 +1499,14 @@ program define ceqef
 									gen double `int_tax'=abs(`tax_`rw'_`cc'');
 									
 									tempvar int_tax_ppp;
+									adi `divideby' ;
 									gen double  `int_tax_ppp'=(`int_tax'/`divideby')*(1/`ppp_calculated');
 							};
 							if "`ben_`rw'_`cc''"!=""{;
 								tempvar int_ben;
 								gen double `int_ben'=`ben_`rw'_`cc'';
 								tempvar int_ben_ppp;
+								adi `divideby' ;
 								gen double  `int_ben_ppp'=(`int_ben'/`divideby')*(1/`ppp_calculated');
 							};
 								
@@ -1503,10 +1522,13 @@ program define ceqef
 							 gen double  `int_ben_ppp'=(`int_ben'/`divideby')*(1/`ppp_calculated');
 							 */
 							 tempvar `rw'_ppp;
+							 adi `divideby' ;
 							 gen double ``rw'_ppp'=(``rw''/`divideby')*(1/`ppp_calculated');
 							 tempvar `cc'_ppp;
+							 adi `divideby' ;
 							 gen double ``cc'_ppp'=(``cc''/`divideby')*(1/`ppp_calculated');
 							 tempvar ystar_ppp;
+							 adi `divideby' ; 
 							 gen double `ystar_ppp'=(`ystar'/`divideby')*(1/`ppp_calculated');
 							 local row=2;
 							*noisily di in red "Begin of POV IMPACT EFF. `rw' `cc' Row= `row'";
@@ -1572,6 +1594,7 @@ program define ceqef
 												gen double `yharm'=____ytaxharm;
 												cap drop ____ytaxharm   ____id_taxharm;
 												tempvar yharm_ppp;
+												adi `divideby' ;
 												gen `yharm_ppp'=(`yharm'/`divideby')*(1/`ppp_calculated');
 								
 								
@@ -1757,7 +1780,7 @@ program define ceqef
 							};
 						};
 						
-		
+
 		
 						*Only TRANSFERS with  MC>0 ;
 
@@ -1783,10 +1806,12 @@ program define ceqef
 							if "``p''"!=""{;
 								if substr("`p'",1,2)!="pl" {; // these are the national PL;
 									if _`p'_isscalar==1 { ; 
+										adi `divideby' ;
 										local z= (``p''/`divideby')*(1/`ppp_calculated');
 									};
 									else if _`p'_isscalar==0 {;
 										tempvar z;
+										adi `divideby' ;
 										qui gen `z'= (``p''/`divideby')*(1/`ppp_calculated');
 									};
 								};	
@@ -1818,10 +1843,12 @@ program define ceqef
 						****TAXES AND TRANSFERS for R and N;
 						if "`tax_`rw'_`cc''"!=""{;
 							tempvar taxesef;
+							adi `divideby' ;
 							gen double `taxesef'=abs((`tax_`rw'_`cc''/`divideby')*(1/`ppp_calculated'));
 						};
 						if "`ben_`rw'_`cc''"!=""{;
 							tempvar benef;
+							adi `divideby' ;
 							gen double `benef'=(`ben_`rw'_`cc''/`divideby')*(1/`ppp_calculated');
 						};
 			
@@ -1830,6 +1857,7 @@ program define ceqef
 							foreach p in `plopts'{;
 								if "``p''"!=""{;
 									if substr("`p'",1,2)!="pl" {; // these are the national PL;
+										adi `divideby'
 										local z= (``p''/`divideby')*(1/`ppp_calculated');
 									};	
 									if substr("`p'",1,2)=="pl" {; // these are the national PL;
@@ -1924,13 +1952,14 @@ program define ceqef
 			qui	putexcel D`r_`y''=matrix(`y'_ef) using `"`using'"',keepcellformat modify sheet("`sheet'") ;
 
 			};
+		
+
 		local date `c(current_date)';		
 		local titlesprint;
 		local titlerow = 3;
 		local titlecol = 1;
 		local titlelist country surveyyear authors date ppp 
 				baseyear cpibase cpisurvey ppp_calculated scenario group project;
-
 		foreach title of local titlelist {;
 			returncol `titlecol';
 			if "``title''"!="" & "``title''"!="-1" 
@@ -1940,7 +1969,6 @@ program define ceqef
 				qui putexcel `titlesprint'  using `"`using'"', modify keepcellformat sheet("`sheet'");
 
 			qui	putexcel A4=("Results produced by version `version' of `command' on `c(current_date)' at `c(current_time)'") using `"`using'"',  modify keepcellformat  sheet("`sheet'");  
-
 			
 		
 		};
@@ -1963,7 +1991,7 @@ program define ceqef
 		quietly putexcel clear;
 		restore;
 	};
-	
+
 	end;	// END ceqef;
 
 	

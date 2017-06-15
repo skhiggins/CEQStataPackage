@@ -126,7 +126,7 @@ program define ceqcoverage, rclass
 			AUTHors(string)
 			BASEyear(real -1)
 			SCENario(string)
-			GRoup(string)
+			GROUp(string)
 			PROJect(string)
 			/* OTHER OPTIONS */
 
@@ -899,16 +899,16 @@ program define ceqcoverage, rclass
 	foreach v of local alllist {
 		if "``v''"!="" {
 			** groups
-			tempvar `v'_group
-			qui gen ``v'_group' = . 
+			tempvar `v'_group2
+			qui gen ``v'_group2' = . 
 			forval gp=1/6 {
-				qui replace ``v'_group' = `gp' if ``v'_ppp'>=`cut`=`gp'-1'' & ``v'_ppp'<`cut`gp''
+				qui replace ``v'_group2' = `gp' if ``v'_ppp'>=`cut`=`gp'-1'' & ``v'_ppp'<`cut`gp''
 				// this works because I set `cut0' = 0 and `cut6' = infinity
 			}
-			qui replace ``v'_group' = 1 if ``v'_ppp' < 0
+			qui replace ``v'_group2' = 1 if ``v'_ppp' < 0
 		}
 	}	
-	local group = 6
+	local group2 = 6
 	
 	**********************
 	** CALCULATE RESULTS *
@@ -951,7 +951,7 @@ program define ceqcoverage, rclass
 						
 						// in LCU
 						forval gp=1/6 {
-							qui summ `pr' if ``v'_group'==`gp' `aw' 
+							qui summ `pr' if ``v'_group2'==`gp' `aw' 
 							matrix `mat'`v'[`pr_row',`gp'] = r(sum)
 						}
 						qui summ `pr' `aw'
@@ -959,7 +959,7 @@ program define ceqcoverage, rclass
 					
 						// in PPP
 						forval gp=1/6 {
-							qui summ ``pr'_ppp' if ``v'_group'==`gp' `aw' 
+							qui summ ``pr'_ppp' if ``v'_group2'==`gp' `aw' 
 							matrix `mat'`v'_ppp[`pr_row',`gp'] = r(sum)
 						}
 						qui summ ``pr'_ppp' `aw'
@@ -970,7 +970,7 @@ program define ceqcoverage, rclass
 
 						if "`db_`pr''"!="" & `db_result' == 1 {
 							forval gp=1/6 {
-								qui summ `db_`pr'' if ``v'_group'==`gp' ///
+								qui summ `db_`pr'' if ``v'_group2'==`gp' ///
 									[aw=`exp'] // `db_`pr'' has number of direct beneficiaries in hh
 									// use hh weight rather than hhweight*members since
 									// `db_`pr'' already has number of ben per hh
@@ -992,7 +992,7 @@ program define ceqcoverage, rclass
 					
 						// Beneficiary households
 						forval gp=1/6 {
-							qui summ `one' if ``v'_group'==`gp' & `pr'!=0 & !missing(`pr') ///
+							qui summ `one' if ``v'_group2'==`gp' & `pr'!=0 & !missing(`pr') ///
 								[aw=`exp']
 							matrix `mat'`v'_hh[`pr_row',`gp'] = r(sum)
 						}
@@ -1002,7 +1002,7 @@ program define ceqcoverage, rclass
 					
 						// Direct and indirect beneficiaries
 						forval gp=1/6 {
-							qui summ `one' if ``v'_group'==`gp' & `pr'!=0 & !missing(`pr') ///
+							qui summ `one' if ``v'_group2'==`gp' & `pr'!=0 & !missing(`pr') ///
 								`aw'
 							matrix `mat'`v'_all[`pr_row',`gp'] = r(sum)
 						}
@@ -1016,13 +1016,13 @@ program define ceqcoverage, rclass
 			// Bottom matter
 			foreach suffix in "" "_ppp" {
 				forval gp=1/6 {
-					qui summ `one' if ``v'_group'==`gp' `aw'
+					qui summ `one' if ``v'_group2'==`gp' `aw'
 					matrix bottom`v'`suffix'[1,`gp'] = r(sum)
 					
-					qui summ `one' if ``v'_group'==`gp' [aw=`exp']
+					qui summ `one' if ``v'_group2'==`gp' [aw=`exp']
 					matrix bottom`v'`suffix'[2,`gp'] = r(sum)
 
-					qui summ ``v'`suffix'' if ``v'_group'==`gp' `aw'
+					qui summ ``v'`suffix'' if ``v'_group2'==`gp' `aw'
 					matrix bottom`v'`suffix'[3,`gp'] = r(sum)
 				}
 				qui summ `one' `aw'

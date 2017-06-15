@@ -64,7 +64,7 @@
 {synopt :{opth auth:ors(string)}}Authors of study{p_end}
 {synopt :{opth base:year(real)}}Base year of PPP conversion (e.g., 2005, 2011){p_end}
 {synopt :{opth scen:ario(string)}}Scenario{p_end}
-{synopt :{opth gr:oup(string)}}Group{p_end}
+{synopt :{opth grou:p(string)}}Group{p_end}
 {synopt :{opth proj:ect(string)}}Project{p_end}
 {synopt :{opth sheetm(string)}}Name of sheet to write results ranking by market income. Default is "E10.m Concentration"{p_end}
 {synopt :{opth sheetmp(string)}}Name of sheet to write results ranking by market income plus pensions. Default is "E10.m+p Concentration"{p_end}

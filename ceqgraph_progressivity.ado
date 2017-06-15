@@ -47,7 +47,7 @@ capture program define ceqgraph_progressivity
 			AUTHors(string)
 			BASEyear(real -1)
 			SCENario(string)
-			GRoup(string)
+			GROUp(string)
 			PROJect(string)
 			/** SPECIFIC TO THIS ADO FILE: */
 			scheme(string)

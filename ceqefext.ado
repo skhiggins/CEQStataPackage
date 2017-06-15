@@ -888,7 +888,7 @@ program define _ceqefext, rclass
 			
 			BASEyear(real -1)
 			SCENario(string)
-			GRoup(string)
+			GROUp(string)
 			PROJect(string)
 			/* OTHER OPTIONS 
 			NODecile
@@ -896,6 +896,9 @@ program define _ceqefext, rclass
 			NOCentile
 			NOBin
 			*/
+			/** VARIABLE MODIFICATON */
+			IGNOREMissing
+			
 			NODIsplay
 			_version(string)
 		]

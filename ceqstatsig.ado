@@ -119,7 +119,7 @@ program define ceqstatsig, rclass
 			AUTHors(string)
 			BASEyear(real -1)
 			SCENario(string)
-			GRoup(string)
+			GROUp(string)
 			PROJect(string)
 			/* OTHER OPTIONS */
 			NOGini

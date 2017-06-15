@@ -183,7 +183,7 @@ program define ceqmarg, rclass
 			AUTHors(string)
 			BASEyear(real -1)
 			SCENario(string)
-			GRoup(string)
+			GROUp(string)
 			PROJect(string)
 			/** OTHER OPTIONS */
 			NODecile
@@ -1173,6 +1173,8 @@ program define ceqmarg, rclass
 									local v_wo_touse `wo_ppp'
 									local v_w_touse `w_ppp'
 								}
+								
+
 								else if _`p'_isscalar==1 {   // if pov line is scalar, // (note this local defined above)
 									local _pline = ``p'' // set `_pline' as that scalar and
 									local v_wo_touse ``v'_wo_`pr''   // use original income variable
@@ -1191,6 +1193,7 @@ program define ceqmarg, rclass
 								forval i=0/2 {
 									scalar _pov_wo_`i' = r(pov`i')
 								}
+
 								qui ceqpov `v_w_touse' `pw', z(`_pline')
 								forval i=0/2 {
 									scalar _pov_w_`i' = r(pov`i')
@@ -1273,6 +1276,8 @@ program define ceqmarg, rclass
 		local warningprint `warningprint' A5=("`warningcount' important warning messages are printed starting on row `warningrow'.") 
 		
 		// putexcel
+		set trace on 
+
 		foreach vrank of local alllist {
 			if "``vrank''"!="" {
 				qui putexcel `titlesprint' `versionprint' `titles' ///
@@ -1284,7 +1289,7 @@ program define ceqmarg, rclass
 			}
 		}
 	}
-
+	set trace off
 	*********
 	** OPEN *
 	*********

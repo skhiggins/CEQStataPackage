@@ -21,6 +21,7 @@
 ** (beta version; please report any bugs), written by Sean Higgins sean.higgins@ceqinstitute.org
 
 ** CHANGES
+**   06-06-2017 Changed previous loca groups to group2
 **   06-01-2017 Add additional options to print meta-information
 ** 	 01-12-2017 Set the data type of all newly generated variables to be double
 ** 				Add a check of the data type of income and fiscal variables and issue a warning if
@@ -117,7 +118,7 @@ program define ceqpop, rclass
 			AUTHors(string)
 			BASEyear(real -1)
 			SCENario(string)
-			GRoup(string)
+			GROUp(string)
 			PROJect(string)
 			/** OTHER OPTIONS */
 			NODecile
@@ -450,7 +451,7 @@ program define ceqpop, rclass
 		}
 	}
 	
-	local group = 6
+	local grp = 6
 	local dec = 10
 	local cent = 100
 	if `_ppp' & "`nobin'"=="" local bin = `count_bins' // need if condition here b/c o.w. `count_bins' doesn't exist	
@@ -500,7 +501,7 @@ program define ceqpop, rclass
 	local resultset
 	local rdec   = 11 // row where decile results start
 	local rgroup = `rdec' + `dec' + `vertincrement'
-	local rcent  = `rgroup' + `group' + `vertincrement'
+	local rcent  = `rgroup' + `grp' + `vertincrement'
 	local rbin   = `rcent' + `cent' + `vertincrement'
 	local startpop = `startcol_o'
 	foreach v of local alllist {

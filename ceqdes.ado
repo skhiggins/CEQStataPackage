@@ -135,7 +135,7 @@ program define ceqdes, rclass
 			SURVeyyear(string) /** string because could be range of years **/
 			AUTHors(string)
 			SCENario(string)
-			GRoup(string)
+			GROUp(string)
 			PROJect(string)
 			/** DROP MISSING VALUES **/
 			IGNOREMissing

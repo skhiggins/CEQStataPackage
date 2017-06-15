@@ -9,6 +9,8 @@
 ** v1.0 6aug2016 For use with Jun 2016 version of Output Tables
 
 ** CHANGES
+** 	06-06-2017 Changed minimum abbreviation for GROUPby to GROUPBy
+**			   due to new option for GRoup.
 ** 	01-06-2017 Include Scenario, Group, and Project as opitions to be inputed into excel.
 ** 	01-12-2017 Set the data type of all newly generated variables to be double
 ** 			   Add a check of the data type of income and fiscal variables and issue a warning if
@@ -84,7 +86,7 @@ program define ceqiop, rclass
 		[if] [in] [pweight/] 
 		, 
 			/* CIRCUMSTANCES */
-			GROUPby(varlist)
+			GROUPBy(varlist)
 		[	
 			/* INCOME CONCEPTS: */
 			Market(varname)
@@ -110,7 +112,7 @@ program define ceqiop, rclass
 			AUTHors(string)
 			BASEyear(real -1)
 			SCENario(string)
-			GRoup(string)
+			GROUp(string)
 			PROJect(string)
 			/* DROP MISSING VALUES */
 			IGNOREMissing

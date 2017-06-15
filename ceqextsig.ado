@@ -28,6 +28,7 @@
 
 ** TO DO
 
+
 *************************
 ** PRELIMINARY PROGRAMS *
 *************************
@@ -174,7 +175,7 @@ program define ceqextsig
 	
 		// let's do this:
 		_ceqextsig `using' `if' `in' [`weight' `exp'], ///
-			``incname'_opt' `list_opt2' `options' `open_opt' `nodisplay_opt' ///
+			``incname'_opt' `list_opt2' `options' `open_opt' `nodisplay_opt' 
 			/*_version("`version'") */
 	}
 end
@@ -186,7 +187,7 @@ program define _ceqextsig, rclass
 	version 13.0
 	#delimit ;
 	syntax 
-		[using/]
+		[using]
 		[if] [in] [pweight/] 
 		[, 
 			/** INCOME CONCEPTS: */
@@ -251,7 +252,6 @@ program define _ceqextsig, rclass
 			sheetd(string)
 			sheetc(string)
 			sheetf(string)
-			OPEN
 			/** GROUP CUTOFFS */
 			cut1(real 1.25)
 			cut2(real 2.5)
@@ -265,22 +265,27 @@ program define _ceqextsig, rclass
 			
 			BASEyear(real -1)
 			SCENario(string)
-			GRoup(string)
+			GROUp(string) 
 			PROJect(string)
-			/** OTHER OPTIONS */
-			NODecile
-			NOGroup
-			NOCentile
-			NOBin
 			
-			NODIsplay
+			/** OTHER OPTIONS */
+			
+			// Displayed in syntax command below to get around options dilemna 
+			
 			/*_version(string)*/
 			/** IGNOREMISSING */
-			IGNOREMissing
+			
+			
+			*
 		]
 	;
-	#delimit cr
 	
+	#delimit cr
+	if "`exp'"!="" local pw "[`weight'=`exp']"  // tp get around Stata option limit
+	if `"`using'"'!="" local using "`using'"
+	local 0  `"`using' `if' `in' `pw', `options'"'   //
+    syntax [if] [in] [using/] [pweight/]  [, IGNOREMissing OPEN  NODecile NOGroup NOCentile NOBin NODIsplay]
+		
 		
 	***********
 	** LOCALS *

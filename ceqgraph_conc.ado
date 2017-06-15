@@ -65,7 +65,7 @@ capture program define ceqgraph_conc, rclass
 			AUTHors(string)
 			BASEyear(real -1)
 			SCENario(string)
-			GRoup(string)
+			GROUp(string)
 			PROJect(string)
 			/** SPECIFIC TO THIS ADO FILE: */
 			scheme(string)
