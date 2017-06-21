@@ -46,6 +46,9 @@ capture program define ceqgraph_progressivity
 			SURVeyyear(string) /** string because could be range of years **/
 			AUTHors(string)
 			BASEyear(real -1)
+			SCENario(string)
+			GROUp(string)
+			PROJect(string)
 			/** SPECIFIC TO THIS ADO FILE: */
 			scheme(string)
 			path(string)
@@ -401,12 +404,13 @@ capture program define ceqgraph_progressivity
 			local titlesprint
 			local titlerow = 3
 			local titlecol = 1
-			local titlelist country surveyyear authors date ppp baseyear cpibase cpisurvey ppp_calculated
+			local titlelist country surveyyear authors date ppp baseyear cpibase cpisurvey  ///
+					scenario group project
 			foreach title of local titlelist {
 				returncol `titlecol'
 				if "``title''"!="" & "``title''"!="-1" ///
 					local  titlesprint `titlesprint' `r(col)'`titlerow'=("``title''")
-				local titlecol = `titlecol' + 2
+				local titlecol = `titlecol' + 1
 			}
 		
 				

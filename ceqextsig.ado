@@ -1,7 +1,8 @@
 ** ADO FILE FOR EXTENDED INCOME CONCEPTS SHEET OF CEQ MASTER WORKBOOK SECTION E
 
 ** VERSION AND NOTES (changes between versions described under CHANGES)
-*! v1.6 06apr2017 For use with Oct 2016 version of CEQ Master Workbook 
+*! v1.7 01jun2017 For use with May 2017 version of CEQ Master Workbook 
+** v1.6 06apr2017 For use with Oct 2016 version of CEQ Master Workbook 
 ** v1.5 08mar2017 For use with Oct 2016 version of CEQ Master Workbook 
 ** v1.4 12jan2017 For use with Oct 2016 version of CEQ Master Workbook
 ** v1.3 13nov2016 For use with Oct 2016 version of CEQ Master Workbook
@@ -11,6 +12,7 @@
 *! (beta version; please report any bugs), written by Sean Higgins sean.higgins@ceqinstitute.org
 
 ** CHANGES
+**   06-01-2017 Add additional options to print meta-information
 **   04-06-2017 Remove the warning about negative tax values
 **   03-08-2017 Remove the net in-kind transfers as a broad category in accordance with the instruction that users
 **				 supply net in-kind transfer variables to health/education/otherpublic options
@@ -25,6 +27,7 @@
 ** NOTES
 
 ** TO DO
+
 
 *************************
 ** PRELIMINARY PROGRAMS *
@@ -172,7 +175,7 @@ program define ceqextsig
 	
 		// let's do this:
 		_ceqextsig `using' `if' `in' [`weight' `exp'], ///
-			``incname'_opt' `list_opt2' `options' `open_opt' `nodisplay_opt' ///
+			``incname'_opt' `list_opt2' `options' `open_opt' `nodisplay_opt' 
 			/*_version("`version'") */
 	}
 end
@@ -184,7 +187,7 @@ program define _ceqextsig, rclass
 	version 13.0
 	#delimit ;
 	syntax 
-		[using/]
+		[using]
 		[if] [in] [pweight/] 
 		[, 
 			/** INCOME CONCEPTS: */
@@ -249,7 +252,6 @@ program define _ceqextsig, rclass
 			sheetd(string)
 			sheetc(string)
 			sheetf(string)
-			OPEN
 			/** GROUP CUTOFFS */
 			cut1(real 1.25)
 			cut2(real 2.5)
@@ -262,20 +264,28 @@ program define _ceqextsig, rclass
 			AUTHors(string)
 			
 			BASEyear(real -1)
-			/** OTHER OPTIONS */
-			NODecile
-			NOGroup
-			NOCentile
-			NOBin
+			SCENario(string)
+			GROUp(string) 
+			PROJect(string)
 			
-			NODIsplay
+			/** OTHER OPTIONS */
+			
+			// Displayed in syntax command below to get around options dilemna 
+			
 			/*_version(string)*/
 			/** IGNOREMISSING */
-			IGNOREMissing
+			
+			
+			*
 		]
 	;
-	#delimit cr
 	
+	#delimit cr
+	if "`exp'"!="" local pw "[`weight'=`exp']"  // tp get around Stata option limit
+	if `"`using'"'!="" local using "`using'"
+	local 0  `"`using' `if' `in' `pw', `options'"'   //
+    syntax [if] [in] [using/] [pweight/]  [, IGNOREMissing OPEN  NODecile NOGroup NOCentile NOBin NODIsplay]
+		
 		
 	***********
 	** LOCALS *
@@ -1136,12 +1146,13 @@ program define _ceqextsig, rclass
 		local titlesprint
 		local titlerow = 3
 		local titlecol = 1
-		local titlelist country surveyyear authors date ppp baseyear cpibase cpisurvey ppp_calculated
+		local titlelist country surveyyear authors date ppp baseyear cpibase cpisurvey ppp_calculated ///
+				scenario group project
 		foreach title of local titlelist {
 			returncol `titlecol'
 			if "``title''"!="" & "``title''"!="-1" ///
 				local  titlesprint `titlesprint' `r(col)'`titlerow'=("``title''")
-			local titlecol = `titlecol' + 2
+			local titlecol = `titlecol' + 1
 		}
 		
 		// Export to Excel column titles

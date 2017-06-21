@@ -1,7 +1,8 @@
 ** ADO FILE FOR FISCAL INTERVENTIONS SHEET OF CEQ MASTER WORKBOOK SECTION E
 
 ** VERSION AND NOTES (changes between versions described under CHANGES)
-*! v2.0 23apr2017 For use with Oct 2016 version of CEQ Master Workbook 2017
+*! v2.1 02jun2017 For use with May 2017 version of CEQ Master Workbook 2017
+** v2.0 23apr2017 For use with Oct 2016 version of CEQ Master Workbook 2017
 ** v1.7 06apr2017 For use with Oct 2016 version of CEQ Master Workbook 2017
 ** v1.6 03mar2017 For use with Sep 2016 version of CEQ Master Workbook 2016
 ** v1.5 06feb2017 For use with Sep 2016 version of CEQ Master Workbook 2016
@@ -13,6 +14,7 @@
 *! (beta version; please report any bugs), written by Sean Higgins sean.higgins@ceqinstitute.org
 
 ** CHANGES
+**   06-01-2017 Add additional options to print meta-information
 **   04-23-2017 Change variable used to calculate beneficiary household and direct and indirect beneficiaries
 **				Change the if condition for target from == 1 to >0 to account for household-level data
 **   04-06-2017 Add warning that users need to specify fiscal intervention option for target results
@@ -138,6 +140,9 @@ program define ceqtarget, rclass
 			SURVeyyear(string) /* string because could be range of years */
 			AUTHors(string)
 			BASEyear(real -1)
+			SCENario(string)
+			GROUp(string)
+			PROJect(string)
 			/* OTHER OPTIONS */
 
 			/* VARIABLE MODIFICATON */
@@ -1251,16 +1256,16 @@ program define ceqtarget, rclass
 	foreach v of local alllist {
 		if "``v''"!="" {
 			** groups
-			tempvar `v'_group
-			qui gen ``v'_group' = . 
+			tempvar `v'_group2
+			qui gen ``v'_group2' = . 
 			forval gp=1/6 {
-				qui replace ``v'_group' = `gp' if ``v'_ppp'>=`cut`=`gp'-1'' & ``v'_ppp'<`cut`gp''
+				qui replace ``v'_group2' = `gp' if ``v'_ppp'>=`cut`=`gp'-1'' & ``v'_ppp'<`cut`gp''
 				// this works because I set `cut0' = 0 and `cut6' = infinity
 			}
-			qui replace ``v'_group' = 1 if ``v'_ppp' < 0
+			qui replace ``v'_group2' = 1 if ``v'_ppp' < 0
 		}
 	}	
-	local group = 6
+	local group2 = 6
 	
 	**********************
 	** CALCULATE RESULTS *
@@ -1317,7 +1322,7 @@ program define ceqtarget, rclass
 							if "`tarb_`pr''"!="" {
 								cap confirm variable `tarb_`pr''
 								if _rc == 0 {
-									qui summ `pr' if ``v'_group'==`gp' & `tarb_`pr'' > 0  `aw'     
+									qui summ `pr' if ``v'_group2'==`gp' & `tarb_`pr'' > 0  `aw'     
 									matrix `mat'`v'[`pr_row',`gp'] = r(sum)
 								}
 								else {
@@ -1345,7 +1350,7 @@ program define ceqtarget, rclass
 						// Benefits received by target population in PPP
 						forval gp=1/6 {
 							if "`tarb_`pr''"!="" {
-								qui summ ``pr'_ppp' if ``v'_group'==`gp' & `tarb_`pr'' > 0   `aw'   
+								qui summ ``pr'_ppp' if ``v'_group2'==`gp' & `tarb_`pr'' > 0   `aw'   
 								matrix `mat'`v'_ppp[`pr_row',`gp'] = r(sum)
 							}
 							else {
@@ -1366,7 +1371,7 @@ program define ceqtarget, rclass
 						if "`tarb_`pr''"!="" & `db_result' == 1 {
 							// Target Individuals
 							forval gp=1/6 {
-								qui summ `tarb_`pr'' if ``v'_group'==`gp' [aw=`exp']    // using the new variable
+								qui summ `tarb_`pr'' if ``v'_group2'==`gp' [aw=`exp']    // using the new variable
 								matrix `mat'`v'_target[`pr_row',`gp'] = r(sum)
 							}
 							
@@ -1382,7 +1387,7 @@ program define ceqtarget, rclass
 						if "`tarb_`pr''"!="" {
 							// Target households
 							forval gp=1/6 {
-								qui summ `one' if ``v'_group'==`gp' & !missing(`pr') & `tarb_`pr'' > 0 ///
+								qui summ `one' if ``v'_group2'==`gp' & !missing(`pr') & `tarb_`pr'' > 0 ///
 									[aw=`exp']
 								matrix `mat'`v'_target_hh[`pr_row',`gp'] = r(sum)
 							}
@@ -1392,7 +1397,7 @@ program define ceqtarget, rclass
 					
 							// Direct and indirect target beneficiaries
 							forval gp=1/6 {
-								qui summ `one' if ``v'_group'==`gp' & !missing(`pr') & `tarb_`pr'' > 0 ///
+								qui summ `one' if ``v'_group2'==`gp' & !missing(`pr') & `tarb_`pr'' > 0 ///
 									`aw'
 								matrix `mat'`v'_target_all[`pr_row',`gp'] = r(sum)
 							}
@@ -1411,7 +1416,7 @@ program define ceqtarget, rclass
 						if "`tar_`pr''"!="" & "`bdt_`pr''"!="" & `db_result' == 1 {
 							// Target Direct beneficiaries
 							forval gp=1/6 {
-								qui summ `bdt_`pr'' if ``v'_group'==`gp' [aw=`exp']    // using the new variable
+								qui summ `bdt_`pr'' if ``v'_group2'==`gp' [aw=`exp']    // using the new variable
 		
 								/* qui summ `db_`pr'' if ``v'_group'==`gp' & `tar_`pr'' > 0 ///
 									[aw=`exp'] */ 
@@ -1436,7 +1441,7 @@ program define ceqtarget, rclass
 						if "`tar_`pr''"!="" {
 							// Target beneficiary households
 							forval gp=1/6 {
-								qui summ `one' if ``v'_group'==`gp'  & `bdt_`pr''>0 /* & `pr'!=0 & !missing(`pr') & `tar_`pr'' > 0 */ ///
+								qui summ `one' if ``v'_group2'==`gp'  & `bdt_`pr''>0 /* & `pr'!=0 & !missing(`pr') & `tar_`pr'' > 0 */ ///
 									[aw=`exp']
 								matrix `mat'`v'_hh[`pr_row',`gp'] = r(sum)
 							}
@@ -1446,7 +1451,7 @@ program define ceqtarget, rclass
 					
 							// Direct and indirect target beneficiaries
 							forval gp=1/6 {
-								qui summ `one' if ``v'_group'==`gp'  & `bdt_`pr''>0  /* & `pr'!=0 & !missing(`pr') & `tar_`pr'' > 0 */ ///
+								qui summ `one' if ``v'_group2'==`gp'  & `bdt_`pr''>0  /* & `pr'!=0 & !missing(`pr') & `tar_`pr'' > 0 */ ///
 									`aw'
 								matrix `mat'`v'_all[`pr_row',`gp'] = r(sum)
 							}
@@ -1553,12 +1558,13 @@ program define ceqtarget, rclass
 		local titlesprint
 		local titlerow = 3
 		local titlecol = 1
-		local titlelist country surveyyear authors date ppp baseyear cpibase cpisurvey ppp_calculated
+		local titlelist country surveyyear authors date ppp baseyear cpibase cpisurvey ppp_calculated ///
+				scenario group project
 		foreach title of local titlelist {
 			returncol `titlecol'
 			if "``title''"!="" & "``title''"!="-1" ///
 				local  titlesprint `titlesprint' `r(col)'`titlerow'=("``title''")
-			local titlecol = `titlecol' + 2
+			local titlecol = `titlecol' + 1
 		}
 
 		// Print version number on Excel sheet

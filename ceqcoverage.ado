@@ -1,7 +1,8 @@
 ** ADO FILE FOR FISCAL INTERVENTIONS SHEET OF CEQ MASTER WORKBOOK SECTION E
 
 ** VERSION AND NOTES (changes between versions described under CHANGES)
-*! v1.7 02apr2017 For use with Oct 2016 version of CEQ Master Workbook 2016
+*! v1.8 01jun2017 For use with May 2017 version of CEQ Master Workbook 2016
+** v1.7 02apr2017 For use with Oct 2016 version of CEQ Master Workbook 2016
 ** v1.6 08mar2017 For use with Oct 2016 version of CEQ Master Workbook 2016
 ** v1.5 06feb2017 For use with Sep 2016 version of CEQ Master Workbook 2016
 ** v1.4 12jan2017 For use with Oct 2016 version of CEQ Master Workbook 2016
@@ -12,6 +13,7 @@
 *! (beta version; please report any bugs), written by Sean Higgins sean.higgins@ceqinstitute.org
 
 ** CHANGES
+**	 06-01-2017 Add additional options to print meta-information
 **   04-02-2017 Remove the temporary variables from the negative tax warning list 
 **   03-08-2017 Remove the net in-kind transfers as a broad category in accordance with the instruction that users
 **				 supply net in-kind transfer variables to health/education/otherpublic options
@@ -123,6 +125,9 @@ program define ceqcoverage, rclass
 			SURVeyyear(string) /* string because could be range of years */
 			AUTHors(string)
 			BASEyear(real -1)
+			SCENario(string)
+			GROUp(string)
+			PROJect(string)
 			/* OTHER OPTIONS */
 
 			/* VARIABLE MODIFICATON */
@@ -894,16 +899,16 @@ program define ceqcoverage, rclass
 	foreach v of local alllist {
 		if "``v''"!="" {
 			** groups
-			tempvar `v'_group
-			qui gen ``v'_group' = . 
+			tempvar `v'_group2
+			qui gen ``v'_group2' = . 
 			forval gp=1/6 {
-				qui replace ``v'_group' = `gp' if ``v'_ppp'>=`cut`=`gp'-1'' & ``v'_ppp'<`cut`gp''
+				qui replace ``v'_group2' = `gp' if ``v'_ppp'>=`cut`=`gp'-1'' & ``v'_ppp'<`cut`gp''
 				// this works because I set `cut0' = 0 and `cut6' = infinity
 			}
-			qui replace ``v'_group' = 1 if ``v'_ppp' < 0
+			qui replace ``v'_group2' = 1 if ``v'_ppp' < 0
 		}
 	}	
-	local group = 6
+	local group2 = 6
 	
 	**********************
 	** CALCULATE RESULTS *
@@ -946,7 +951,7 @@ program define ceqcoverage, rclass
 						
 						// in LCU
 						forval gp=1/6 {
-							qui summ `pr' if ``v'_group'==`gp' `aw' 
+							qui summ `pr' if ``v'_group2'==`gp' `aw' 
 							matrix `mat'`v'[`pr_row',`gp'] = r(sum)
 						}
 						qui summ `pr' `aw'
@@ -954,7 +959,7 @@ program define ceqcoverage, rclass
 					
 						// in PPP
 						forval gp=1/6 {
-							qui summ ``pr'_ppp' if ``v'_group'==`gp' `aw' 
+							qui summ ``pr'_ppp' if ``v'_group2'==`gp' `aw' 
 							matrix `mat'`v'_ppp[`pr_row',`gp'] = r(sum)
 						}
 						qui summ ``pr'_ppp' `aw'
@@ -965,7 +970,7 @@ program define ceqcoverage, rclass
 
 						if "`db_`pr''"!="" & `db_result' == 1 {
 							forval gp=1/6 {
-								qui summ `db_`pr'' if ``v'_group'==`gp' ///
+								qui summ `db_`pr'' if ``v'_group2'==`gp' ///
 									[aw=`exp'] // `db_`pr'' has number of direct beneficiaries in hh
 									// use hh weight rather than hhweight*members since
 									// `db_`pr'' already has number of ben per hh
@@ -987,7 +992,7 @@ program define ceqcoverage, rclass
 					
 						// Beneficiary households
 						forval gp=1/6 {
-							qui summ `one' if ``v'_group'==`gp' & `pr'!=0 & !missing(`pr') ///
+							qui summ `one' if ``v'_group2'==`gp' & `pr'!=0 & !missing(`pr') ///
 								[aw=`exp']
 							matrix `mat'`v'_hh[`pr_row',`gp'] = r(sum)
 						}
@@ -997,7 +1002,7 @@ program define ceqcoverage, rclass
 					
 						// Direct and indirect beneficiaries
 						forval gp=1/6 {
-							qui summ `one' if ``v'_group'==`gp' & `pr'!=0 & !missing(`pr') ///
+							qui summ `one' if ``v'_group2'==`gp' & `pr'!=0 & !missing(`pr') ///
 								`aw'
 							matrix `mat'`v'_all[`pr_row',`gp'] = r(sum)
 						}
@@ -1011,13 +1016,13 @@ program define ceqcoverage, rclass
 			// Bottom matter
 			foreach suffix in "" "_ppp" {
 				forval gp=1/6 {
-					qui summ `one' if ``v'_group'==`gp' `aw'
+					qui summ `one' if ``v'_group2'==`gp' `aw'
 					matrix bottom`v'`suffix'[1,`gp'] = r(sum)
 					
-					qui summ `one' if ``v'_group'==`gp' [aw=`exp']
+					qui summ `one' if ``v'_group2'==`gp' [aw=`exp']
 					matrix bottom`v'`suffix'[2,`gp'] = r(sum)
 
-					qui summ ``v'`suffix'' if ``v'_group'==`gp' `aw'
+					qui summ ``v'`suffix'' if ``v'_group2'==`gp' `aw'
 					matrix bottom`v'`suffix'[3,`gp'] = r(sum)
 				}
 				qui summ `one' `aw'
@@ -1092,12 +1097,13 @@ program define ceqcoverage, rclass
 		local titlesprint
 		local titlerow = 3
 		local titlecol = 1
-		local titlelist country surveyyear authors date ppp baseyear cpibase cpisurvey ppp_calculated
+		local titlelist country surveyyear authors date ppp baseyear cpibase cpisurvey ppp_calculated ///
+				scenario group project
 		foreach title of local titlelist {
 			returncol `titlecol'
 			if "``title''"!="" & "``title''"!="-1" ///
 				local  titlesprint `titlesprint' `r(col)'`titlerow'=("``title''")
-			local titlecol = `titlecol' + 2
+			local titlecol = `titlecol' + 1
 		}
 
 		// Print version number on Excel sheet

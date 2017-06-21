@@ -1,12 +1,14 @@
 ** ADO FILE FOR FISCAL INTERVENTIONS SHEET OF CEQ MASTER WORKBOOK SECTION E
 
 ** VERSION AND NOTES (changes between versions described under CHANGES)
-*! v1.2 12jan2017 For use with Oct 2016 version of CEQ Master Workbook 
+*! v1.3 02jun2017 For use with May 2017 version of CEQ Master Workbook 
+** v1.2 12jan2017 For use with Oct 2016 version of CEQ Master Workbook 
 ** v1.1 30sep2016 For use with Jun 2016 version of CEQ Master Workbook
 ** v1.0 25sep2016 For use with Jun 2016 version of CEQ Master Workbook
 *! (beta version; please report any bugs), written by Sean Higgins sean.higgins@ceqinstitute.org
 
 ** CHANGES
+**   06-01-2017 Add additional options to print meta-information
 ** 	 1-12-2017 Set the data type of all newly generated variables to be double
 ** 			   Add a check of the data type of income and fiscal variables and issue a warning if
 **				 they are not double
@@ -75,6 +77,9 @@ program define ceqinfra, rclass
 			SURVeyyear(string) /* string because could be range of years */
 			AUTHors(string)
 			BASEyear(real -1)
+			SCENario(string)
+			GROUp(string)
+			PROJect(string)
 			/* OTHER OPTIONS */
 			NODecile
 			NOGroup
@@ -390,7 +395,7 @@ program define ceqinfra, rclass
 		exit 198
 	}
 	if "`nodecile'"=="" local _dec dec
-	if "`nogroup'"=="" local _group group
+	if "`nogroup'"=="" local _group2 group2
 	if "`nocentile'"=="" local _cent cent
 	if "`nobin'"=="" local _bin bin
 	
@@ -446,18 +451,18 @@ program define ceqinfra, rclass
 		if "``v''"!="" {
 			** bins and groups
 			if `_ppp' {
-				tempvar `v'_group
-				qui gen ``v'_group' = . 
+				tempvar `v'_group2
+				qui gen ``v'_group2' = . 
 				forval gp=1/6 {
-					qui replace ``v'_group' = `gp' if ``v'_ppp'>=`cut`=`gp'-1'' & ``v'_ppp'<`cut`gp''
+					qui replace ``v'_group2' = `gp' if ``v'_ppp'>=`cut`=`gp'-1'' & ``v'_ppp'<`cut`gp''
 					// this works because I set `cut0' = 0 and `cut6' = infinity
 				}
-				qui replace ``v'_group' = 1 if ``v'_ppp' < 0 // negatives go in <`cut1' group
+				qui replace ``v'_group2' = 1 if ``v'_ppp' < 0 // negatives go in <`cut1' group
 			}
 		}
 	}
 	
-	local group = 6
+	local group2 = 6
 	
 	**********************
 	** CALCULATE RESULTS *
@@ -475,10 +480,10 @@ program define ceqinfra, rclass
 			local row = 1
 			foreach char of local infrastructures { // already varnames
 				forval gp=1/6 {
-					qui summ `char' if ``v'_group'==`gp' [aw=`exp']
+					qui summ `char' if ``v'_group2'==`gp' [aw=`exp']
 					matrix results_hh`v'[`row',`gp'] = r(sum)
 					
-					qui summ `char' if ``v'_group'==`gp' `aw'
+					qui summ `char' if ``v'_group2'==`gp' `aw'
 					matrix results_ind`v'[`row',`gp'] = r(sum)
 				}
 				qui summ `char' [aw=`exp']
@@ -493,10 +498,10 @@ program define ceqinfra, rclass
 			// Total number of households/individuals row
 			local row = 9 // since fixed 8 rows for infrastructure vars
 			forval gp=1/6 {
-				qui summ `one' if ``v'_group'==`gp' [aw=`exp']
+				qui summ `one' if ``v'_group2'==`gp' [aw=`exp']
 				matrix results_hh`v'[`row',`gp'] = r(sum)
 				
-				qui summ `one' if ``v'_group'==`gp' `aw'
+				qui summ `one' if ``v'_group2'==`gp' `aw'
 				matrix results_ind`v'[`row',`gp'] = r(sum)
 			}
 			qui summ `one' [aw=`exp']
@@ -509,7 +514,7 @@ program define ceqinfra, rclass
 			
 			// Total income row
 			forval gp=1/6 {
-				qui summ ``v'' if ``v'_group'==`gp' `aw'
+				qui summ ``v'' if ``v'_group2'==`gp' `aw'
 				matrix results_hh`v'[`row',`gp'] = r(sum)
 				matrix results_ind`v'[`row',`gp'] = r(sum)
 			}
@@ -570,12 +575,13 @@ program define ceqinfra, rclass
 		local titlesprint
 		local titlerow = 3
 		local titlecol = 1
-		local titlelist country surveyyear authors date ppp baseyear cpibase cpisurvey ppp_calculated
+		local titlelist country surveyyear authors date ppp baseyear cpibase cpisurvey ppp_calculated ///
+				scenario group project
 		foreach title of local titlelist {
 			returncol `titlecol'
 			if "``title''"!="" & "``title''"!="-1" ///
 				local  titlesprint `titlesprint' `r(col)'`titlerow'=("``title''")
-			local titlecol = `titlecol' + 2
+			local titlecol = `titlecol' + 1
 		}
 
 		// Print version number on Excel sheet

@@ -1,13 +1,15 @@
 ** ADO FILE FOR POPULATION SHEET OF CEQ Master Workbook Section E
 
 ** VERSION AND NOTES (changes between versions described under CHANGES)
-*! v1.3 27mar17 For use with Oct 2016 version of CEQ Master Workbook Section E
+*! v1.4 01jun17 For use with may 2017 version of CEQ Master Workbook Section E
+** v1.3 27mar17 For use with Oct 2016 version of CEQ Master Workbook Section E
 ** v1.2 12jan17 For use with Oct 2016 version of CEQ Master Workbook Section E
 ** v1.1 01dec16 For use with Oct 2016 version of CEQ Master Workbook Section E
 ** v1.0 29sep16 For use with Sep 2016 version of CEQ Master Workbook Section E
 *! (beta version; please report any bugs), written by Sean Higgins sean.higgins@ceqinstitute.org
 
 ** CHANGES
+**  06-01-2017  Add additional options to print meta-information
 **  03-27-2017  Adjust started row of warning messages (bug pointed out by Sandra Martinez)
 ** 	01-12-2017  Set the data type of all newly generated variables to be double
 ** 			    Add a check of the data type of income and fiscal variables and issue a warning if
@@ -86,6 +88,9 @@ program define ceqeduc, rclass
 			SURVeyyear(string) /* string because could be range of years */
 			AUTHors(string)
 			BASEyear(real -1)
+			SCENario(string)
+			GROUp(string)
+			PROJect(string)
 			/* DROP MISSING VALUES */
 			IGNOREMissing
 		]
@@ -274,7 +279,7 @@ program define ceqeduc, rclass
 		exit 198
 	}
 	if "`nodecile'"=="" local _dec dec
-	if "`nogroup'"=="" local _group group
+	if "`nogroup'"=="" local _group2 group2
 	if "`nocentile'"=="" local _cent cent
 	if "`nobin'"=="" local _bin bin
 	
@@ -407,18 +412,18 @@ program define ceqeduc, rclass
 		if "``v''"!="" {
 			** groups
 			if `_ppp' {
-				tempvar `v'_group
-				qui gen ``v'_group' = . 
+				tempvar `v'_group2
+				qui gen ``v'_group2' = . 
 				forval gp=1/6 {
-					qui replace ``v'_group' = `gp' if ``v'_ppp'>=`cut`=`gp'-1'' & ``v'_ppp'<`cut`gp''
+					qui replace ``v'_group2' = `gp' if ``v'_ppp'>=`cut`=`gp'-1'' & ``v'_ppp'<`cut`gp''
 					// this works because I set `cut0' = 0 and `cut6' = infinity
 				}
-				qui replace ``v'_group' = 1 if ``v'_ppp' < 0
+				qui replace ``v'_group2' = 1 if ``v'_ppp' < 0
 			}
 		}
 	}
 	
-	local group = 6
+	local group2 = 6
 
 	**********************
 	** CALCULATE RESULTS *
@@ -440,13 +445,13 @@ program define ceqeduc, rclass
 					if "``educ''"=="" continue
 					
 					// Target population
-					qui summ `one' if ``educ'age'==1 & ``v'_group'==`gp' `aw'
+					qui summ `one' if ``educ'age'==1 & ``v'_group2'==`gp' `aw'
 					matrix ``v'_target'[`ee',`gp'] = r(sum)
 					
 					// Total attending public/private
 					forval pp=0/1 {
 						qui summ `one' if ``educ''==1 & `public'==`pp' ///
-							& ``v'_group'==`gp' `aw'
+							& ``v'_group2'==`gp' `aw'
 						matrix ``v'_total_`_`pp'_''[`ee',`gp'] = r(sum)
 							// `_`pp'_' is "pri" or "pub"
 					}
@@ -454,7 +459,7 @@ program define ceqeduc, rclass
 					// Target attending public/private
 					forval pp=0/1 {
 						qui summ `one' if ``educ'age'==1 & `public'==`pp' /// 
-							& ``v'_group'==`gp'  & ``educ''==1  `aw' 
+							& ``v'_group2'==`gp'  & ``educ''==1  `aw' 
 						matrix ``v'_target_`_`pp'_''[`ee',`gp'] = r(sum)
 					}
 					
@@ -481,12 +486,13 @@ program define ceqeduc, rclass
 		local titlesprint
 		local titlerow = 3
 		local titlecol = 1
-		local titlelist country surveyyear authors date ppp baseyear cpibase cpisurvey ppp_calculated
+		local titlelist country surveyyear authors date ppp baseyear cpibase cpisurvey ppp_calculated ///
+				scenario group project
 		foreach title of local titlelist {
 			returncol `titlecol'
 			if "``title''"!="" & "``title''"!="-1" ///
 				local  titlesprint `titlesprint' `r(col)'`titlerow'=("``title''")
-			local titlecol = `titlecol' + 2
+			local titlecol = `titlecol' + 1
 		}
 
 		// Print version number on Excel sheet

@@ -1,13 +1,15 @@
 ** ADO FILE FOR POPULATION SHEET OF CEQ Master Workbook Section E
 
 ** VERSION AND NOTES (changes between versions described under CHANGES)
-*! v1.3 27mar2017 For use with Oct 2016 version of Output Tables
+*! v1.4 01jun2017 For use with June 2017 version of Output Tables
+** v1.3 27mar2017 For use with Oct 2016 version of Output Tables
 ** v1.2 12jan2017 For use with Oct 2016 version of Output Tables
 ** v1.1 1oct2016 For use with Jun 2016 version of Output Tables
 ** v1.0 8aug2016 For use with Jun 2016 version of Output Tables
-*! (beta version; please report any bugs), written by Sean Higgins sean.higgins@ceqinstitute.org
+** (beta version; please report any bugs), written by Sean Higgins sean.higgins@ceqinstitute.org
 
 ** CHANGES
+**	  06-01-2017 Add additional options to print meta-information
 **    03-27-2017 Fix row alignmnet (bug pointed out by Sandra Martinez)
 ** 	  01-12-2017 Set the data type of all newly generated variables to be double
 ** 				 Add a check of the data type of income and fiscal variables and issue a warning if
@@ -177,6 +179,9 @@ program define ceqassump, rclass
 			SURVeyyear(string) /* string because could be range of years */
 			AUTHors(string)
 			BASEyear(real -1)
+			SCENario(string)
+			GROUp(string)
+			PROJect(string)
 			/* OTHER OPTIONS */
 			NODecile
 			NOGroup
@@ -490,10 +495,10 @@ program define ceqassump, rclass
 		** groups
 		if `_ppp' {
 			if "`nogroup'"=="" {
-				tempvar `v'_group
-				qui gen ``v'_group' = . 
+				tempvar `v'_group2
+				qui gen ``v'_group2' = . 
 				forval gp=1/6 {
-					qui replace ``v'_group' = `gp' if ``v'_ppp'>=`cut`=`gp'-1'' & ``v'_ppp'<`cut`gp''
+					qui replace ``v'_group2' = `gp' if ``v'_ppp'>=`cut`=`gp'-1'' & ``v'_ppp'<`cut`gp''
 					// this works because I set `cut0' = 0 and `cut6' = infinity
 				}
 			}
@@ -504,7 +509,7 @@ program define ceqassump, rclass
 		if "`nodecile'"==""  qui quantiles `v' `aw', gen(``v'_dec') n(10)   stable
 	}
 	
-	local group = 6
+	local group2 = 6
 	local dec = 10
 	
 	**********************
@@ -594,7 +599,7 @@ program define ceqassump, rclass
 	
 	// Rest of sheet
 	// Note: mata used in some places below to vectorize things and increase efficiency
-	foreach x in `_dec' `_group' { // separated _dec _group from _bin _centile since we decided to only have LCU total by bin and centile
+	foreach x in `_dec' `_group2' { // separated _dec _group from _bin _centile since we decided to only have LCU total by bin and centile
 		mata: J`x' = J(1,``x'',1) // row vector of 1s to get column sums
 		** create empty mata matrices for results
 		foreach ss in totLCU {
@@ -624,7 +629,7 @@ program define ceqassump, rclass
 	** PRINT RESULTS **
 	*******************
 	local mat_list "frontmatter" 
-	foreach x in `_dec' `_group' {
+	foreach x in `_dec' `_group2' {
 		local mat_list `mat_list' L_totLCU_`x'
 	}
 	local colname_list ""
@@ -649,12 +654,13 @@ program define ceqassump, rclass
 		local titlesprint
 		local titlerow = 3
 		local titlecol = 1
-		local titlelist country surveyyear authors date ppp baseyear cpibase cpisurvey ppp_calculated
+		local titlelist country surveyyear authors date ppp baseyear cpibase cpisurvey ppp_calculated ///
+				scenario group project
 		foreach title of local titlelist {
 			returncol `titlecol'
 			if "``title''"!="" & "``title''"!="-1" ///
 				local  titlesprint `titlesprint' `r(col)'`titlerow'=("``title''")
-			local titlecol = `titlecol' + 2
+			local titlecol = `titlecol' + 1
 		}
 
 		// Print version number on Excel sheet
@@ -667,11 +673,11 @@ program define ceqassump, rclass
 		local resultset
 		local rfrontmatter = 9
 		local rdec   = 43 // row where decile results start
-		local rgroup = `rdec' + `dec' + `vertincrement' + 1
+		local rgroup2 = `rdec' + `dec' + `vertincrement' + 1
 		local startpop = `startcol_o'
 		returncol `startpop'
 		local resultset `resultset' `r(col)'`rfrontmatter'=matrix(frontmatter)
-		foreach x in `_dec' `_group' {
+		foreach x in `_dec' `_group2' {
 			local startcol = `startcol_o'
 			foreach ss in totLCU {
 				returncol `startcol'
@@ -699,7 +705,7 @@ program define ceqassump, rclass
 			local _`x'col `r(col)'
 		}
 		forval i=1/6 {
-			local therow = `rgroup' + `i'  
+			local therow = `rgroup2' + `i'  
 			local cutoffs `cutoffs' `_lowcol'`therow'=(`cut`=`i'-1'') `_hicol'`therow'=(`cut`i'')
 		}
 		local rpovlines = 16 
@@ -730,7 +736,7 @@ program define ceqassump, rclass
 	
 	// In return list
 	return matrix frontmatter = frontmatter
-	foreach x in `_dec' `_group' {
+	foreach x in `_dec' `_group2' {
 		foreach ss in totLCU {
 			cap confirm matrix L_`ss'_`x'
 			if !_rc {

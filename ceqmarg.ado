@@ -1,7 +1,8 @@
 ** ADO FILE FOR MARGINAL EFFECTS
 
 ** VERSION AND NOTES (changes between versions described under CHANGES)
-*! v1.4 16may2017 For use with Oct 2016 version of Output Tables
+*! v1.5 02jun2017 For use with Jun 2017 version of Output Tables
+** v1.4 16may2017 For use with Oct 2016 version of Output Tables
 ** v1.3 06apr2017 For use with Oct 2016 version of Output Tables
 ** v1.2 27mar2017 For use with Oct 2016 version of Output Tables
 ** v1.1 08mar2017 For use with Oct 2016 version of Output Tables
@@ -9,6 +10,7 @@
 *! (beta version; please report any bugs), written by Sean Higgins sean.higgins@ceqinstitute.org
 
 ** CHANGES
+**   05-27-2017 Add additional options to print meta-information
 **   05-16-2017 Fix command name mistake
 **   04-06-2017 Remove the warning about negative tax values
 **   03-08-2017 Remove the net in-kind transfers as a broad category in accordance with the instruction that users
@@ -180,6 +182,9 @@ program define ceqmarg, rclass
 			SURVeyyear(string) /** string because could be range of years */
 			AUTHors(string)
 			BASEyear(real -1)
+			SCENario(string)
+			GROUp(string)
+			PROJect(string)
 			/** OTHER OPTIONS */
 			NODecile
 			NOGroup
@@ -1168,6 +1173,8 @@ program define ceqmarg, rclass
 									local v_wo_touse `wo_ppp'
 									local v_w_touse `w_ppp'
 								}
+								
+
 								else if _`p'_isscalar==1 {   // if pov line is scalar, // (note this local defined above)
 									local _pline = ``p'' // set `_pline' as that scalar and
 									local v_wo_touse ``v'_wo_`pr''   // use original income variable
@@ -1186,6 +1193,7 @@ program define ceqmarg, rclass
 								forval i=0/2 {
 									scalar _pov_wo_`i' = r(pov`i')
 								}
+
 								qui ceqpov `v_w_touse' `pw', z(`_pline')
 								forval i=0/2 {
 									scalar _pov_w_`i' = r(pov`i')
@@ -1222,12 +1230,13 @@ program define ceqmarg, rclass
 		local titlesprint
 		local titlerow = 3
 		local titlecol = 1
-		local titlelist country surveyyear authors date ppp baseyear cpibase cpisurvey ppp_calculated
+		local titlelist country surveyyear authors date ppp baseyear cpibase cpisurvey ppp_calculated ///
+				scenario group project
 		foreach title of local titlelist {
 			returncol `titlecol'
 			if "``title''"!="" & "``title''"!="-1" ///
 				local  titlesprint `titlesprint' `r(col)'`titlerow'=("``title''")
-			local titlecol = `titlecol' + 2
+			local titlecol = `titlecol' + 1
 		}
 
 		// Print version number on Excel sheet
@@ -1267,6 +1276,8 @@ program define ceqmarg, rclass
 		local warningprint `warningprint' A5=("`warningcount' important warning messages are printed starting on row `warningrow'.") 
 		
 		// putexcel
+		set trace on 
+
 		foreach vrank of local alllist {
 			if "``vrank''"!="" {
 				qui putexcel `titlesprint' `versionprint' `titles' ///
@@ -1278,7 +1289,7 @@ program define ceqmarg, rclass
 			}
 		}
 	}
-
+	set trace off
 	*********
 	** OPEN *
 	*********

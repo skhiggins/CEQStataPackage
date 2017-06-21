@@ -67,14 +67,17 @@
 {synopt :{opth prop:ortion(real)}}Relative poverty line as a proportion of median household income from 0 to 1 (default is 0.5){p_end}
 
 {syntab:Missing and negative values}
-{synopt :{opt ignorem:issing}}Ignore any missing values of income concepts and fiscal interventions
-{synopt :{opt negatives}}Produce all results even if negative values present
+{synopt :{opt ignorem:issing}}Ignore any missing values of income concepts and fiscal interventions{p_end}
+{synopt :{opt negatives}}Produce all results even if negative values present{p_end}
    
 {syntab:Export directly to CEQ Master Workbook (requires Stata 13 or newer)}
 {synopt :{opth coun:try(string)}}Country{p_end}
 {synopt :{opth surv:eyyear(string)}}Year of survey{p_end}
 {synopt :{opth auth:ors(string)}}Authors of study{p_end}
 {synopt :{opth base:year(real)}}Base year of PPP conversion (e.g., 2005, 2011){p_end}
+{synopt :{opth scen:ario(string)}}Scenario{p_end}
+{synopt :{opth grou:p(string)}}Group{p_end}
+{synopt :{opth proj:ect(string)}}Project{p_end}
 {synopt :{opth sheetm(string)}}Name of sheet to write results ranking by market income. Default is "E11.m FiscalInterventions"{p_end}
 {synopt :{opth sheetmp(string)}}Name of sheet to write results ranking by market income plus pensions. Default is "E11.m+p FiscalInterventions"{p_end}
 {synopt :{opth sheetn(string)}}Name of sheet to write results ranking by net market income. Default is "E11.n FiscalInterventions"{p_end}

@@ -1,13 +1,17 @@
 ** ADO FILE FOR POPULATION SHEET OF CEQ OUTPUT TABLES
 
 ** VERSION AND NOTES (changes between versions described under CHANGES)
-*! v1.4 12jan2017 For use with Oct 2016 version of Output Tables
+*! v1.5 01jun2017 For use with May 2017 version of Output Tables
+** v1.4 12jan2017 For use with Oct 2016 version of Output Tables
 ** v1.3 01oct2016 For use with Jun 2016 version of Output Tables
 ** v1.2 10sep2016 For use with Jun 2016 version of Output Tables
 ** v1.1 12aug2016 For use with Jun 2016 version of Output Tables
 ** v1.0 6aug2016 For use with Jun 2016 version of Output Tables
 
 ** CHANGES
+** 	06-06-2017 Changed minimum abbreviation for GROUPby to GROUPBy
+**			   due to new option for GRoup.
+** 	01-06-2017 Include Scenario, Group, and Project as opitions to be inputed into excel.
 ** 	01-12-2017 Set the data type of all newly generated variables to be double
 ** 			   Add a check of the data type of income and fiscal variables and issue a warning if
 **				 they are not double
@@ -82,7 +86,7 @@ program define ceqiop, rclass
 		[if] [in] [pweight/] 
 		, 
 			/* CIRCUMSTANCES */
-			GROUPby(varlist)
+			GROUPBy(varlist)
 		[	
 			/* INCOME CONCEPTS: */
 			Market(varname)
@@ -107,6 +111,9 @@ program define ceqiop, rclass
 			SURVeyyear(string) /* string because could be range of years */
 			AUTHors(string)
 			BASEyear(real -1)
+			SCENario(string)
+			GROUp(string)
+			PROJect(string)
 			/* DROP MISSING VALUES */
 			IGNOREMissing
 		]
@@ -446,12 +453,12 @@ program define ceqiop, rclass
 	local titlesprint
 	local titlerow = 3
 	local titlecol = 1
-	local titlelist country surveyyear authors date
+	local titlelist country surveyyear authors date scenario group project
 	foreach title of local titlelist {
 		returncol `titlecol'
 		if "``title''"!="" & "``title''"!="-1" ///
 			local  titlesprint `titlesprint' `r(col)'`titlerow'=("``title''")
-		local titlecol = `titlecol' + 2
+		local titlecol = `titlecol' + 1
 	}
 
 	// Print version number on Excel sheet

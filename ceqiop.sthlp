@@ -17,7 +17,7 @@
 {synopthdr}
 {synoptline}
 {syntab:Required}
-{synopt :{opth gr:oupby(varlist)}}Categorical variables that identify circumstances. 
+{synopt :{opth groupb:y(varlist)}}Categorical variables that identify circumstances. 
 (If each observation in the data set is a household, the variable should identify 
 values for the household head.){p_end}
 
@@ -48,6 +48,10 @@ values for the household head.){p_end}
 {synopt :{opth coun:try(string)}}Country{p_end}
 {synopt :{opth surv:eyyear(string)}}Year of survey{p_end}
 {synopt :{opth auth:ors(string)}}Authors of study{p_end}
+{synopt :{opth scen:ario(string)}}Scenario{p_end}
+{synopt :{opth grou:p(string)}}Group{p_end}
+{synopt :{opth proj:ect(string)}}Project{p_end}
+
 {synopt :{opth sheet(string)}}Name of sheet to write population matrices. Default is "E4. Inequality of Opportunity"{p_end}
 {synopt :{opt open}}Automatically open CEQ Master Workbook with new results added{p_end}
 {synoptline}		
@@ -68,7 +72,7 @@ income concepts, following the non-parametric method in Ferreira and Gignoux (20
 {opth t:axable(varname)}, {opth d:isposable(varname)}, {opth c:onsumable(varname)}, 
 {opth c:onsumable(varname)}, and {opth f:inal(varname)} options. 
 Circumstance sets are specified by
-the variables in {opth gr:oupby(varlist)}. For example, one circumstance set could be 
+the variables in {opth groupb:y(varlist)}. For example, one circumstance set could be 
 (female, black, parents were college graduates, urban): all individuals with those four traits are grouped together in 
 one circumstance set. Circumstances are pre-determined factors that are not dependent on an 
 individual’s effort, such as race, gender, and parents’ education or parents’ income. A smoothed income distribution 

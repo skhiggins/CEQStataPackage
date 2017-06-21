@@ -1,12 +1,14 @@
 ** ADO FILE FOR FISCAL INTERVENTIONS SHEET OF CEQ MASTER WORKBOOK SECTION E
 
 ** VERSION AND NOTES (changes between versions described under CHANGES)
-*! v1.2 12jan2017 For use with Oct 2016 version of CEQ Master Workbook 
+*! v1.3 01jun2017 For use with May 2017 version of CEQ Master Workbook 
+** v1.2 12jan2017 For use with Oct 2016 version of CEQ Master Workbook 
 ** v1.1 01oct2016 For use with Jun 2016 version of CEQ Master Workbook 
 ** v1.0 25sep2016 For use with Jun 2016 version of CEQ Master Workbook 
 *! (beta version; please report any bugs), written by Sean Higgins sean.higgins@ceqinstitute.org
 
 ** CHANGES
+**   06-01-2017 Add additional options to print meta-information
 ** 	 01-12-2017 Set the data type of all newly generated variables to be double
 ** 				Add a check of the data type of income and fiscal variables and issue a warning if
 **				 they are not double
@@ -131,6 +133,9 @@ program define ceqhhchar, rclass
 			SURVeyyear(string) /* string because could be range of years */
 			AUTHors(string)
 			BASEyear(real -1)
+			SCENario(string)
+			GROUp(string)
+			PROJect(string)
 			/* OTHER OPTIONS */
 			NODecile
 			NOGroup
@@ -419,7 +424,7 @@ program define ceqhhchar, rclass
 		exit 198
 	}
 	if "`nodecile'"=="" local _dec dec
-	if "`nogroup'"=="" & (`_ppp') local _group group
+	if "`nogroup'"=="" & (`_ppp') local _group2 group2
 	if "`nocentile'"=="" local _cent cent
 	if "`nobin'"=="" & (`_ppp') local _bin bin
 	
@@ -518,13 +523,13 @@ program define ceqhhchar, rclass
 					qui replace ``v'_bin' = 1 if ``v'_ppp' < 0
 				}
 				if "`nogroup'"=="" {
-					tempvar `v'_group
-					qui gen ``v'_group' = . 
+					tempvar `v'_group2
+					qui gen ``v'_group2' = . 
 					forval gp=1/6 {
-						qui replace ``v'_group' = `gp' if ``v'_ppp'>=`cut`=`gp'-1'' & ``v'_ppp'<`cut`gp''
+						qui replace ``v'_group2' = `gp' if ``v'_ppp'>=`cut`=`gp'-1'' & ``v'_ppp'<`cut`gp''
 						// this works because I set `cut0' = 0 and `cut6' = infinity
 					}
-					qui replace ``v'_group' = 1 if ``v'_ppp' < 0
+					qui replace ``v'_group2' = 1 if ``v'_ppp' < 0
 				}
 			}
 			
@@ -535,7 +540,7 @@ program define ceqhhchar, rclass
 		}
 	}
 	
-	local group = 6
+	local group2 = 6
 	local dec = 10
 	local cent = 100
 	if `_ppp' & "`nobin'"=="" local bin = `count_bins' // need if condition here b/c o.w. `count_bins' doesn't exist	
@@ -577,7 +582,7 @@ program define ceqhhchar, rclass
 	// Rest of sheet
 	foreach vrank of local alllist {
 		if "``vrank''"!="" {
-			foreach x in `_dec' `_group' `_cent' `_bin' {
+			foreach x in `_dec' `_group2' `_cent' `_bin' {
 				** create empty mata matrices for results
 				matrix results`vrank'_`x' = J(`=``x''+1',`cols',.)
 				
@@ -626,15 +631,15 @@ program define ceqhhchar, rclass
 		local resultset
 		local rfrontmatter = 9
 		local rdec   = 14 // row where decile results start
-		local rgroup = `rdec' + `dec' + `vertincrement'
-		local rcent  = `rgroup' + `group' + `vertincrement'
+		local rgroup2 = `rdec' + `dec' + `vertincrement'
+		local rcent  = `rgroup' + `group2' + `vertincrement'
 		local rbin   = `rcent' + `cent' + `vertincrement'
 		foreach vrank of local alllist {
 			if "``vrank''"!="" {
 				local startcol = `startcol_o'
 				returncol `startcol'
 				local resultset`vrank' `resultset`vrank'' `r(col)'`rfrontmatter'=matrix(frontmatter`vrank')
-				foreach x in `_dec' `_group' `_cent' `_bin' {
+				foreach x in `_dec' `_group2' `_cent' `_bin' {
 					returncol `startcol'
 					local resultset`vrank' `resultset`vrank'' `r(col)'`r`x''=matrix(results`vrank'_`x')
 					returncol `popcol'
@@ -648,12 +653,13 @@ program define ceqhhchar, rclass
 		local titlesprint
 		local titlerow = 3
 		local titlecol = 1
-		local titlelist country surveyyear authors date ppp baseyear cpibase cpisurvey ppp_calculated
+		local titlelist country surveyyear authors date ppp baseyear cpibase cpisurvey ppp_calculated ///
+				scenario group project
 		foreach title of local titlelist {
 			returncol `titlecol'
 			if "``title''"!="" & "``title''"!="-1" ///
 				local  titlesprint `titlesprint' `r(col)'`titlerow'=("``title''")
-			local titlecol = `titlecol' + 2
+			local titlecol = `titlecol' + 1
 		}
 
 		// Print version number on Excel sheet
@@ -676,7 +682,7 @@ program define ceqhhchar, rclass
 			local _`x'col `r(col)'
 		}
 		forval i=1/6 {
-			local therow = `rgroup' + `i' - 1
+			local therow = `rgroup2' + `i' - 1
 			if `i'==1 { 
 				local cutoffs `cutoffs' `_hicol'`therow'=(`cut`i'')
 			}
