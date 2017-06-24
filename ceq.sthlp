@@ -1,6 +1,6 @@
 {smcl}
 {* 31oct2016}{...}
-{cmd:help ceq} {right:Rodrigo Aranda and Sean Higgins}
+{cmd:help ceq} {right:Rodrigo Aranda, Sean Higgins, Ruoxi Li}
 {hline}
 
 {pstd}
@@ -44,7 +44,12 @@ sheets of the CEQ Master Workbook 2016 Section E{p_end}
 
 {phang}{helpb ceqextend} computes summary statistics and detailed information for CEQ extended income 
 concepts by income decile, group, centile, and bin for the "E12. Extended Income Concepts" sheets of the 
-CEQ Master Workbook 2016 Section E{p_end}
+CEQ Master Workbook 2016 Section E {p_end}
+
+
+{phang}{helpb ceqmarg} computes marginal contribution of fiscal interventions
+(taxes, transfers, and subsidies) to inequality and poverty for the "E13. Marg. Contrib." 
+sheets of the CEQ Master Workbook 2016 Section E {p_end}
 
 {phang}{helpb ceqefext} computes effectiveness indicators for CEQ extended income concepts, for 
 the "E14. Effectiveness" sheets of the CEQ Master Workbook 2016 Section E{p_end} 
@@ -62,6 +67,8 @@ the "E17. Dominance" sheets of the CEQ Master Workbook 2016 Section E{p_end}
 {phang}{helpb ceqcoverage} computes indicators on coverage and leakages for fiscal 
 interventions (taxes, transfers, and subsidies) by income group for the "E18. Coverage Tables" sheets of the 
 CEQ Master Workbook 2016 Section E{p_end}
+
+{phang}{helpb ceqtarget} computes indicators on coverage and leakages for fiscal interventions (taxes, transfers, and subsidies) by income group for the "E19. Coverage (Target)" sheets of the CEQ Master Workbook 2016 Section E E{p_end}
 
 {phang}{helpb ceqeduc} computes educational enrollment rates, for the "E20. Edu Enrollment Rates" sheet of the 
 CEQ Master Workbook 2016 Section E{p_end}
@@ -88,11 +95,10 @@ progressivity, for the "E24. Lorenz Curves" sheet of the CEQ Master Workbook 201
 {p2line}
 {p2colreset}{...}  
 
+
+{phang}{helpb ceqassump} tests how assumptions used to construct income concepts affect
+inequality, poverty, distribution, for the "E28. Assumptions" sheet of the CEQ Master Workbook 2016 Section E {p_end}
+
 {phang}{helpb ceqrace} produces results tables for sheets of the Ethno Racial Master Workbook, which is 
 the CEQ Master Workbook 2016 Section F{p_end}
 
-{title:Acknowledgments}
-
-{pstd}
-We are grateful to Rosie Li for research assistance.
-{p_end}
