@@ -1,6 +1,6 @@
 {smcl}
 {* 31oct2016}{...}
-{cmd:help ceq} {right:Rodrigo Aranda, Sean Higgins, Ruoxi Li}
+{cmd:help ceq} {right:Sean Higgins, Rodrigo Aranda, Ruoxi Li}
 {hline}
 
 {pstd}
