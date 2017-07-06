@@ -3,7 +3,7 @@
 * VERSION AND NOTES (changes between versions described under CHANGES)
 *! v1.5 21may2017 For use with Apr 2017 version of Output Tables
 ** v1.4 03Jan2016 For use with Feb 2016 version of Output Tables
-*! (beta version; please report any bugs), written by Rodrigo Aranda raranda@tulane.edu
+** (beta version; please report any bugs), written by Rodrigo Aranda raranda@tulane.edu
 
 * CHANGES
 *  v1.1 Added Poverty options as well as cleaned some bugs 
@@ -835,7 +835,7 @@ program define _ceqefext, rclass
 			Pensions   (varlist)
 			DTRansfers (varlist)
 			DTAXes     (varlist) 
-			CONT:ribs(varlist)
+			CONTribs(varlist)
 			SUbsidies  (varlist)
 			INDTAXes   (varlist)
 			HEALTH     (varlist)
