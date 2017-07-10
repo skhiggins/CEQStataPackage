@@ -73,7 +73,7 @@ program define ceqgraph, rclass
 	local dit display as text in smcl
 	local die display as error in smcl
 	local command ceqgraph
-	local version 2.2
+	local version 2.3
 	`dit' "Running version `version' of `command' `subcmd' on `c(current_date)' at `c(current_time)'" _n "   (please report this information if reporting a bug to sean.higgins@ceqinstitute.org)"
 	
 	****************

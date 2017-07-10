@@ -1,7 +1,7 @@
 ** ADO FILE FOR FISCAL INTERVENTIONS SHEET OF CEQ MASTER WORKBOOK SECTION E
 
 ** VERSION AND NOTES (changes between versions described under CHANGES)
-*! v1.3 02jun2017 For use with May 2017 version of CEQ Master Workbook 
+*! v1.3 02jun2017 For use with July 2017 version of CEQ Master Workbook 
 ** v1.2 12jan2017 For use with Oct 2016 version of CEQ Master Workbook 
 ** v1.1 30sep2016 For use with Jun 2016 version of CEQ Master Workbook
 ** v1.0 25sep2016 For use with Jun 2016 version of CEQ Master Workbook
@@ -100,7 +100,7 @@ program define ceqinfra, rclass
 	local dit display as text in smcl
 	local die display as error in smcl
 	local command ceqinfra
-	local version 1.1
+	local version 1.3
 	`dit' "Running version `version' of `command' on `c(current_date)' at `c(current_time)'" _n "   (please report this information if reporting a bug to sean.higgins@ceqinstitute.org)"
 	
 	** infrastructure access variables

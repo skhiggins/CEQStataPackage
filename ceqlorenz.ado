@@ -1,7 +1,8 @@
 ** ADO FILE FOR POPULATION SHEET OF CEQ OUTPUT TABLES
 
 ** VERSION AND NOTES (changes between versions described under CHANGES)
-*! v3.7 02jun2017 For use with May 2017 version of Output Tables
+*! v3.8 29jun2017 For use with July3 2017 version of Output Tables
+** v3.7 02jun2017 For use with May 2017 version of Output Tables
 ** v3.6 12mar2017 For use with Oct 2016 version of Output Tables
 ** v3.5 12jan2017 For use with Oct 2016 version of Output Tables
 ** v3.4 01oct2016 For use with Jun 2016 version of Output Tables
@@ -21,11 +22,12 @@
 ** v1.11 28may2015 was dII.ado, for use with Jan 8 2015 version of Disaggregated Tables
 ** ... // omitting version information since name of ado file changed
 ** v1.0 20oct2014 
-*! (beta version; please report any bugs), written by Sean Higgins sean.higgins@ceqinstitute.org
+** (beta version; please report any bugs), written by Sean Higgins sean.higgins@ceqinstitute.org
 
 ** CHANGES
-**   06-06-2017 Changed line 408: local _group group to local _group grp
-**				Changed line 619: local group = 6 to local grp = 6 (don't know where this is used)
+**   06-29-2017 Replacing covconc with improved version by Paul Corral
+**   06-06-2017 Changed line 408: local _group group to local _group2 group2
+**				Changed line 619: local group = 6 to local group2 = 6 (don't know where this is used)
 **   06-01-2017 Add additional options to print meta-information
 ** 	 03-12-2017 Add flexibilty to allow some poverty results to be produced when ppp is not specified
 ** 	 01-12-2017 Set the data type of all newly generated variables to be double
@@ -83,55 +85,7 @@ program define returncol, rclass
 	return local col = col
 end // END returncol
 
-// BEGIN covconc (Higgins 2015)
-//  Calculates Gini and concentration coefficients
-cap program drop covconc
-program define covconc, rclass sortpreserve
-	syntax varname [if] [in] [pw aw iw fw/], [rank(varname)]
-	preserve
-	marksample touse
-	qui keep if `touse' // drops !`if', !`in', and any missing values of `varname'
-	local 1 `varlist'
-	if "`rank'"=="" {
-		local rank `1'
-		local _return gini
-		local _returndi Gini
-	}
-	else {
-		local _return conc
-		local _returndi Concentration Coefficient
-	}
-	sort `rank' `1', stable // sort in increasing order of ranking variable; break ties with other variable
-	tempvar F wnorm wsum // F is adjusted fractional rank, wnorm normalized weights,
-		// wsum sum of normalized weights for obs 1, ..., i-1
-	if "`exp'"!="" { // with weights   
-		local aw [aw=`exp'] // with = since I used / in syntax  
-		tempvar weight
-		gen `weight' = `exp'
-		qui summ `weight'
-		qui gen `wnorm' = `weight'/r(sum) // weights normalized to sum to 1
-		qui gen double `wsum' = sum(`wnorm')
-		qui gen double `F' = `wsum'[_n-1] + `wnorm'/2 // from Lerman and Yitzhaki (1989)
-		qui replace `F' = `wnorm'/2 in 1
-		qui corr `1' `F' `aw', cov
-		local cov = r(cov_12)
-		qui summ `1' `aw', meanonly 
-		local mean = r(mean)
-	}
-	else { // no weights
-		qui gen `F' = _n/_N // sorted so this works in unweighted case; 
-			// cumul `1', gen(`F') would also work
-		qui corr `1' `F', cov
-		local cov = r(cov_12)
-		qui summ `1', meanonly
-		local mean = r(mean)
-	}
-	local `_return' = ((r(N)-1)/r(N))*(2/`mean')*`cov' // the (N-1)/N term adjusts for
-		// the fact that Stata does sample cov
-	return scalar `_return' = ``_return''
-	di as result "`_returndi': ``_return''"
-	restore
-end // END covconc
+
 
 // BEGIN _theil 
 // (code adapted from inequal7, Van Kerm 2001, revision of inequal, Whitehouse 1995)
@@ -257,7 +211,7 @@ program define ceqlorenz, rclass
 	local dit display as text in smcl
 	local die display as error in smcl
 	local command ceqlorenz
-	local version 3.6
+	local version 3.8
 	`dit' "Running version `version' of `command' on `c(current_date)' at `c(current_time)'" _n "   (please report this information if reporting a bug to sean.higgins@ceqinstitute.org)"
 	
 	** income concepts
@@ -407,7 +361,7 @@ program define ceqlorenz, rclass
 		exit 198
 	}
 	if "`nodecile'"=="" local _dec dec
-	if "`nogroup'"=="" & (`_ppp') local _group grp
+	if "`nogroup'"=="" & (`_ppp') local _group2 group2
 	if "`nocentile'"=="" local _cent cent
 	if "`nobin'"=="" & (`_ppp') local _bin bin
 	
@@ -601,13 +555,13 @@ program define ceqlorenz, rclass
 					qui replace ``v'_bin' = 1 if ``v'_ppp' < 0
 				}
 				if "`nogroup'"=="" {
-					tempvar `v'_group
-					qui gen ``v'_group' = . 
+					tempvar `v'_group2
+					qui gen ``v'_group2' = . 
 					forval gp=1/6 {
-						qui replace ``v'_group' = `gp' if ``v'_ppp'>=`cut`=`gp'-1'' & ``v'_ppp'<`cut`gp''
+						qui replace ``v'_group2' = `gp' if ``v'_ppp'>=`cut`=`gp'-1'' & ``v'_ppp'<`cut`gp''
 						// this works because I set `cut0' = 0 and `cut6' = infinity
 					}
-					qui replace ``v'_group' = 1 if ``v'_ppp' < 0
+					qui replace ``v'_group2' = 1 if ``v'_ppp' < 0
 				}
 			}
 			
@@ -618,7 +572,7 @@ program define ceqlorenz, rclass
 		}
 	}
 	
-	local grp = 6
+	local group2 = 6
 	local dec = 10
 	local cent = 100
 	if `_ppp' & "`nobin'"=="" local bin = `count_bins' // need if condition here b/c o.w. `count_bins' doesn't exist	
@@ -732,7 +686,7 @@ program define ceqlorenz, rclass
 	
 	// Rest of sheet
 	// Note: mata used in some places below to vectorize things and increase efficiency
-	foreach x in `_dec' `_group' { // separated _dec _group from _bin _centile since we decided to only have LCU total by bin and centile
+	foreach x in `_dec' `_group2' { // separated _dec _group from _bin _centile since we decided to only have LCU total by bin and centile
 		mata: J`x' = J(1,``x'',1) // row vector of 1s to get column sums
 		mata: tri`x' = lowertriangle(J(`=``x''+1',`=``x''+1',1)) // for cumulative shares
 		** create empty mata matrices for results
@@ -855,13 +809,13 @@ program define ceqlorenz, rclass
 		local resultset
 		local rfrontmatter = 9
 		local rdec   = 53 // row where decile results start
-		local rgroup = `rdec' + `dec' + `vertincrement'
-		local rcent  = `rgroup' + `grp' + `vertincrement'
+		local rgroup2 = `rdec' + `dec' + `vertincrement'
+		local rcent  = `rgroup2' + `group2' + `vertincrement'
 		local rbin   = `rcent' + `cent' + `vertincrement'
 		local startpop = `startcol_o'
 		returncol `startpop'
 		local resultset `resultset' `r(col)'`rfrontmatter'=matrix(frontmatter)
-		foreach x in `_dec' `_group' {
+		foreach x in `_dec' `_group2' {
 			local startcol = `startcol_o'
 			foreach ss of local supercols {
 				returncol `startcol'
@@ -887,7 +841,7 @@ program define ceqlorenz, rclass
 			local _`x'col `r(col)'
 		}
 		forval i=1/6 {
-			local therow = `rgroup' + `i' - 1
+			local therow = `rgroup2' + `i' - 1
 			returncol `lowcol'
 			if `i'==1 { 
 				local cutoffs `cutoffs' `_lowcol'`therow'=("") `_hicol'`therow'=(`cut`i'')
@@ -924,7 +878,7 @@ program define ceqlorenz, rclass
 	}
 	
 	// In return list
-	foreach x in `_dec' `_group' `_cent' `_bin' {
+	foreach x in `_dec' `_group2' `_cent' `_bin' {
 		foreach ss of local supercols {
 			cap confirm matrix L_`ss'_`x'
 			if !_rc {

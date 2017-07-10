@@ -1,12 +1,12 @@
 ** ADO FILE FOR POPULATION SHEET OF CEQ Master Workbook Section E
 
 ** VERSION AND NOTES (changes between versions described under CHANGES)
-*! v1.4 01jun17 For use with may 2017 version of CEQ Master Workbook Section E
+*! v1.4 01jun17 For use with July 2017 version of CEQ Master Workbook Section E
 ** v1.3 27mar17 For use with Oct 2016 version of CEQ Master Workbook Section E
 ** v1.2 12jan17 For use with Oct 2016 version of CEQ Master Workbook Section E
 ** v1.1 01dec16 For use with Oct 2016 version of CEQ Master Workbook Section E
 ** v1.0 29sep16 For use with Sep 2016 version of CEQ Master Workbook Section E
-*! (beta version; please report any bugs), written by Sean Higgins sean.higgins@ceqinstitute.org
+** (beta version; please report any bugs), written by Sean Higgins sean.higgins@ceqinstitute.org
 
 ** CHANGES
 **  06-01-2017  Add additional options to print meta-information
@@ -104,7 +104,7 @@ program define ceqeduc, rclass
 	local dit display as text in smcl
 	local die display as error in smcl
 	local command ceqeduc
-	local version 1.3
+	local version 1.4
 	`dit' "Running version `version' of `command' on `c(current_date)' at `c(current_time)'" _n "   (please report this information if reporting a bug to sean.higgins@ceqinstitute.org)"
 	
 	** education levels 

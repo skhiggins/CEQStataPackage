@@ -881,6 +881,9 @@ program define _ceqefext, rclass
 			COUNtry(string)
 			SURVeyyear(string) /* string because could be range of years */
 			AUTHors(string)
+			SCENario(string)
+			GROUp(string)
+			PROJect(string)
 			
 			BASEyear(real -1)
 			/* OTHER OPTIONS 
@@ -2129,13 +2132,13 @@ program define _ceqefext, rclass
 				local titlesprint;
 				local titlerow = 3;
 				local titlecol = 1;
-				local titlelist country surveyyear authors date ppp baseyear cpibase cpisurvey ppp_calculated;
+				local titlelist country surveyyear authors date ppp baseyear cpibase cpisurvey ppp_calculated scenario group project ;
 
 				foreach title of local titlelist {;
 				returncol `titlecol';
 				if "``title''"!="" & "``title''"!="-1" 
 				local  titlesprint `titlesprint' `r(col)'`titlerow'=("``title''");
-				local titlecol = `titlecol' + 2;
+				local titlecol = `titlecol' + 1;
 				};
 				qui putexcel `titlesprint'  `versionprint' `titles1`y'' `titles2`y'' `titles3`y'' `titles4`y'' using `"`using'"', modify keepcellformat sheet("`sheet`y''");
 

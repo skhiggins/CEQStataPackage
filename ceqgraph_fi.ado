@@ -133,7 +133,7 @@ capture program define ceqgraph_fi
 	local dit display as text in smcl
 	local die display as error in smcl
 	local command ceqgraph_fi
-	local version 2.1
+	local version 2.3
 
 	** results
 	if "`headcount'`total'`percapita'`normalized'"=="" {

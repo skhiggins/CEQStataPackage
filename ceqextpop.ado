@@ -1,14 +1,14 @@
 ** ADO FILE FOR POPULATION SHEET OF CEQ OUTPUT TABLES
 
 ** VERSION AND NOTES (changes between versions described under CHANGES)
-*! v1.6 01jun2017 For use with May 2017 version of Output Tables
+*! v1.6 01jun2017 For use with July 2017 version of Output Tables
 ** v1.5 08mar2017 For use with Oct 2016 version of Output Tables
 ** v1.4 12jan2017 For use with Oct 2016 version of Output Tables
 ** v1.3 30oct2016 For use with Jun 2016 version of Output Tables 
 ** v1.2 01oct2016 For use with Jun 2016 version of Output Tables 
 ** v1.1 8aug2016 For use with Jun 2016 version of Output Tables 
 ** v1.0 6aug2016 For use with Jun 2016 version of Output Tables 
-*! (beta version; please report any bugs), written by Sean Higgins sean.higgins@ceqinstitute.org
+** (beta version; please report any bugs), written by Sean Higgins sean.higgins@ceqinstitute.org
 
 ** CHANGES
 **   06-01-2017 Add additional options to print meta-information
@@ -80,7 +80,7 @@ program define ceqextpop
 	local dit display as text in smcl
 	local die display as error in smcl
 	local command ceqextpop
-	local version 1.5
+	local version 1.6
 	`dit' "Running version `version' of `command' on `c(current_date)' at `c(current_time)'" _n "   (please report this information if reporting a bug to sean.higgins@ceqinstitute.org)"
 	
 	** income concept options
@@ -632,7 +632,7 @@ program define _ceqextpop, rclass
 		** exit 198
 	** }
 	if "`nodecile'"=="" local _dec dec
-	if "`nogroup'"=="" & (`_ppp') local _group group
+	if "`nogroup'"=="" & (`_ppp') local _group2 group2
 	if "`nocentile'"=="" local _cent cent
 	if "`nobin'"=="" & (`_ppp') local _bin bin
 	
@@ -905,14 +905,14 @@ program define _ceqextpop, rclass
 					local count_bins = `i'
 					qui replace ``v'_bin' = 1 if ``v'_ppp' < 0
 				}
-				if "`nogroup'"=="" {
-					tempvar `v'_group
-					qui gen ``v'_group' = . 
+				if "`nogroup2'"=="" {
+					tempvar `v'_group2
+					qui gen ``v'_group2' = . 
 					forval gp=1/6 {
-						qui replace ``v'_group' = `gp' if ``v'_ppp'>=`cut`=`gp'-1'' & ``v'_ppp'<`cut`gp''
+						qui replace ``v'_group2' = `gp' if ``v'_ppp'>=`cut`=`gp'-1'' & ``v'_ppp'<`cut`gp''
 						// this works because I set `cut0' = 0 and `cut6' = infinity
 					}
-					qui replace ``v'_group' = 1 if ``v'_ppp' < 0
+					qui replace ``v'_group2' = 1 if ``v'_ppp' < 0
 				}
 			}
 			
@@ -950,13 +950,13 @@ program define _ceqextpop, rclass
 					qui replace ``v'_bin' = 1 if ``v'_ppp' < 0
 				}
 				if "`nogroup'"=="" {
-					tempvar `v'_group
-					qui gen ``v'_group' = . 
+					tempvar `v'_group2
+					qui gen ``v'_group2' = . 
 					forval gp=1/6 {
-						qui replace ``v'_group' = `gp' if ``v'_ppp'>=`cut`=`gp'-1'' & ``v'_ppp'<`cut`gp''
+						qui replace ``v'_group2' = `gp' if ``v'_ppp'>=`cut`=`gp'-1'' & ``v'_ppp'<`cut`gp''
 						// this works because I set `cut0' = 0 and `cut6' = infinity
 					}
-					qui replace ``v'_group' = 1 if ``v'_ppp' < 0
+					qui replace ``v'_group2' = 1 if ``v'_ppp' < 0
 				}
 			}
 			
@@ -967,7 +967,7 @@ program define _ceqextpop, rclass
 		}
 	}
 	
-	local group = 6
+	local group2 = 6
 	local dec = 10
 	local cent = 100
 	
@@ -976,7 +976,7 @@ program define _ceqextpop, rclass
 	**********************
 	** CALCULATE RESULTS *
 	**********************
-	foreach x in `_dec' `_group' `_cent' `_bin' {
+	foreach x in `_dec' `_group2' `_cent' `_bin' {
 		matrix J`x' = J(1,``x'',1) // row vector of 1s to get column sums
 		foreach y of local alllist {
 			if "``y''"!="" {
@@ -1030,15 +1030,15 @@ program define _ceqextpop, rclass
 		local trow = 8
 		local coltrow = 9
 		local rdec   = 11 // row where decile results start
-		local rgroup = `rdec' + `dec' + `vertincrement'
-		local rcent  = `rgroup' + `group' + `vertincrement'
+		local rgroup2 = `rdec' + `dec' + `vertincrement'
+		local rcent  = `rgroup2' + `group2' + `vertincrement'
 		local rbin   = `rcent' + `cent' + `vertincrement'
 		local startpop = `startcol_o'
 		if "``y''"!="" {
 			foreach ext of local marg`y' {
 				returncol `startpop'
 				// Matrices
-				foreach x in `_dec' `_group' `_cent' `_bin' {
+				foreach x in `_dec' `_group2' `_cent' `_bin' {
 					local resultset`y' `resultset`y'' `r(col)'`r`x''=matrix(`x'_`ext'pop)
 				}
 				// Titles
@@ -1058,6 +1058,7 @@ program define _ceqextpop, rclass
 	local titlesprint
 	local titlerow = 3
 	local titlecol = 1
+	
 	local titlelist country surveyyear authors date ppp baseyear cpibase cpisurvey ppp_calculated ///
 			scenario group project
 	foreach title of local titlelist {
@@ -1093,7 +1094,7 @@ program define _ceqextpop, rclass
 		local _`x'col `r(col)'
 	}
 	forval i=1/6 {
-		local therow = `rgroup' + `i' - 1
+		local therow = `rgroup2' + `i' - 1
 		if `i'==1 { 
 				local cutoffs `cutoffs' `_hicol'`therow'=(`cut`i'')
 		}

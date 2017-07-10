@@ -65,7 +65,6 @@
 {synopt :{opth scen:ario(string)}}Scenario{p_end}
 {synopt :{opth grou:p(string)}}Group{p_end}
 {synopt :{opth proj:ect(string)}}Project{p_end}
-{synopt :{opth base:year(real)}}Base year of PPP conversion (e.g., 2005, 2011){p_end}
 {synopt :{opth sheet(string)}}Name of sheet to write results. Default is "E25. Concentration Curves"{p_end}
 {synopt :{opt open}}Automatically open CEQ Master Workbook with new results added{p_end}
 
@@ -109,7 +108,7 @@ variables. The {opth health(varlist)}, {opth educ:ation(varlist)} and {opth othe
 need to be specfied with fiscal intervention variable(s) that are net of user fee(s).
 If any of these variables is negative for any households due to user fees exceeding gross benefits, the negative values should be truncated at 0. 
 The user fee options are designed solely to separately analyze the distribution of usre fees and will not be used in calculating 
-net health/education/other public transfers. See the example section for more detail.
+net health/education/other public transfers. See the example section for more detail. The variables provided in the {opth health(varlist)}, {opth educ:ation(varlist)}, and {opth other:public(varlist)} options should already be net of co-payments and user fees; we nevertheless include the separate options {opth userfeesh:ealth(varlist)}, {opth userfeese:duc(varlist)}, and {opth userfeeso:ther(varlist)} so that, for example, user fees can be analyzed.
 
 {pstd}
 The income and fiscal intervention variables should be expressed in household per capita or per adult equivalent 

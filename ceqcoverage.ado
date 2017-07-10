@@ -1,7 +1,7 @@
 ** ADO FILE FOR FISCAL INTERVENTIONS SHEET OF CEQ MASTER WORKBOOK SECTION E
 
 ** VERSION AND NOTES (changes between versions described under CHANGES)
-*! v1.8 01jun2017 For use with May 2017 version of CEQ Master Workbook 2016
+*! v1.8 01jun2017 For use with July 2017 version of CEQ Master Workbook 2016
 ** v1.7 02apr2017 For use with Oct 2016 version of CEQ Master Workbook 2016
 ** v1.6 08mar2017 For use with Oct 2016 version of CEQ Master Workbook 2016
 ** v1.5 06feb2017 For use with Sep 2016 version of CEQ Master Workbook 2016
@@ -10,7 +10,7 @@
 ** v1.2 01oct2016 For use with Sep 2016 version of CEQ Master Workbook 2016
 ** v1.1 30sep2016 For use with Jun 2016 version of CEQ Master Workbook 2016
 ** v1.0 23sep2016 For use with Jun 2016 version of CEQ Master Workbook 2016
-*! (beta version; please report any bugs), written by Sean Higgins sean.higgins@ceqinstitute.org
+** (beta version; please report any bugs), written by Sean Higgins sean.higgins@ceqinstitute.org
 
 ** CHANGES
 **	 06-01-2017 Add additional options to print meta-information
@@ -143,7 +143,7 @@ program define ceqcoverage, rclass
 	local dit display as text in smcl
 	local die display as error in smcl
 	local command ceqcoverage
-	local version 1.7
+	local version 1.8
 	`dit' "Running version `version' of `command' on `c(current_date)' at `c(current_time)'" _n "   (please report this information if reporting a bug to sean.higgins@ceqinstitute.org)"
 	
 	** income concepts

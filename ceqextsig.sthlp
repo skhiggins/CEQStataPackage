@@ -111,7 +111,7 @@ in-kind benefits by {opth other:public(varlist)}, health user fees by {opth user
 education user fees by {opth userfeese:duc(varlist)}, and other public user fees by
 {opth userfeeso:ther(varlist)}. Tax and contribution variables may be saved as 
 either positive or negative values, as long as one is used consistently for all tax and contribution 
-variables. The same goes for user fees variables.
+variables. The same goes for user fees variables. The variables provided in the {opth health(varlist)}, {opth educ:ation(varlist)}, and {opth other:public(varlist)} options should already be net of co-payments and user fees; we nevertheless include the separate options {opth userfeesh:ealth(varlist)}, {opth userfeese:duc(varlist)}, and {opth userfeeso:ther(varlist)} so that, for example, user fees can be analyzed.
 
 {pstd}
 Poverty lines in PPP dollars per day can be set using the {opth pl1(real)}, {opth pl2(real)}, 

@@ -1,7 +1,7 @@
 * ADO FILE FOR DOMINANCE SHEET OF CEQ OUTPUT TABLES
 
 * VERSION AND NOTES (changes between versions described under CHANGES)
-*! v1.4 01jun2017 For use with May 2017 version of Output Tables
+*! v1.4 01jun2017 For use with July 2017 version of Output Tables
 ** v1.3 29OCT2016 For use with Jul 2016 version of Output Tables
 ** (beta version; please report any bugs), written by Rodrigo Aranda raranda@tulane.edu
 
@@ -156,7 +156,7 @@ qui estat svyset;
 local wname2=`"`e(wvar)'"';
 };
 
-tempvar y2 w2;
+qui tempvar y2 w2;
 cap drop `w2';
 cap drop `y2';
 qui gen `y2'=`2';
@@ -203,7 +203,7 @@ collapse (sum) _lp1 _lp2, by(_p);
 qui count;
 local obs1=`r(N)'+1;
 qui set obs `obs1';
-gen double _fp=0;
+qui gen double _fp=0;
 qui count;
 local chk = `r(N)' - 1;
 forvalues i=2/`r(N)' {;
@@ -235,7 +235,7 @@ qui replace _flp1= `lpi' in `av';
 cap drop _p _lp1;
 drop _merge;
 merge using `mas2';
-gen _flp2=0;
+qui gen _flp2=0;
 qui count; 
 local i = 1;
 local aa=`r(N)'-1;
@@ -442,7 +442,7 @@ program define ceqdom, rclass sortpreserve;//General program for dominance;
 	local dit display as text in smcl;
 	local die display as error in smcl;
 	local command ceqdom;
-	local version 1.3;
+	local version 1.4;
 	`dit' "Running version `version' of `command' on `c(current_date)' at `c(current_time)'" _n "   (please report this information if reporting a bug to raranda@tulane.edu)";
 	qui{;
 	* weight (if they specified hhsize*hhweight type of thing);
@@ -525,14 +525,14 @@ program define ceqdom, rclass sortpreserve;//General program for dominance;
 	
 	* collapse to hh-level data;
 	if "`hsize'"=="" { ;// i.e., it is individual-level data;
-		tempvar members;
+		qui tempvar members;
 		sort `hhid';
 		qui bys `hhid': gen `members' = _N; // # members in hh ;
 		qui bys `hhid': drop if _n>1; // faster than duplicates drop;
 		local hsize `members';
 	};
 		* temporary variables;
-	tempvar one;
+	qui tempvar one;
 	qui gen `one' = 1;
 	**********************
 	* SVYSET AND WEIGHTS *
@@ -548,7 +548,7 @@ program define ceqdom, rclass sortpreserve;//General program for dominance;
 		if "`exp'"=="" & "`r(wvar)'"!="" local w `r(wvar)';
 		if "`exp'"!="" local w `exp';
 		if "`w'"!="" {;
-			tempvar weightvar;
+			qui tempvar weightvar;
 			qui gen double `weightvar' = `w'*`hsize';
 			local w `weightvar';
 		};
@@ -671,8 +671,8 @@ program define ceqdom, rclass sortpreserve;//General program for dominance;
 	};
 	
 	*Temporary dataset from which to run results;
-	tempfile orig;
-	save `orig',replace;
+	qui tempfile orig;
+	qui save `orig',replace;
 	
 	*****Lorenz curves;
 	local a=0;
@@ -684,25 +684,25 @@ program define ceqdom, rclass sortpreserve;//General program for dominance;
 			if `_`y''>`_`z''{;
 			local b=`b'+1;
 			if "``z''"!=""{;
-			domineq ``y'' ``z'', rank1(``y'') rank2(``z'');
+			qui domineq ``y'' ``z'', rank1(``y'') rank2(``z'');
 			matrix inc_cross[`_`y'',`_`z''] = r(inters);
 			
 			if r(inters)==0{;
 				*if (`_`y''>= `_`z'' & `_`y''<=5) | (`_`y''< `_`z'' & `_`y''>5){;
-				tempvar x1 y1 x2 y2 num ;
+				qui tempvar x1 y1 x2 y2 num ;
 		
-				glcurve ``y'' `aw', sortvar(``y'') lorenz pvar(`x1') glvar(`y1')  replace nograph;
-				gen `num'=1;//identifier;
+				qui glcurve ``y'' `aw', sortvar(``y'') lorenz pvar(`x1') glvar(`y1')  replace nograph;
+				qui gen `num'=1;//identifier;
 				keep `x1' `y1' `num';
-				tempfile temp1;
-				save "`temp1'",replace;
+				qui tempfile temp1;
+				qui save "`temp1'",replace;
 				use "`orig'",clear;
-				glcurve ``z'' `aw', sortvar(``z'') lorenz pvar(`x1') glvar(`y1')  replace nograph;
+				qui glcurve ``z'' `aw', sortvar(``z'') lorenz pvar(`x1') glvar(`y1')  replace nograph;
 
-				gen `num'=2;//identifier;
-				keep `x1' `y1' `num';
-				append using "`temp1'";
-				ksmirnov `y1',by(`num');
+				qui gen `num'=2;//identifier;
+				qui keep `x1' `y1' `num';
+				qui append using "`temp1'";
+				qui ksmirnov `y1',by(`num');
 				/* bootstrap  r(p_cor),reps(`reps') seed(12345):  ksmirnov `y1',by(`num'); */
 				/* matrix res=r(table); 
 				local pval=res[4,1]; */ 
@@ -729,29 +729,29 @@ program define ceqdom, rclass sortpreserve;//General program for dominance;
 		if `_`y''>`_`z''{;
 			local b=`b'+1;
 			if "``z''"!=""{;
-			domineq ``y'' ``z'', rank1(``w'') rank2(``w'');
+			qui domineq ``y'' ``z'', rank1(``w'') rank2(``w'');
 			matrix `w'_cross[`_`y'',`_`z''] = r(inters);
 			
 			if r(inters)==0{;
 				*if (`_`y''>= `_`z'' & `_`y''<=5) | (`_`y''< `_`z'' & `_`y''>5){;
 
-				tempvar x1 y1 x2 y2 num ;
+				qui tempvar x1 y1 x2 y2 num ;
 		
-				glcurve ``y'' `aw', sortvar(``w'') lorenz pvar(`x1') glvar(`y1')  replace nograph;
-				gen `num'=1;//identifier;
+				qui glcurve ``y'' `aw', sortvar(``w'') lorenz pvar(`x1') glvar(`y1')  replace nograph;
+				qui gen `num'=1;//identifier;
 				keep `x1' `y1' `num';
-				tempfile temp1;
-				save "`temp1'",replace;
+				qui tempfile temp1;
+				qui save "`temp1'",replace;
 				use "`orig'", clear;
-				glcurve ``z'' `aw', sortvar(``w'') lorenz pvar(`x1') glvar(`y1')  replace nograph;
+				qui glcurve ``z'' `aw', sortvar(``w'') lorenz pvar(`x1') glvar(`y1')  replace nograph;
 
-				gen `num'=2;//identifier;
+				qui gen `num'=2;//identifier;
 				keep `x1' `y1' `num';
-				append using "`temp1'";
+				qui append using "`temp1'";
 				/* bootstrap  r(p_cor),reps(`reps') seed(12345):  ksmirnov `y1',by(`num');
 				matrix res=r(table);
 				local pval=res[4,1]; */
-				ksmirnov `y1',by(`num');
+				qui ksmirnov `y1',by(`num');
 				matrix `w'_p[`_`y'',`_`z''] = `r(p)';
 				use "`orig'",clear;
 				};
@@ -796,8 +796,7 @@ program define ceqdom, rclass sortpreserve;//General program for dominance;
 		local titlesprint;
 		local titlerow = 3;
 		local titlecol = 1;
-		local titlelist country surveyyear authors date ppp baseyear 
-				cpibase cpisurvey ppp_calculated scenario group project ;
+		local titlelist country surveyyear authors date scenario group project ;
 
 		foreach title of local titlelist {;
 			returncol `titlecol';

@@ -1,15 +1,17 @@
 ** ADO FILE FOR MARGINAL EFFECTS
 
 ** VERSION AND NOTES (changes between versions described under CHANGES)
-*! v1.5 02jun2017 For use with Jun 2017 version of Output Tables
+*! v1.6 29jun2017 For use with July 2017 version of Output Tables
+** v1.5 02jun2017 For use with Jun 2017 version of Output Tables
 ** v1.4 16may2017 For use with Oct 2016 version of Output Tables
 ** v1.3 06apr2017 For use with Oct 2016 version of Output Tables
 ** v1.2 27mar2017 For use with Oct 2016 version of Output Tables
 ** v1.1 08mar2017 For use with Oct 2016 version of Output Tables
 ** v1.0 12feb2017 For use with Oct 2016 version of Output Tables
-*! (beta version; please report any bugs), written by Sean Higgins sean.higgins@ceqinstitute.org
+** (beta version; please report any bugs), written by Sean Higgins sean.higgins@ceqinstitute.org
 
 ** CHANGES
+**   06-29-2017 Replacing covconc with improved version by Paul Corral
 **   05-27-2017 Add additional options to print meta-information
 **   05-16-2017 Fix command name mistake
 **   04-06-2017 Remove the warning about negative tax values
@@ -33,59 +35,10 @@ program define returncol, rclass
 	return local col = col
 end // END returncol
 
-// BEGIN covconc (Higgins 2015)
-cap program drop covconc
-program define covconc, rclass sortpreserve
-	syntax varname [if] [in] [pw aw iw fw/], [rank(varname)]
-	preserve
-	marksample touse
-	qui keep if `touse' // drops !`if', !`in', and any missing values of `varname'
-	local 1 `varlist'
-	if "`rank'"=="" {
-		local rank `1'
-		local _return gini
-		local _returndi Gini
-	}
-	else {
-		local _return conc
-		local _returndi Concentration Coefficient
-	}
-	sort `rank' `1', stable // sort in increasing order of ranking variable; break ties with other variable
-	tempvar F wnorm wsum // F is adjusted fractional rank, wnorm normalized weights,
-		// wsum sum of normalized weights for obs 1, ..., i-1
-	if "`exp'"!="" { // with weights
-		local aw [aw=`exp'] // with = since I used / in syntax
-		tempvar weight
-		gen `weight' = `exp'
-		qui summ `weight'
-		qui gen `wnorm' = `weight'/r(sum) // weights normalized to sum to 1
-		qui gen double `wsum' = sum(`wnorm')
-		qui gen double `F' = `wsum'[_n-1] + `wnorm'/2 // from Lerman and Yitzhaki (1989)
-		qui replace `F' = `wnorm'/2 in 1
-		qui corr `1' `F' `aw', cov
-		local cov = r(cov_12)
-		qui summ `1' `aw', meanonly 
-		local mean = r(mean)
-	}
-	else { // no weights
-		qui gen `F' = _n/_N // sorted so this works in unweighted case; 
-			// cumul `1', gen(`F') would also work
-		qui corr `1' `F', cov
-		local cov = r(cov_12)
-		qui summ `1', meanonly
-		local mean = r(mean)
-	}
-	local `_return' = ((r(N)-1)/r(N))*(2/`mean')*`cov' // the (N-1)/N term adjusts for
-		// the fact that Stata does sample cov
-	return scalar `_return' = ``_return''
-	di as result "`_returndi': ``_return''"
-	restore
-end // END covconc
-
 // BEGIN ceqpov (Higgins 2017)
 capture program drop ceqpov
 program define ceqpov, rclass sortpreserve
-	syntax varlist(max=1) [if] [in] [pw aw iw fw/], z(string)
+	syntax varlist(max=1) [if] [in] [aw], z(string)
 	preserve
 	marksample touse
 	qui keep if `touse' // drops !`if', !`in', and any missing values of `varname'
@@ -99,7 +52,7 @@ program define ceqpov, rclass sortpreserve
 	qui gen `zyz2' = `zyz1'^2                            // square of normalized poverty gap
 
 	forval i=0/2 {
-		qui summ `zyz`i'' `aw', meanonly // `if' `in' restrictions already taken care of by `touse' above
+		qui summ `zyz`i'' [`weight'`exp'], meanonly // `if' `in' restrictions already taken care of by `touse' above
 		scalar _pov`i' = r(mean)
 		return scalar pov`i' = _pov`i'
 	}
@@ -205,7 +158,7 @@ program define ceqmarg, rclass
 	local dit display as text in smcl
 	local die display as error in smcl
 	local command ceqmarg
-	local version 1.3
+	local version 1.6
 	`dit' "Running version `version' of `command' on `c(current_date)' at `c(current_time)'" _n "   (please report this information if reporting a bug to sean.higgins@ceqinstitute.org)"
 	
 	** income concepts
@@ -1188,13 +1141,12 @@ program define ceqmarg, rclass
 									local v_wo_touse `wo_normalized' // use normalized income in the calculations
 									local v_w_touse `w_normalized' // use normalized income in the calculations
 								}
-								
-								qui ceqpov `v_wo_touse' `pw', z(`_pline')
+								qui ceqpov `v_wo_touse' `aw', z(`_pline')
 								forval i=0/2 {
 									scalar _pov_wo_`i' = r(pov`i')
 								}
-
-								qui ceqpov `v_w_touse' `pw', z(`_pline')
+								
+								qui ceqpov `v_w_touse' `aw', z(`_pline')
 								forval i=0/2 {
 									scalar _pov_w_`i' = r(pov`i')
 									matrix poverty`v'[`=`row'+`i'',`col'] = _pov_wo_`i' - _pov_w_`i'
@@ -1276,7 +1228,6 @@ program define ceqmarg, rclass
 		local warningprint `warningprint' A5=("`warningcount' important warning messages are printed starting on row `warningrow'.") 
 		
 		// putexcel
-		set trace on 
 
 		foreach vrank of local alllist {
 			if "``vrank''"!="" {
@@ -1289,7 +1240,6 @@ program define ceqmarg, rclass
 			}
 		}
 	}
-	set trace off
 	*********
 	** OPEN *
 	*********
