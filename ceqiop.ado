@@ -1,7 +1,7 @@
 ** ADO FILE FOR POPULATION SHEET OF CEQ OUTPUT TABLES
 
 ** VERSION AND NOTES (changes between versions described under CHANGES)
-*! v1.5 01jun2017 For use with May 2017 version of Output Tables
+*! v1.5 01jun2017 For use with July 2017 version of Output Tables
 ** v1.4 12jan2017 For use with Oct 2016 version of Output Tables
 ** v1.3 01oct2016 For use with Jun 2016 version of Output Tables
 ** v1.2 10sep2016 For use with Jun 2016 version of Output Tables
@@ -127,7 +127,7 @@ program define ceqiop, rclass
 	local dit display as text in smcl
 	local die display as error in smcl
 	local command ceqiop
-	local version 1.4
+	local version 1.5
 	`dit' "Running version `version' of `command' on `c(current_date)' at `c(current_time)'" _n "   (please report this information if reporting a bug to sean.higgins@ceqinstitute.org)"
 	
 	** general CEQ ado files

@@ -116,7 +116,7 @@ either positive or negative values, as long as one is used consistently for all 
 variables. For user fees that should be subtracted out of health and education benefits, the gross 
 benefits should be specified by a set of variables (e.g., gross primary education benefits, gross 
 secondary education benefits, etc.), and another variable with user fees, stored as negative values, 
-should also be included in the {opth health(varlist)} or {opth educ:ation(varlist)} option.
+should also be included in the {opth health(varlist)} or {opth educ:ation(varlist)} option. The variables provided in the {opth health(varlist)}, {opth educ:ation(varlist)}, and {opth other:public(varlist)} options should already be net of co-payments and user fees; we nevertheless include the separate options {opth userfeesh:ealth(varlist)}, {opth userfeese:duc(varlist)}, and {opth userfeeso:ther(varlist)} so that, for example, user fees can be analyzed.
 
 {pstd}
 Poverty lines in PPP dollars per day can be set using the {opth pl1(real)}, {opth pl2(real)}, and 

@@ -1,13 +1,13 @@
 ** ADO FILE FOR COVARIANCE SHEET OF CEQ MASTER WORKBOOK SECTION E
 
 ** VERSION AND NOTES (changes between versions described under CHANGES
-*! v1.5 01jun2017 For use with May 2017 version of Output Tables
+*! v1.5 01jun2017 For use with July 2017 version of Output Tables
 ** v1.4 08mar2017 For use with Oct 2016 version of Output Tables
 ** v1.3 12jan2017 For use with Oct 2016 version of Output Tables
 ** v1.2 30oct2016 For use with Jun 2016 version of Output Tables
 ** v1.1 24sep2016 For use with Jun 2016 version of Output Tables
 ** v1.0 03sep2016 For use with Jun 2016 version of Output Tables
-*! (beta version; please report any bugs), written by Sean Higgins sean.higgins@ceqinstitute.org
+** (beta version; please report any bugs), written by Sean Higgins sean.higgins@ceqinstitute.org
 
 ** CHANGES
 **	 06-01-2017 Add additional options to print meta-information
@@ -153,7 +153,7 @@ program define ceqcov, rclass
 	local dit display as text in smcl
 	local die display as error in smcl
 	local command ceqcov
-	local version 1.4
+	local version 1.5
 	`dit' "Running version `version' of `command' on `c(current_date)' at `c(current_time)'" _n "   (please report this information if reporting a bug to sean.higgins@ceqinstitute.org)"
 	
 	** income concepts

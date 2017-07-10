@@ -18,7 +18,7 @@
 ** v1.3 9oct2015 For use with Oct 4 2015 version of Output Tables
 ** v1.1 15sep2015 For use with Sep 4 2015 version of Output Tables
 ** v1.0 2sep2015 
-*! (beta version; please report any bugs), written by Sean Higgins sean.higgins@ceqinstitute.org
+** (beta version; please report any bugs), written by Sean Higgins sean.higgins@ceqinstitute.org
 
 ** CHANGES
 **   3-28-2017 Fix cell alignment for income bins
@@ -196,7 +196,7 @@ program define ceqfi, rclass
 	local dit display as text in smcl
 	local die display as error in smcl
 	local command ceqfi
-	local version 3.2
+	local version 3.3
 	`dit' "Running version `version' of `command' on `c(current_date)' at `c(current_time)'" _n "   (please report this information if reporting a bug to sean.higgins@ceqinstitute.org)"
 	
 	** income concepts

@@ -1,7 +1,7 @@
 ** ADO FILE FOR POPULATION SHEET OF CEQ OUTPUT TABLES
 
 ** VERSION AND NOTES (changes between versions described under CHANGES)
-*! v3.9 26may2017 For use with May 2017 version of Output Tables
+*! v3.9 26may2017 For use with July 2017 version of Output Tables
 ** v3.8 06apr2017 For use with Oct 2016 version of Output Tables
 ** v3.7 08mar2017 For use with Oct 2016 version of Output Tables
 ** v3.6 12jan2017 For use with Oct 2016 version of Output Tables

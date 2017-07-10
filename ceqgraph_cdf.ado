@@ -75,7 +75,7 @@ capture program define ceqgraph_cdf
 	local dit display as text in smcl
 	local die display as error in smcl
 	local command ceqgraph_cdf
-	local version 2.1
+	local version 2.3
 
 	** income concepts
 	local m `market'

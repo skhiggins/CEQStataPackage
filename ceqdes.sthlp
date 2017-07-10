@@ -91,7 +91,7 @@ education user fees by {opth userfeese:duc(varlist)}, and other public user fees
 {opth userfeeso:ther(varlist)}. Tax, contribution and user fees variables may be saved as 
 either positive or negative values, as long as one is used consistently for all tax, contribution and user fees
 variables. *** The {opth health(varlist)}, {opth educ:ation(varlist)} and {opth other:public(varlist)} options 
-need to be specfied with fiscal intervention variable(s) that are net of user fee(s).
+need to be specfied with fiscal intervention variable(s) that are net of user fee(s). The variables provided in the {opth health(varlist)}, {opth educ:ation(varlist)}, and {opth other:public(varlist)} options should already be net of co-payments and user fees; we nevertheless include the separate options {opth userfeesh:ealth(varlist)}, {opth userfeese:duc(varlist)}, and {opth userfeeso:ther(varlist)} so that, for example, user fees can be analyzed.
 If any of these variables is negative for any households due to user fees exceeding gross benefits, the negative values should be truncated at 0. The user fee options are
 designed solely to separately analyze the distribution of usre fees and will not be used in calculating net health/education/other public 
 transfers. See the example section for more detail. ***

@@ -1,7 +1,7 @@
 ** ADO FILE FOR EXTENDED INCOME CONCEPTS SHEET OF CEQ MASTER WORKBOOK SECTION E
 
 ** VERSION AND NOTES (changes between versions described under CHANGES)
-*! v1.7 01jun2017 For use with May 2017 version of CEQ Master Workbook 
+*! v1.7 01jun2017 For use with July 2017 version of CEQ Master Workbook 
 ** v1.6 06apr2017 For use with Oct 2016 version of CEQ Master Workbook 
 ** v1.5 08mar2017 For use with Oct 2016 version of CEQ Master Workbook 
 ** v1.4 12jan2017 For use with Oct 2016 version of CEQ Master Workbook
@@ -9,7 +9,7 @@
 ** v1.2 30oct2016 For use with July 2016 version of CEQ Master Workbook
 ** v1.1 30sep2016 For use with July 2016 version of CEQ Master Workbook
 ** v1.0 12sep2016 For use with July 2016 version of CEQ Master Workbook
-*! (beta version; please report any bugs), written by Sean Higgins sean.higgins@ceqinstitute.org
+** (beta version; please report any bugs), written by Sean Higgins sean.higgins@ceqinstitute.org
 
 ** CHANGES
 **   06-01-2017 Add additional options to print meta-information
@@ -295,7 +295,7 @@ program define _ceqextsig, rclass
 	local ditall display as text in smcl 
 	local die display as error in smcl
 	local command ceqextsig
-	local version 1.5 //`_version'	
+	local version 1.7 //`_version'	
 	
 	** income concepts
 	local m `market'

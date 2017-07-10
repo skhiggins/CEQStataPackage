@@ -1,0 +1,1031 @@
+---------------------------------------------------------------
+      name:  <unnamed>
+       log:  C:\Users\Marc Brooks\GitHub\CEQStataPackage\CEQSta
+> taPackage\ceqfiSH76.log
+  log type:  text
+ opened on:  10 Jul 2017, 08:55:31
+
+. // For the remainder let's create local macros for the groups
+>  of options for the commands
+. //  of the CEQ Stata Package.
+. #delimit ;
+delimiter now ;
+. local income_concepts
+>         market(market_inc_p) 
+>         mpluspensions(marketplusp_inc_p)
+>         netmarket(netmarket_inc_p)
+>         gross(gross_inc_p)
+>         disposable(disposable_inc_p)
+>         consumable(consumable_inc_p)
+>         final(final_inc_p)
+> ;
+
+. local survey_design
+>         hhid(famunit)
+>         psu(psu)
+>         strata(strata)
+> ;
+
+. local title_options
+>         country("United States")
+>         surveyyear("2011")
+>         authors("Sean Higgins")
+>         baseyear(2005)
+>         scen("test")
+>         proj("test")
+>         grou("test")
+> ;
+
+. local title_options2
+>         country("United States")
+>         surveyyear("2011")
+>         authors("Sean Higgins")
+>         scen("test")
+>         proj("test")
+>         grou("test")
+> ;
+
+. #delimit cr
+delimiter now cr
+. 
+. //help ceqpop
+. // Now we need to include the relevant numbers for a PPP conv
+> ersion. If we are using
+. //  the WDI to get the PPP conversion factor and CPIs, we can
+>  use -ceqppp-
+. //help ceqppp
+. /*ceqppp, country("usa") ///
+>         baseyear(2005)     ///
+>         surveyyear(2011)   ///
+>         locals
+> // Test that -locals- option worked
+> display `ppp'
+> display `cpibase'
+> display `cpisurvey'
+> 
+> #delimit ;
+> local ppp_options
+>         ppp(`ppp')
+>         cpibase(`cpibase')
+>         cpisurvey(`cpisurvey')
+>         yearly
+> ;*/
+. 
+. di "`ppp'" 
+1
+
+. di "`cpibase'" 
+89.560532
+
+. #delimit ;
+delimiter now ;
+. local ppp_options
+>         ppp(`ppp')
+>         cpibase(`cpibase')
+>         cpisurvey(`cpisurvey')
+>         yearly
+> ;
+
+.  /*
+> local ppp_options
+>         ppp(1.151811492142544)
+>         cpibase(89.560532)
+>         cpisurvey(103.15685)
+>         yearly
+> ; */
+> /*
+> // ssc install quantiles, replace ; 
+> // a required package for ceqpop ; */
+> if `ceqpop' ceqpop
+>         [pweight = s_weight] if incl==1 using "$sheets/E2_tes
+> t.xlsx", 
+>         `income_concepts'
+>         `ppp_options'
+>         `survey_design'
+>         `title_options'
+> ;
+
+. rename poverty_line_e pe, replace;
+
+. rename poverty_line_m pm, replace;
+
+. destring pe, replace;
+pe already numeric; no replace
+
+. destring pm, replace;
+pm already numeric; no replace
+
+. //help ceqlorenz;
+> local povline_options /* can take variables or scalars */
+>         nationalextremepl(pe) 
+>         nationalmoderatepl(pm)
+>         othermoderatepl(7965)  /* national poverty line in US
+>  (for 2person hh = 15,930 for hh, /2) */
+> ;
+
+. // creates error when pp poptions specified ;
+> *set trace on ;
+. if `ceqlorenz' ceqlorenz
+>         [pweight = s_weight] if incl==1 using "$sheets/E3_tes
+> t.xlsx", 
+>         `income_concepts'
+>         `ppp_options'
+>         `survey_design'
+>         `povline_options'
+>         `title_options'
+>         ignorem
+> ;
+
+. *set trace off ;
+. //help ceqfi;
+> local new_povline_options
+>         nationalextremepl(pe) 
+>         nationalmoderatepl(pm)
+>         pl1(13) /* rich country poverty lines */
+>         pl2(17)
+>         pl3(21)
+> ;
+
+. if `ceqfi' ceqfi
+>         [pweight = s_weight] if incl==1 using "$sheets/E5E6_t
+> est.xlsx", 
+>         `income_concepts'
+>         `new_povline_options'
+>         `ppp_options'
+>         `survey_design'
+>     `title_options'
+>         ;
+
+. //help ceqconc;
+> if `ceqconc' ceqconc
+>         [pweight = s_weight] if incl==1 using "$sheets/E10_te
+> st.xlsx",
+>         `income_concepts'
+>         `ppp_options'
+>         `survey_design'
+>         `title_options'
+> ;
+
+. //help ceqfiscal;
+> local fiscal_interventions
+>         pensions(`pensions_list')
+>         dtransfers(`dtransfers_list')
+>         dtaxes(`dtaxes_list')
+>         contribs(`contributions_list')
+>         subsidies(`subsidies_list')
+>         indtaxes(`indtaxes_list')
+>         health(`healthben_list')
+>         educ(`educben_list')
+> ;
+
+. if `ceqfiscal' ceqfiscal
+>         [pweight = s_weight] if incl==1 using "$sheets/E11_te
+> st.xlsx",
+>         `income_concepts'
+>         `fiscal_interventions'
+>         `ppp_options'
+>         `survey_design' 
+>         `title_options'
+> ;
+
+. if `ceqextend' ceqextend 
+>         [pweight = s_weight] if incl==1 using "$sheets/E12_te
+> st.xlsx",
+>         `income_concepts'
+>         `fiscal_interventions'
+>         `ppp_options'
+>         `survey_design'
+>         `povline_options'
+>         `title_options'
+>         negatives
+> ;
+
+.         if `ceqmarg' ceqmarg 
+>         [pweight = s_weight] if incl==1 using "$sheets/E13_te
+> st.xlsx",
+>         `income_concepts'
+>         `fiscal_interventions'
+>         `ppp_options'
+>         `survey_design'
+>         `povline_options'
+>         `title_options'
+>          negatives
+> ;
+
+.         if `ceqgraph' ceqgraph_progressivity
+>         [pweight = s_weight] if incl==1,
+>         `income_concepts'
+>         `survey_design'
+>         `title_options2'
+>         graphname("progressivity")
+> ;
+
+.         if `ceqgraph' ceqgraph_conc
+>         [pweight = s_weight] if incl==1,
+>         `income_concepts'
+>         `survey_design'
+>         `title_options2'
+>         graphname("concentration")
+> ;
+
+.         if `ceqgraph' ceqgraph_cdf
+>         [pweight = s_weight] if incl==1,
+>         `income_concepts'
+>         `ppp_options'
+>         `survey_design'
+>         `title_options'
+>         graphname("cdf")
+> ;
+
+.         if `ceqgraph' ceqgraph_fi
+>         [pweight = s_weight] if incl==1,
+>         `income_concepts'
+>         `ppp_options'
+>         `survey_design'
+>         `title_options'
+>         graphname("Fiscal")
+> ;
+
+.         if `ceqextpop' ceqextpop
+>         [pweight = s_weight] if incl==1 using "$sheets/E2_tes
+> t.xlsx",
+>         `income_concepts'
+>         `fiscal_interventions'
+>         `ppp_options'
+>         `survey_design'
+>         `title_options'
+>         /*`povline_options'*/
+>         /*nocentile nobin // for speed; when producing full M
+> WB don't include this line */
+> ;
+
+. //set trace on;
+> if `ceqiop' ceqiop
+>         [pweight = s_weight] if incl==1 using "$sheets/E4_tes
+> t.xlsx",
+>         head(head)
+>         groupby(race state)
+>         `income_concepts'
+>         `survey_design'
+>         `title_options'
+>         /* for speed; when producing full MWB don't include t
+> his line */
+> ;
+
+. if `ceqstatsig' ceqstatsig
+>         [pweight = s_weight] if incl==1 using "$sheets/E7_tes
+> t.xlsx",
+>         ignoremissing
+>         `ppp_options'
+>         `income_concepts'
+>         `survey_design'
+>         `povline_options'
+>         `title_options'
+> ;
+
+. if `ceqcov' ceqcov
+>         [pweight = s_weight] if incl==1 using "$sheets/E15_te
+> st.xlsx",
+>         `income_concepts'
+>         `fiscal_interventions'
+>         `survey_design'
+>         `title_options'
+>         ignorem
+> ;
+
+. /*cap log close;
+> //log using ceqdom.text, text replace; 
+> set trace on; */
+> if `ceqdom' ceqdom
+>         [pweight = s_weight] if incl==1 using "$sheets/E8_tes
+> t.xlsx",
+>         /*taxable(netmarket_inc_p)*/
+>         reps(5)
+>         `income_concepts'
+>         `survey_design'
+>         `title_options'
+>         `ppp_options'
+> ;
+Running version 1.4 of ceqdom on 10 Jul 2017 at 08:55:31
+   (please report this information if reporting a bug to rarand
+> a@tulane.edu)
+Writing to "C:\Users\Marc Brooks\Dropbox\MarcBrooks_CEQ\MWB E/E
+> 8_test.xlsx", may take several minutes
+file C:\Users\Marc Brooks\Dropbox\MarcBrooks_CEQ\MWB E/E8_test.
+> xlsx saved
+file C:\Users\Marc Brooks\Dropbox\MarcBrooks_CEQ\MWB E/E8_test.
+> xlsx saved
+file C:\Users\Marc Brooks\Dropbox\MarcBrooks_CEQ\MWB E/E8_test.
+> xlsx saved
+file C:\Users\Marc Brooks\Dropbox\MarcBrooks_CEQ\MWB E/E8_test.
+> xlsx saved
+file C:\Users\Marc Brooks\Dropbox\MarcBrooks_CEQ\MWB E/E8_test.
+> xlsx saved
+file C:\Users\Marc Brooks\Dropbox\MarcBrooks_CEQ\MWB E/E8_test.
+> xlsx saved
+file C:\Users\Marc Brooks\Dropbox\MarcBrooks_CEQ\MWB E/E8_test.
+> xlsx saved
+file C:\Users\Marc Brooks\Dropbox\MarcBrooks_CEQ\MWB E/E8_test.
+> xlsx saved
+file C:\Users\Marc Brooks\Dropbox\MarcBrooks_CEQ\MWB E/E8_test.
+> xlsx saved
+file C:\Users\Marc Brooks\Dropbox\MarcBrooks_CEQ\MWB E/E8_test.
+> xlsx saved
+file C:\Users\Marc Brooks\Dropbox\MarcBrooks_CEQ\MWB E/E8_test.
+> xlsx saved
+file C:\Users\Marc Brooks\Dropbox\MarcBrooks_CEQ\MWB E/E8_test.
+> xlsx saved
+file C:\Users\Marc Brooks\Dropbox\MarcBrooks_CEQ\MWB E/E8_test.
+> xlsx saved
+file C:\Users\Marc Brooks\Dropbox\MarcBrooks_CEQ\MWB E/E8_test.
+> xlsx saved
+file C:\Users\Marc Brooks\Dropbox\MarcBrooks_CEQ\MWB E/E8_test.
+> xlsx saved
+file C:\Users\Marc Brooks\Dropbox\MarcBrooks_CEQ\MWB E/E8_test.
+> xlsx saved
+file C:\Users\Marc Brooks\Dropbox\MarcBrooks_CEQ\MWB E/E8_test.
+> xlsx saved
+file C:\Users\Marc Brooks\Dropbox\MarcBrooks_CEQ\MWB E/E8_test.
+> xlsx saved
+
+. if `ceqdomext' ceqdomext
+>         [pweight = s_weight] if incl==1 using "$sheets/E17_te
+> st.xlsx",
+>         `income_concepts'
+>         `survey_design'
+>         `title_options'
+>         taxable(netmarket_inc_p)
+>         pensions(`pensions_list')
+>         dtransfers(`dtransfers_list')
+>         dtaxes(`dtaxes_list')
+>         contribs(`contributions_list')
+>         subsidies(`subsidies_list')
+>         indtaxes(`indtaxes_list')
+>         health(`healthben_list')
+>         educ(`educben_list')
+> ;
+
+. /*
+> set trace on;
+> if `ceqef' ceqef
+>         [pweight = s_weight] if incl==1 using "$sheets\E9_tes
+> t.xlsx",
+>         `income_concepts'
+>         `survey_design'
+>         `title_options'
+>         `ppp_options'
+>         `povline_options'
+>         taxable(netmarket_inc_p)
+>         pensions(`pensions_list')
+>         dtransfers(`dtransfers_list')
+>         dtaxes(`dtaxes_list')
+>         contribs(`contributions_list')
+>         subsidies(`subsidies_list')
+>         indtaxes(`indtaxes_list')
+>         health(`healthben_list')
+>         educ(`educben_list')
+> ;
+> set trace off;
+> */
+> if `ceqcoverage' ceqcoverage
+>         [pweight = s_weight] if incl==1 
+>         using "$sheets/E18_test.xlsx",
+>         `income_concepts'
+>         `fiscal_interventions'
+>         `ppp_options'
+>         `survey_design'
+>         `title_options'
+>         
+>         ignorem
+>         recpens(head)
+> ;
+
+. if `ceqtarget' ceqtarget
+>         [pweight = s_weight] if incl==1 
+>          using "$sheets/E19_test.xlsx",
+>         `income_concepts'
+>         `fiscal_interventions'
+>         `ppp_options'
+>         `survey_design'
+>         `title_options'
+>         
+>         ignorem
+>         recpens(head)
+> ;
+
+. if `ceqhhchar' ceqhhchar value_lunch_p
+>         [pweight = s_weight] if incl==1 
+>          using "$sheets/E22_test.xlsx",
+>         `income_concepts'
+>         `survey_design'
+>         `title_options'
+>         `ppp_options'
+>         ignorem
+> ;
+
+. if `ceqindchar' ceqindchar value_lunch_p
+>         [pweight = s_weight] if incl==1 
+>         using "$sheets/E23_test.xlsx",
+>         `income_concepts'
+>         `survey_design'
+>         `title_options'
+>         `ppp_options'
+>         ignorem
+> ;
+
+. if `ceqassump' ceqassump
+>         `test_inc_p1' market_inc_p `test_inc_p2' 
+>         [pweight = s_weight]  if incl==1 
+>         using "$sheets/E28_test.xlsx",
+>         `survey_design'
+>         `title_options'
+>         `ppp_options'
+>         ignorem
+> ;
+
+.  if `ceqinfra' ceqinfra `electricity' `wateraccess' 
+>         [pweight = s_weight] if incl==1 using "$sheets/E21_te
+> st.xlsx",
+>         `income_concepts'
+>         `survey_design'
+>         `title_options'
+>         `ppp_options'
+>         ignorem
+> ;
+
+. if `ceqeduc' ceqeduc  
+>         [pweight = s_weight] if incl==1 using "$sheets/E20_te
+> st.xlsx",
+>         `income_concepts'
+>         `survey_design'
+>         `title_options'
+>         `ppp_options'
+>         preschool(`preschool')
+>         primary(`primary')
+>         /*secondary(`secondary')*/
+>         tertiary(`tertiary')
+>         preschoolage(`preschoolage')
+>         primaryage(`primaryage')
+>         secondaryage(`secondaryage')
+>         tertiaryage(`tertiaryage')
+>         public(`public')
+>         ignorem
+> ;
+
+. /*cap log close;
+> log using ceqefextoct22.log, replace;*/
+> 
+> /*
+> set trace on ;
+> 
+> if `ceqefext' ceqefext
+>         [pweight = s_weight] if incl==1 using "$sheets\E14_te
+> st",
+>         `income_concepts'
+>         `survey_design'
+>         `title_options'
+>         `ppp_options'
+>         `povline_options'
+>         /*taxable(netmarket_inc_p)*/
+>         pensions(`pensions_list')
+>         dtransfers(`dtransfers_list')
+>         dtaxes(`dtaxes_list')
+>         contrib(`contributions_list')
+>         subsidies(`subsidies_list')
+>         indtaxes(`indtaxes_list')
+>         health(`healthben_list')
+>         educ(`educben_list')
+> ;
+> set trace off;
+> */
+> 
+> if `ceqdes' ceqdes
+>         [pweight = s_weight] if incl==1 using "$sheets/E1_tes
+> t.xlsx", 
+>         market(market_inc_p) 
+>         mpluspensions(marketplusp_inc_p)
+>         netmarket(netmarket_inc_p)
+>         gross(gross_inc_p)
+>         disposable(disposable_inc_p)
+>         consumable(consumable_inc_p)
+>         final(final_inc_p)
+>         pensions(`pensions_list')
+>         dtransfers(`dtransfers_list')
+>         dtaxes(`dtaxes_list')
+>         contribs(`contributions_list')
+>         subsidies(`subsidies_list')
+>         indtaxes(`indtaxes_list')
+>         health(`healthben_list')
+>         educ(`educben_list')
+>         hhid(famunit)
+>         psu(psu)
+>         strata(strata)
+>         country("United States")
+>         surveyyear("2011")
+>         authors("Sean Higgins")
+>         scen("test")
+>         group("test")
+>         project("test")
+>         open /* to open Excel automatically; make sure to clo
+> se again before running
+>                 another CEQ command */
+> ;
+
+. #delimit cr
+delimiter now cr
+. 
+. restore
+
+. exit
+
+end of do-file
+
+
+. do "C:\Users\MARCBR~1\AppData\Local\Temp\STD00000000.tmp"
+
+. global adofiles "C:\Users\Marc Brooks\Dropbox\CEQStataPackage
+> "
+
+. 
+end of do-file
+
+. do "C:\Users\MARCBR~1\AppData\Local\Temp\STD00000000.tmp"
+
+. global adofiles "C:\Users\Marc Brooks\Dropbox\CEQStataPackage
+> "
+
+. 
+. adopath ++ "$adofiles"
+  [1]              "C:\Users\Marc Brooks\Dropbox\CEQStataPackag
+> e"
+  [2]              "C:\Users\Marc Brooks\GitHub\CEQStataPackage
+> \CEQStataPackage"
+  [3]  (BASE)      "C:\Program Files (x86)\Stata14\ado\base/"
+  [4]  (SITE)      "C:\Program Files (x86)\Stata14\ado\site/"
+  [5]              "."
+  [6]  (PERSONAL)  "c:\ado\personal/"
+  [7]  (PLUS)      "c:\ado\plus/"
+  [8]  (OLDPLACE)  "c:\ado/"
+
+. // Change the working director to this folder:
+. cd "$adofiles"
+C:\Users\Marc Brooks\Dropbox\CEQStataPackage
+
+. version 13.0
+
+. 
+end of do-file
+
+. do "C:\Users\MARCBR~1\AppData\Local\Temp\STD00000000.tmp"
+
+. 
+. global data "C:\Users\Marc Brooks\Dropbox\MarcBrooks_CEQ\data
+> "
+
+. global adofiles "C:\Users\Marc Brooks\GitHub\CEQStataPackage\
+> CEQStataPackage"
+
+. global sheets "C:\Users\Marc Brooks\Dropbox\MarcBrooks_CEQ\MW
+> B E"
+
+. global logs "C:\Users\Marc Brooks\Dropbox\MarcBrooks_CEQ\logs
+> "
+
+. 
+. global adofiles "C:\Users\Marc Brooks\Dropbox\CEQStataPackage
+> "
+
+. 
+. adopath ++ "$adofiles"
+  [1]              "C:\Users\Marc Brooks\Dropbox\CEQStataPackag
+> e"
+  [2]              "C:\Users\Marc Brooks\GitHub\CEQStataPackage
+> \CEQStataPackage"
+  [3]  (BASE)      "C:\Program Files (x86)\Stata14\ado\base/"
+  [4]  (SITE)      "C:\Program Files (x86)\Stata14\ado\site/"
+  [5]              "."
+  [6]  (PERSONAL)  "c:\ado\personal/"
+  [7]  (PLUS)      "c:\ado\plus/"
+  [8]  (OLDPLACE)  "c:\ado/"
+
+. // Change the working director to this folder:
+. cd "$adofiles"
+C:\Users\Marc Brooks\Dropbox\CEQStataPackage
+
+. version 13.0
+
+. //set trace on
+. /*
+> cap log close
+> log using ceqextsig_jan14.log, replace
+> */
+. **********
+. * LOCALS *
+. **********
+. // Use these locals to control which commands are run
+. // [Don't add these locals to control which results to produc
+> e
+. //  until done showing ceqdes]
+. local first_run = 0  // set to 1 the first time this do file 
+> is run
+
+. local ceqdes = 0 // set to 1 to execute ceqdes (sheet E1)
+
+. local ceqpop = 0 // set to 1 to execute ceqpop (sheet E2)
+
+. local ceqextpop = 0 // set to 1 to execute ceqextpop (sheet E
+> 2b) **
+
+. local ceqlorenz = 0 // set to 1 to execute ceqlorenz (sheet E
+> 3)
+
+. local ceqiop = 0 // set to 1 to execute ceqiop (sheet E4) **
+
+. local ceqfi = 0 // set to 1 to execute ceqfi (sheets E5, E6)
+
+. local ceqstatsig = 0 // set to 1 to execute ceqstatsig (sheet
+>  E7) **
+
+. local ceqdom = 0 // set to 1 to execute ceqdom (sheet E8) **
+
+. local ceqef = 0 // set to 1 to execute ceqef (sheet E9) **
+
+. local ceqconc = 0 // set to 1 to execute ceqconc (sheet E10)
+
+. local ceqfiscal = 0 // set to 1 to execute ceqfiscal (sheet E
+> 11)
+
+. local ceqextend = 0 // set to 1 to execute ceqextend (sheet E
+> 12)
+
+. local ceqmarg = 1 // set to 1 to execute ceqmarg (sheet E13) 
+> ***
+
+. local ceqefext = 1 // set to 1 to execute ceqefext (sheet E14
+> )
+
+. local ceqcov = 0 // set to 1 to execute ceqcov (sheet E15)
+
+. local ceqextsig = 0 // set to 1 to execute ceqextsig (sheet E
+> 16)
+
+. local ceqdomext = 0 // set to 1 to execute ceqdomext (sheet E
+> 17)
+
+. local ceqcoverage = 0 // set to 1 to execute ceqcoverage (she
+> et E18)
+
+. local ceqtarget = 0 // set to 1 to execute ceqtarget (sheet E
+> 19) ***
+
+. local ceqeduc = 0 // set to 1 to execute ceqeduc (sheet E20)
+
+. local ceqinfra = 0 // set to 1 to execute ceqinfra (sheet E21
+> )
+
+. local ceqhhchar = 0 // set to 1 to execute ceqhhchar (sheet E
+> 22)
+
+. local ceqindchar = 0 // set to 1 to execute ceqindchar (sheet
+>  E23)
+
+. local ceqassump = 0 // set to 1 to execute ceqassump (sheet E
+> 28)
+
+. 
+. local ceqgraph = 0
+
+. 
+. // 
+. #delimit ;
+delimiter now ;
+. local pensions_list 
+>         contributory_pensions_p
+> ;
+
+. local dtransfers_list
+>         incwelfr_p
+>         incssi_p
+>         incvet_p
+>         incunemp_p
+>         incwkcom_p
+>         eitcred_p
+>         ctccrd_p
+>         actccrd_p
+>         public_scholarships_p
+>         snap_p
+>         value_lunch_p
+> ;
+
+. local dtaxes_list
+>         income_taxes_p
+>         proptax_p
+> ;
+
+. local contributions_list
+>         emcontrb_p 
+>         contrib_p
+> ;
+
+. local subsidies_list
+>         housing_sub_p 
+>         heating_sub_p
+> ;
+
+. local indtaxes_list
+>         salestax_p
+> ;
+
+. local healthben_list
+>         medicare_ben_p 
+>         medicaid_ben_p
+> ;
+
+. local educben_list
+>         educ_ben_p /* remember in practice you should have mu
+> ltiple variables 
+>                 for each level of educaiton, and in this case
+>  would *not* include the 
+>                 total education benefits (sum of other catego
+> ries) in this list */
+> ;
+
+. #delimit cr
+delimiter now cr
+. 
+. ********
+. * DATA *
+. ********
+. // Import the datta set we created in Higgins_CEQ_StataTraini
+> ng_1_2a_2d.do
+. 
+. use "$data\US_CEQ.dta" , clear
+
+. sample 25, by(famunit)
+(1,623 observations deleted)
+
+. 
+. bysort famunit: egen minhead = min(head)
+
+. replace head = 1 if minhead!=1 & head == minhead
+(413 real changes made)
+
+. 
+. //tab netmarket_inc_p if netmarket_inc_p < 0
+. //tab consumable_inc_p if consumable_inc_p < 0
+. //set trace on 
+. // Check the names of the variables and number of observation
+> s:
+. //describe
+. //count
+. //replace incrent=. if incrent==333  // test if ignoremissing
+>  works
+. preserve
+
+. 
+. *cd "`path'"
+. tempvar electricity 
+
+. gen `electricity'=1 if market_inc_p < 1000
+(638 missing values generated)
+
+. replace `electricity'=0 if market_inc_p >= 1000 
+(638 real changes made)
+
+. label var `electricity' "Electricity (simulated dummy)"
+
+. tempvar wateraccess
+
+. gen `wateraccess'=1 if market_inc_p < 2000
+(616 missing values generated)
+
+. replace `wateraccess'=0 if market_inc_p >= 2000
+(616 real changes made)
+
+. label var `wateraccess' "Water access (simulated dummy)"
+
+. 
+. ** for ceqeduc
+. tempvar preschool 
+
+. gen `preschool' = `electricity'
+
+. label var `preschool' "preschool attendance (simulated dummy)
+> "
+
+. 
+. tempvar primary
+
+. gen `primary' = `wateraccess'
+
+. label var `primary' "primary attendance (simulated dummy)"
+
+. tab `primary' if incl==1
+
+    primary |
+ attendance |
+ (simulated |
+     dummy) |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          0 |        570       92.38       92.38
+          1 |         47        7.62      100.00
+------------+-----------------------------------
+      Total |        617      100.00
+
+. 
+. tempvar secondary 
+
+. gen `secondary' = `wateraccess'
+
+. label var `secondary' "secondary attendance (simulated dummy)
+> "
+
+. 
+. tempvar tertiary
+
+. gen `tertiary' = `electricity'
+
+. label var `tertiary' "tertiary attendance (sim dummy)"
+
+. 
+. tempvar preschoolage
+
+. gen `preschoolage' = `electricity'
+
+. label var `preschoolage' "preschool age (sim dummy)"
+
+. 
+. tempvar primaryage
+
+. gen `primaryage' = `wateraccess'
+
+. label var `primaryage' "primary school age(simulated dummy)"
+
+. 
+. tempvar secondaryage  
+
+. gen `secondaryage' = `wateraccess'
+
+. label var `secondaryage' "secondary school age(simulated dumm
+> y)"
+
+. 
+. tempvar tertiaryage
+
+. gen `tertiaryage' = `electricity'
+
+. label var `tertiaryage' "tertiary school age(sim dummy)"
+
+. 
+. tempvar public
+
+. gen `public' = head
+
+. replace `public' = . if head != 1
+(30 real changes made, 30 to missing)
+
+. replace `public' = 0 if head ==2
+(1 real change made)
+
+. label var `public' "public school attendance (simulated dummy
+> )"
+
+. 
+. tempvar test_inc_p1
+
+. tempvar test_inc_p2
+
+. gen `test_inc_p1' = market_inc_p /2 
+(46 missing values generated)
+
+. gen `test_inc_p2' = market_inc_p + value_lunch_p
+(46 missing values generated)
+
+. label var `test_inc_p1' "test market inc 1"
+
+. label var `test_inc_p2' "test market inc 2"
+
+. 
+. //replace medicare_ben_p = -100 if medicare_ben_p <1000
+. //replace income_taxes_p = -100 if income_taxes_p <1000
+. //replace income_taxes_p = - income_taxes_p // test out the n
+> egative fiscal intervensions warning
+. 
+. //replace market_inc_p=-599 if market_inc_p <10000
+. //replace consumable_inc_p = -10000 if consumable_inc_p < 0
+. 
+. 
+. *******************
+. * MASTER WORKBOOK *
+. *******************
+. *ssc install ceq, replace // install CEQ Stata package
+. *//help ceq
+. 
+. // Copy Master Workbook so we have the original version that 
+> will stay "blank" 
+. //  and a version we will fill with results
+. if `first_run' copy 2_MWB2016_Part_II_Output_Tables_BetaVersi
+> on_Feb2016.xlsx US_CEQ.xlsx, replace
+
+. 
+. * Locals for PPP conversion for poverty calculations (2005 PP
+> P)
+. *//help ceqppp
+. ceqppp, country("usa") base(2005) survey(2011) locals
+RESULTS FOR PPP CONVERSION
+Country: usa
+Base year: 2005
+Survey year: 2011
+
+PPP Conversion Factor (From Base Year LCU to Base Year PPP)
+(compare to cell I3)
+1
+CPI (Base Year)
+(compare to cell M3)
+89.560532
+CPI (Year of Survey)
+(compare to cell O3)
+103.15684
+PPP Conversion Factor (from LCU in Year of Survey to Base Year 
+> PPP)
+(compare to cell Q3)
+1.1518114
+
+Results saved in the following locals: `ppp', `cpibase', `cpisu
+> rvey'
+
+. 
+. * Sheet E1. Descriptive Statistics
+. *//help ceqdes
+. #delimit ;
+delimiter now ;
+. /*if `ceqdes' ceqdes
+>         [pweight = s_weight] if incl==1 using MWB2016_E1_Jun9
+> _2016.xlsx, 
+>         market(market_inc_p) 
+>         mpluspensions(marketplusp_inc_p)
+>         netmarket(netmarket_inc_p)
+>         gross(gross_inc_p)
+>         disposable(disposable_inc_p)
+>         consumable(consumable_inc_p)
+>         final(final_inc_p)
+>         pensions(`pensions_list')
+>         dtransfers(`dtransfers_list')
+>         dtaxes(`dtaxes_list')
+>         contribs(`contributions_list')
+>         subsidies(`subsidies_list')
+>         indtaxes(`indtaxes_list')
+>         health(`healthben_list')
+>         educ(`educben_list')
+>         hhid(famunit)
+>         psu(psu)
+>         strata(strata)
+>         country("United States")
+>         surveyyear("2011")
+>         authors("Sean Higgins")
+>         open 
+>         */
+> ;
+.  if `ceqextsig' ceqextsig
+>         [pweight = s_weight] if incl==1 using "$sheets/E16_te
+> st.xlsx",
+>         country("United States")
+>         surveyyear("2011")
+>         authors("Sean Higgins")
+>         scen("test")
+>         grou("tes")
+>         proj("test")
+>         market(market_inc_p) 
+>         mpluspensions(marketplusp_inc_p)
+>         netmarket(netmarket_inc_p)
+>         gross(gross_inc_p)
+>         disposable(disposable_inc_p)
+>         consumable(consumable_inc_p)
+>         final(final_inc_p)
+>         /*pensions(`pensions_list')
+>         dtransfers(`dtransfers_list')*/
+>         dtaxes(income_taxes_p /* `dtaxes_list' */ )
+>         /*contribs(`contributions_list')
+>         subsidies(`subsidies_list')
+>         indtaxes(`indtaxes_list')
+>         health(`healthben_list')
+>         educ(`educben_list')*/
+>         hhid(famunit)
+>         psu(psu)
+>         strata(strata) 
+>         /*`income_concepts'
+>         `fiscal_interventions'
+>         `survey_design'
+>         `title_options'
+>         `ppp_options' */
+>         nationalextremepl(poverty_line_e) 
+>         ignorem 
+>         ppp(1.151811492142544)
+>         cpibase(89.560532)
+>         cpisurvey(103.15685)
+>         yearly 
+> ;
+
+. #delimit cr
+delimiter now cr
+. cap log close 

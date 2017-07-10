@@ -45,7 +45,6 @@ capture program define ceqgraph_progressivity
 			COUNtry(string)
 			SURVeyyear(string) /** string because could be range of years **/
 			AUTHors(string)
-			BASEyear(real -1)
 			SCENario(string)
 			GROUp(string)
 			PROJect(string)
@@ -71,7 +70,7 @@ capture program define ceqgraph_progressivity
 	local dit display as text in smcl
 	local die display as error in smcl
 	local command ceqgraph_progressivity
-	local version 2.1
+	local version 2.3
 
 	** income concepts
 	local m `market'
@@ -404,8 +403,8 @@ capture program define ceqgraph_progressivity
 			local titlesprint
 			local titlerow = 3
 			local titlecol = 1
-			local titlelist country surveyyear authors date ppp baseyear cpibase cpisurvey  ///
-					scenario group project
+			local titlelist country surveyyear authors date scenario group project
+			
 			foreach title of local titlelist {
 				returncol `titlecol'
 				if "``title''"!="" & "``title''"!="-1" ///

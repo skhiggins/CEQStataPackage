@@ -1,7 +1,8 @@
 ** ADO FILE FOR EXTENDED INCOME CONCEPTS SHEET OF CEQ OUTPUT TABLES
 
 ** VERSION AND NOTES (changes between versions described under CHANGES)
-*! v4.9 01jun2017 For use with May 2017 version of Output Tables
+*! v5.0 29jun2017 For use with July 2017 version of Output Tables
+** v4.9 01jun2017 For use with May 2017 version of Output Tables
 ** v4.8 22may2017 For use with Oct 2016 version of Output Tables
 ** v4.7 08mar2017 For use with Oct 2016 version of Output Tables
 ** v4.6 12jan2017 For use with Oct 2016 version of Output Tables
@@ -28,9 +29,10 @@
 ** v1.11 28may2015 was dII.ado, for use with Jan 8 2015 version of Disaggregated Tables
 ** ... // omitting version information since name of ado file changed
 ** v1.0 20oct2014 
-*! (beta version; please report any bugs), written by Sean Higgins sean.higgins@ceqinstitute.org
+** (beta version; please report any bugs), written by Sean Higgins sean.higgins@ceqinstitute.org
 
 ** CHANGES 
+**   06-29-2017 Replacing covcon with improved version by Paul Corral
 **   06-01-2017 Add additional options to print meta-information
 **   05-22-2017 Mata calculation of fiscal incidence had a bug (pointed out by Esmeralda Shehaj)
 **   03-08-2017 Remove the net in-kind transfers as a broad category in accordance with the instruction that users
@@ -102,54 +104,7 @@ program define returncol, rclass
 	return local col = col
 end // END returncol
 
-// BEGIN covconc (Higgins 2015)
-cap program drop covconc
-program define covconc, rclass sortpreserve
-	syntax varname [if] [in] [pw aw iw fw/], [rank(varname)]
-	preserve
-	marksample touse
-	qui keep if `touse' // drops !`if', !`in', and any missing values of `varname'
-	local 1 `varlist'
-	if "`rank'"=="" {
-		local rank `1'
-		local _return gini
-		local _returndi Gini
-	}
-	else {
-		local _return conc
-		local _returndi Concentration Coefficient
-	}
-	sort `rank' `1', stable // sort in increasing order of ranking variable; break ties with other variable
-	tempvar F wnorm wsum // F is adjusted fractional rank, wnorm normalized weights,
-		// wsum sum of normalized weights for obs 1, ..., i-1
-	if "`exp'"!="" { // with weights
-		local aw [aw=`exp'] // with = since I used / in syntax
-		tempvar weight
-		gen `weight' = `exp'
-		qui summ `weight'
-		qui gen `wnorm' = `weight'/r(sum) // weights normalized to sum to 1
-		qui gen double `wsum' = sum(`wnorm')
-		qui gen double `F' = `wsum'[_n-1] + `wnorm'/2 // from Lerman and Yitzhaki (1989)
-		qui replace `F' = `wnorm'/2 in 1
-		qui corr `1' `F' `aw', cov
-		local cov = r(cov_12)
-		qui summ `1' `aw', meanonly 
-		local mean = r(mean)
-	}
-	else { // no weights
-		qui gen `F' = _n/_N // sorted so this works in unweighted case; 
-			// cumul `1', gen(`F') would also work
-		qui corr `1' `F', cov
-		local cov = r(cov_12)
-		qui summ `1', meanonly
-		local mean = r(mean)
-	}
-	local `_return' = ((r(N)-1)/r(N))*(2/`mean')*`cov' // the (N-1)/N term adjusts for
-		// the fact that Stata does sample cov
-	return scalar `_return' = ``_return''
-	di as result "`_returndi': ``_return''"
-	restore
-end // END covconc
+
 
 
 // BEGIN _theil 
@@ -234,7 +189,7 @@ program define ceqextend
 	local dit display as text in smcl
 	local die display as error in smcl
 	local command ceqextend
-	local version 4.7
+	local version 5.0
 	`dit' "Running version `version' of `command' on `c(current_date)' at `c(current_time)'" _n "   (please report this information if reporting a bug to sean.higgins@ceqinstitute.org)"
 	
 	** income concept options
