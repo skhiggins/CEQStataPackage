@@ -1,12 +1,15 @@
 ** ADO FILE FOR EFFECTIVENESS SHEET OF CEQ OUTPUT TABLES
 
 ** VERSION AND NOTES (changes between versions described under CHANGES)
-*! v1.4 21may2017 For use with Apr 2017 version of Output Tables
+*! v1.5 20jul2017 For use with July 2017 version of Output Tables
+** v1.4 21may2017 For use with Apr 2017 version of Output Tables
 ** v1.3 03may2017 For use with Jul 2016 version of Output Tables
 ** v1.2 03jan2016 For use with Jul 2016 version of Output Tables
 ** (beta version; please report any bugs), written by Rodrigo Aranda raranda@tulane.edu
 
 ** CHANGES
+**  v1.5 Replacing covgini with covconc and modifiying ceq(tax/ben)star to be more efficient.
+**		 Adjusting _fifgpmc removing marginal contributions of tax and benefits, uses only contribution of FI and FGP to effectivness.
 **  v1.2 Added Spending effectiveness, changes in Spillover so it shows in Excel, FI/FGP results available for all income concepts **  v1.3 Updated to produce no results for FI/FGP per capita and normalized per capita effectiveness indicator **		 Fix the national poverty line specification to include both variables and scalar condition for Beckerman **		 Add the weight local in subcommands **  v1.4 Add option flexibility for income concept and fiscal interventions ** NOTES
 ** No spending effectiveness. Results are not feasible for poverty using the whole system.
 
@@ -34,43 +37,6 @@ end // END returncol
 * With these two adjustments, covgini gives same answer as Gini commands based on 
 *  discrete formulas to 9 decimal places
 
-
-cap program drop covgini
-program define covgini, rclass sortpreserve
-	syntax varname [if] [in] [pw aw iw fw/]
-	preserve
-	marksample touse
-	qui keep if `touse' // drops !`if', !`in', and any missing values of `varname'
-	local 1 `varlist'
-	sort `1' // sort in increasing order of incomes
-	tempvar F wnorm wsum // F is adjusted fractional rank, wnorm normalized weights,
-		// wsum sum of normalized weights for obs 1, ..., i-1
-	if "`exp'"!="" { // with weights
-		local 2 `exp'
-		qui summ `2'
-		qui gen `wnorm' = `2'/r(sum) // weights normalized to sum to 1
-		qui gen double `wsum' = sum(`wnorm')
-		qui gen double `F' = `wsum'[_n-1] + `wnorm'/2 // from Lerman and Yitzhaki (1989)
-		qui replace `F' = `wnorm'/2 in 1
-		qui corr `1' `F' [aw=`2'], cov
-		local cov = r(cov_12)
-		qui summ `1' [aw=`2'], meanonly 
-		local mean = r(mean)
-	}
-	else { // no weights
-		qui gen `F' = _n/_N // sorted so this works in unweighted case; 
-			// cumul `1', gen(`F') would also work
-		qui corr `1' `F', cov
-		local cov = r(cov_12)
-		qui summ `1', meanonly
-		local mean = r(mean)
-	}
-	local gini = ((r(N)-1)/r(N))*(2/`mean')*`cov' // the (N-1)/N term adjusts for
-		// the fact that Stata does sample cov
-	return scalar gini = `gini'
-	di as result "Gini: `gini'"
-	restore
-end
 
 // BEGIN _fifgpmc (Edited from _fifgp, Higgins 2015)
 //  Calculates fiscal impoverishemnt and fiscal gains of the poor
@@ -106,19 +72,19 @@ program define _fifgpmc,rclass
 	local B=r(sum)
 	local TB=`T'+`B'
 	
-	tempvar  d_fi d_fi_t d_fg d_fg_b
+	tempvar  d_fi  d_fg 
 	
 	qui gen `d_fi' = min(`startinc',`z') - min(`startinc',`endinc',`z')
-	qui gen `d_fi_t' = min(`notax',`z') - min(`notax',`endinc',`z')
+	*qui gen `d_fi_t' = min(`notax',`z') - min(`notax',`endinc',`z')
 	
 	*	qui gen `d_fi' = min(`y0',`z') - min(`y0',`y1',`z')
 	*qui gen `d_fg' = min(`y1',`z') - min(`y0',`y1',`z')
 	
 	
 	qui gen `d_fg' = min(`endinc',`z') - min(`startinc',`endinc',`z')
-	qui gen `d_fg_b' = min(`endinc',`z') - min(`noben',`endinc',`z')
+	*qui gen `d_fg_b' = min(`endinc',`z') - min(`noben',`endinc',`z')
 	
-	foreach v in fi fi_t fg fg_b{
+	foreach v in fi fg {
 	qui summ `d_`v'' [`weight' `exp'], meanonly
 			local t_`v' = r(sum)
 			local pc_`v' = r(mean)
@@ -128,27 +94,25 @@ program define _fifgpmc,rclass
 	*Marginal contributions
 	foreach m in t pc n{
 		
-		local `m'_mc_t=``m'_fi'-``m'_fi_t'
-		
-		
-		local `m'_mc_b=``m'_fg_b'-``m'_fg'
+		*local `m'_mc_t=``m'_fi'-``m'_fi_t'
+		*local `m'_mc_b=``m'_fg_b'-``m'_fg'
 		
 		
 		if `T'!=0 /*& (``m'_mc_t'>=0 & ``m'_mc_t'!=0)*/{
-			local mceft_`m'=(`T'/`TB')*(1-(``m'_mc_t'/`T'))
+			local mceft_`m'=(`T'/`TB')*(1-(``m'_fi'/`T'))
 		}
 		else{
 		local mceft_`m'=0
 		}
 		if `B'!=0 /*& (``m'_mc_b'>=0 & ``m'_mc_b'!=.)*/{
-			local mcefb_`m'=(`B'/`TB')*((``m'_mc_b'/`B'))
+			local mcefb_`m'=(`B'/`TB')*((``m'_fg'/`B'))
 		}
 		else{
 		local mcefb_`m'=0
 		}
 		
-			local MCEF_`m'=`mceft_`m''+`mcefb_`m''
-			scalar MCEF_`m'=`mceft_`m''+`mcefb_`m''
+			*local MCEF_`m'=`mceft_`m''+`mcefb_`m''
+			*scalar MCEF_`m'=`mceft_`m''+`mcefb_`m''
 			return scalar MCEF_`m' = `mceft_`m''+`mcefb_`m''
 		
 		}
@@ -174,53 +138,59 @@ program define ceqtaxstar, rclass
 			]
 			;
 		#delimit cr	
-		local ww `exp' //weights
-		*no taxes income
-		tempvar notax
-		gen double `notax'=`startinc'
-		count
-		local N=r(N)
-		gsort - `notax' 
 		
-		replace `taxes'=abs(`taxes')
-		qui sum `taxes' [w=`ww']
-		local tot=r(sum) //total amount to redistribute
-		local cum=0-`tot' //cum takes a positive value when we have redistributed more than enough
-		forvalues x=2/`N'{
-			tempvar tstar
-			gen double `tstar'=`notax'
-			qui sum `tstar' in `x'
-			replace `tstar'=r(mean) in 1/`x'
-			tempvar difstar
-			gen double `difstar'=`notax'-`tstar'
-			qui sum `difstar' [w=`ww'] if `difstar'>0 
-			local cum=r(sum)-`tot'
-			drop `tstar' `difstar'
-
-			if `cum'>0{
-				local stop=`x'
-				continue,break
+		if "`exp'" == "" {
+			local exp = 1
 			}
-		}
-		tempvar ytaxstar
-		gen double `ytaxstar'=`notax'
-		qui sum `ww' in 1/`stop'
-		local redist=`cum'/r(sum)
-		qui sum `ytaxstar' in `stop'
-		replace `ytaxstar'=r(mean) + `redist' in 1/`stop'
-		tempvar taxstar id_taxstar
-		gen double `taxstar'=`notax'-`ytaxstar' in 1/`stop'
-		gen  `id_taxstar'=1 in 1/`stop'
+			
+		gen double ___startinc = `startinc'
+		gen double ___taxes = `taxes'
+		gsort -___startinc
+
+		replace ___taxes = abs(___taxes)
+		qui sum ___taxes [aw=`exp'] 
+		local tot=r(sum) //total amount to redistribute
+		// Taking the difference of income b/w one person and then previous
+		gen double ___diff_y = ___startinc - ___startinc[_n-1]
+		recode ___diff_y (.=0)
+		gen double ___cum_w = sum(`exp')
+		gen double ___diff_y_i = ___diff_y*___cum_w[_n-1]
+		recode ___diff_y_i (.=0)
+		gen double ___cum_diff_y_i = sum(___diff_y_i)
+		// Determining who is taxed.
+		gen ___taxed = (abs(___cum_diff_y_i) < `tot')
+		gen ___last_taxed = ___taxed==1 & ___taxed[_n+1]==0
+
+		gen ___id = _n
+		sum ___id if ___last_taxed== 1
+		assert r(min)==r(max) 
+		local which = r(mean) // Giving observation of which person is taxed.
+		// Generating optimal tax
+		gen double ____taxstar = 0
+		replace ____taxstar = ___startinc - ___startinc[`which'] if ___taxed==1
+
+		local still_tax =  `tot' - abs(___cum_diff_y_i[`which'])
+		
+		local still_tax_per_person = `still_tax' / ___cum_w[`which']
+
+		replace ____taxstar = ____taxstar + `still_tax_per_person' if ___taxed==1
+
+		sum ____taxstar [aw=`exp']
+		// Ensuring that we how allocating the exact amount of tax available
+		assert round(`tot',.1) == round(r(sum),.1)
+		// Generating optimal income 
 		cap drop ____id_taxstar
 		cap drop ____ytaxstar
-		gen double ____id_taxstar=`id_taxstar'
-		gen double ____ytaxstar=`ytaxstar'
-		*qui sum `taxstar' [w=`ww'] in 1/`stop'
-		*local cumf=r(sum)-`tot'
-		* di `cumf' //test to see if all tax has been redistributed;
-		end
+		gen double ____ytaxstar = ___startinc
+		replace ____ytaxstar = ____ytaxstar - ____taxstar if ___taxed == 1
+		gen ____id_taxstar = ___taxed
 
+		drop ___taxed ___last_taxed ____taxstar ___diff_y ___diff_y_i ///
+			 ___cum_diff_y_i ___cum_w ___id ___startinc ___taxes
+
+		end
 		
+	
 		
 * Program to compute ideal transfer for impact effectiveness
 *generates income variable (ybenstar) whith ideal transfers 
@@ -237,51 +207,55 @@ program define ceqbenstar, rclass
 			]
 			;
 		#delimit cr	
-
-		local ww `exp' //weights
-		*no transfers income
-		tempvar noben
-		gen double `noben'=`startinc'
-		count
-		local N=r(N)
-		sort `noben' 
-
-		qui sum `ben' [w=`ww']
-		local tot=r(sum) //total amount to redistribute
-		local cum=0-`tot' //cum takes a positive value when we have redistributed more than enough
-		forvalues x=2/`N'{
-			tempvar bstar
-			gen double `bstar'=`noben'
-			qui sum `bstar' in `x'
-			replace `bstar'=r(mean) in 1/`x'
-			tempvar difstar
-			gen double `difstar'=`noben'-`bstar'
-			qui sum `difstar' [w=`ww'] if `difstar'<0 
-			local cum=abs(r(sum))-`tot'
-			drop `bstar' `difstar'
-			if `cum'>0{
-				local stop=`x'
-				continue,break
+		
+		if "`exp'" == "" {
+			local exp = 1
 			}
-		}
-		tempvar ybenstar
-		gen double `ybenstar'=`noben'
-		qui sum `ww' in 1/`stop'
-		local redist=`cum'/r(sum)
-		qui sum `ybenstar' in `stop'
-		replace `ybenstar'=r(mean) - `redist' in 1/`stop'
-		tempvar benstar id_benstar
-		gen double `benstar'=`ybenstar'-`noben' in 1/`stop'
-		gen  `id_benstar'=1 in 1/`stop'
+			
+		sort  `startinc'
+		
+		qui sum `ben' [aw=`exp'] 
+		local tot=r(sum) //total amount to redistribute
+		// Taking the difference of income b/w one person and then previous
+		gen double ___diff_y = `startinc' - `startinc'[_n-1]
+		recode ___diff_y (.=0)
+		gen double ___cum_w = sum(`exp')
+		gen double ___diff_y_i = ___diff_y*___cum_w[_n-1]
+		recode ___diff_y_i (.=0)
+		gen double ___cum_diff_y_i = sum(___diff_y_i)
+		// Determining who is taxed.
+		gen ___gets_ben = (abs(___cum_diff_y_i) < `tot')
+		gen ___last_rec = ___gets_ben==1 & ___gets_ben[_n+1]==0
 
-		qui sum `benstar' [w=`ww'] in 1/`stop'
-		*local cumf=r(sum)-`tot'
-		*noisily di `cumf' //test to see if all transfer has been redistributed
+		gen ___id = _n
+		sum ___id if ___last_rec== 1
+		assert r(min)==r(max) 
+		local which = r(mean) // Giving observation of which person is taxed.
+
+		gen double ____benstar = 0
+		replace ____benstar = `startinc'[`which'] - `startinc'   if ___gets_ben==1
+
+		local still_ben =  `tot' - abs(___cum_diff_y_i[`which'])
+		local still_ben_per_person = `still_ben' / ___cum_w[`which']
+		
+		replace ____benstar = ____benstar + `still_ben_per_person' if ___gets_ben==1
+
+		sum ____benstar [aw=`exp']
+		// Ensuring that we how allocating the exact amount of benefits available
+		nois assert round(`tot',.1) == round(r(sum),.1)
+		
+		
 		cap drop ____id_benstar
 		cap drop ____ybenstar
-		gen double ____id_benstar=`id_benstar'
-		gen double ____ybenstar=`ybenstar'
+		gen double ____ybenstar = `startinc'
+		replace ____ybenstar = ____ybenstar + ____benstar if ___gets_ben == 1
+		gen ____id_benstar = ___gets_ben
+
+		drop ___gets_ben ___last_rec ____benstar ___diff_y ___diff_y_i ///
+			 ___cum_diff_y_i ___cum_w ___id
+
 		end
+		
 		
 * Program to compute harm tax formula for poverty impact effectiveness
 *generates income variable (ytaxharm) whith ideal taxes 
@@ -298,7 +272,15 @@ program define ceqtaxharm, rclass
 			]
 			;
 			#delimit cr
-		local ww `exp' //weights;
+			
+		if "`exp'" !="" {
+			local aw = "[aw = `exp']" //weights
+			local pw = "[pw = `exp']"
+		}
+		else {
+			tempvar ww
+			gen `ww' = 1
+			}
 		*no taxes income
 		tempvar notax
 		gen double `notax'=`endinc'+abs(`taxes')
@@ -306,7 +288,7 @@ program define ceqtaxharm, rclass
 		local N=r(N)
 		sort `notax' 
 
-		qui sum `taxes' [w=`ww']
+		qui sum `taxes' `aw'
 		local tot=r(sum) //total amount to redistribute
 		local cum=0-`tot' //cum takes a positive value when we have redistributed more than enough
 		forvalues x=2/`N'{
@@ -317,7 +299,7 @@ program define ceqtaxharm, rclass
 			
 			tempvar difstar
 			gen double `difstar'=`notax'-`tharm'
-			qui sum `difstar' [w=`ww'] if `difstar'>0 
+			qui sum `difstar' `aw' if `difstar'>0 
 			local cum=r(sum)-`tot'
 			drop `tharm' `difstar'
 			if `cum'>0{
@@ -354,7 +336,11 @@ program define _ceqmcid, rclass
 			]
 			;
 			#delimit cr
-		local ww `exp' //weights
+			
+		if "`exp'" !="" {
+			local aw = "[aw = `exp']" //weights
+			local pw = "[pw = `exp']"
+		}
 		local id_tax=0
 		local id_ben=0
 		
@@ -382,9 +368,9 @@ program define _ceqmcid, rclass
 		
 		
 			*gini final income
-			covgini `inc' [pw = `exp']
+			covconc `inc' `pw'
 			local g_f=r(gini)
-			covgini `o_inc' [pw = `exp']
+			covconc `o_inc' `pw'
 			local g_o=r(gini)
 		
 			local mc=`g_o'-`g_f'
@@ -401,9 +387,9 @@ program define _ceqmcid, rclass
 			qui gen `pov1_f' = max((`pline'-`inc')/`pline',0) // normalized povety gap of each individual
 			qui gen `pov2_f' = `pov1_f'^2 
 			forvalues f=0/2{
-			qui sum `pov`f'_o' [aw = `exp']
+			qui sum `pov`f'_o' `aw'
 			local p`f'_o=r(mean)
-			qui sum `pov`f'_f' [aw = `exp']
+			qui sum `pov`f'_f' `aw'
 			local p`f'_f=r(mean)
 			local mc`f'=`p`f'_o'-`p`f'_f'
 			return scalar mc_p`f'=`mc`f'' //Marginal Contribution of poverty fgt:`f'
@@ -424,11 +410,15 @@ program define _ceqspend, rclass
 			]
 			;
 			#delimit cr
-		local ww `exp' //weights
+			
+		if "`exp'" !="" {
+			local aw = "[aw = `exp']" //weights
+			local pw = "[pw = `exp']"
+		}
 		local id_tax=0
 		local id_ben=0
 		*gini original
-		covgini `inc' [pw = `exp']
+		covconc `inc' `pw'
 		local g_orig=r(gini)
 		
 		*See if we are dealing with taxes or transfers
@@ -469,7 +459,7 @@ program define _ceqspend, rclass
 				gen `oi_`p''=`o_inc'
 				qui sum `oi_`p'' in `n`p''
 				replace `oi_`p''=r(mean) in 1/`n`p''
-				covgini `oi_`p'' [pw = `exp']
+				covconc `oi_`p'' `pw'
 				local g_`p'=r(gini)
 				drop `oi_`p''
 				local dif= `g_`p''-`g_orig'
@@ -490,7 +480,7 @@ program define _ceqspend, rclass
 				gen `oi_`p''=`o_inc'
 				qui sum `oi_`p'' in `p'
 				replace `oi_`p''=r(mean) in 1/`p'
-				covgini `oi_`p'' [pw = `exp']
+				covconc `oi_`p'' `pw'
 				local g_`p'=r(gini)
 				drop `oi_`p''
 				local dif= `g_`p''-`g_orig'
@@ -516,9 +506,9 @@ program define _ceqspend, rclass
 			if `id_ben'==1{
 			gen `gap'=`oi_`stop''-`o_inc'
 			}
-			qui sum `gap' [aw = `exp']
+			qui sum `gap' `aw'
 			local prime=r(sum)
-			qui sum `inter' [aw = `exp']
+			qui sum `inter' `aw'
 			local tot_inter=r(sum)
 		    if `tot_inter'<0{
 			local tot_inter=r(sum)*(-1)
@@ -547,13 +537,16 @@ program define ceqbensp, rclass
 			]
 			;
 
-		local ww `exp' ;
+		if "`exp'" !="" { ;
+			local aw = "[aw = `exp']" ; //weights ;
+			local pw = "[pw = `exp']" ;
+		} ;
 		*no transfers income;
 		tempvar noben;
 		gen double `noben'=`startinc';
 		count;
 		local N=r(N);
-		sum `ben' [aw = `exp'];
+		sum `ben' `aw';
 		local totben=r(sum);
 		sort `noben' ;
 		
@@ -582,7 +575,7 @@ program define ceqbensp, rclass
 								qui gen `fgt1_`p'' = max((`zz'-`oi_`p'')/`zz',0) ;// normalized povety gap of each individual;
 								qui gen `fgt2_`p'' = `fgt1_`p''^2 ;
 								
-								qui summ `fgt`fgt'_`p'' [aw = `exp'], meanonly; // `if' `in' restrictions already taken care of by `touse' above;	
+								qui summ `fgt`fgt'_`p'' `aw', meanonly; // `if' `in' restrictions already taken care of by `touse' above;	
 								local fgt`fgt'`p'=r(mean);
 								
 								drop  `fgt1_`p'' `fgt2_`p'';
@@ -610,7 +603,7 @@ program define ceqbensp, rclass
 								qui gen `fgt1_`p'' = max((`zz'-`oi_`p'')/`zz',0) ;// normalized povety gap of each individual;
 								qui gen `fgt2_`p'' = `fgt1_`p''^2 ;
 								
-								qui summ `fgt`fgt'_`p'' [aw = `exp'], meanonly; // `if' `in' restrictions already taken care of by `touse' above;	
+								qui summ `fgt`fgt'_`p'' `aw', meanonly; // `if' `in' restrictions already taken care of by `touse' above;	
 								local fgt`fgt'_p'=r(mean);
 								
 								drop  `fgt1_`p'' `fgt2_`p'';
@@ -631,7 +624,7 @@ program define ceqbensp, rclass
 							replace `oi_`stop''=r(mean) in 1/`stop';
 							tempvar gap;
 							gen `gap'=`oi_`stop''-`noben';
-							qui sum `gap' [aw = `exp'];
+							qui sum `gap' `aw';
 							local prime=r(sum);
 							
 							local sp_ef_pov_`fgt'=`prime'/`totben';
@@ -661,39 +654,42 @@ program define ceqbeck, rclass sortpreserve
 			]
 			;
 #delimit cr			
-quietly {
-tempvar difference
-gen double `difference' = `postinc'-`preinc'
-tempvar pre_shortfall
-gen double `pre_shortfall' = `zline' - `preinc'
-tempvar post_shortfall
-gen double `post_shortfall' = `zline' - `postinc'
+	quietly {
+		if "`exp'" !="" {
+			local aw = "[aw = `exp']" //weights
+			}
+		tempvar difference
+		gen double `difference' = `postinc'-`preinc'
+		tempvar pre_shortfall
+		gen double `pre_shortfall' = `zline' - `preinc'
+		tempvar post_shortfall
+		gen double `post_shortfall' = `zline' - `postinc'
 
-sum `difference' [`weight'=`exp'] if `preinc' < `zline'
-scalar AB = r(sum)
-summarize `difference' [`weight'=`exp']
-scalar ABC = r(sum)
-summarize `post_shortfall' [`weight'=`exp'] if `preinc' < `zline' & `postinc'>= `zline'
-scalar B = -r(sum)
-summarize `difference' [`weight'=`exp'] if `postinc' <  `zline'
-scalar A1 = r(sum)
-summarize `pre_shortfall' [`weight'=`exp'] if `preinc' <  `zline' & `postinc' >= `zline'
-scalar A2 = r(sum)
-scalar A = A1 + A2
-summarize `pre_shortfall' [`weight'=`exp'] if `preinc' < `zline'
-scalar AD = r(sum)
-scalar VEE = AB/ABC
-scalar Spillover = B/AB
-scalar PRE = A/ABC
-scalar PGE = A/AD
+		sum `difference' `aw' if `preinc' < `zline'
+		scalar AB = r(sum)
+		summarize `difference' `aw' 
+		scalar ABC = r(sum)
+		summarize `post_shortfall' `aw'  if `preinc' < `zline' & `postinc'>= `zline'
+		scalar B = -r(sum)
+		summarize `difference' `aw'  if `postinc' <  `zline'
+		scalar A1 = r(sum)
+		summarize `pre_shortfall'`aw'  if `preinc' <  `zline' & `postinc' >= `zline'
+		scalar A2 = r(sum)
+		scalar A = A1 + A2
+		summarize `pre_shortfall' `aw'  if `preinc' < `zline'
+		scalar AD = r(sum)
+		scalar VEE = AB/ABC
+		scalar Spillover = B/AB
+		scalar PRE = A/ABC
+		scalar PGE = A/AD
 
-return scalar VEE=VEE
-return scalar Spill = Spillover
-return scalar PRE = PRE
-return scalar PGE = PGE
+		return scalar VEE=VEE
+		return scalar Spill = Spillover
+		return scalar PRE = PRE
+		return scalar PGE = PGE
 
 
-}
+	}
 
 end
 
@@ -710,7 +706,7 @@ program define ceqef
 	#delimit ;
 	syntax 
 		[using/]
-		[if] [in] [pweight] 
+		[if] [in] [pweight/] 
 		[, 
 			/* INCOME CONCEPTS: */
 			Market(varname)
@@ -769,6 +765,9 @@ program define ceqef
 			PROJect(string)
 			
 			BASEyear(real -1)*
+
+			/** DROP MISSING VALUES */
+			IGNOREMissing
 		]
 	;
 
@@ -777,7 +776,7 @@ program define ceqef
 	local dit display as text in smcl;
 	local die display as error in smcl;
 	local command ceqef;
-	local version 1.4;
+	local version 1.5;
 	`dit' "Running version `version' of `command' on `c(current_date)' at `c(current_time)'" _n "   (please report this information if reporting a bug to raranda@tulane.edu)";
 	qui{;
 	* weight (if they specified hhsize*hhweight type of thing);
@@ -834,17 +833,7 @@ program define ceqef
 		qui bys `hhid': drop if _n>1; // faster than duplicates drop;
 		local hsize `members';
 	};
-		* temporary variables;
-	tempvar one;
-	qui gen `one' = 1;
 	
-	* create pseudo income concepts when users did not specify income concepts;
-	foreach concept in market mpluspensions netmarket gross taxable disposable consumable final {;
-		if "``concept''"=="" {;
-			tempvar `concept';
-			qui gen ``concept'' = -1;
-		};
-	};
 	
 	**********************
 	* SVYSET AND WEIGHTS *
@@ -892,6 +881,20 @@ program define ceqef
 	if "`exp'"!="" qui svyset `psu' `pw', `opt';
 	else           qui svyset `psu', `opt';
 
+	
+		* temporary variables;
+	tempvar one;
+	qui gen `one' = 1;
+	
+	* create pseudo income concepts when users did not specify income concepts;
+	foreach concept in market mpluspensions netmarket gross taxable disposable consumable final {;
+		if "``concept''"=="" {;
+			tempvar `concept';
+			qui gen ``concept'' = -1;
+		};
+	};
+	
+
 	**********
 	* LOCALS *
 	**********;
@@ -936,6 +939,25 @@ program define ceqef
 		};
 	};
 	
+
+	** missing income concepts
+	foreach var of local varlist {
+		qui count if missing(`var')  
+		if "`ignoremissing'"=="" {
+			if r(N) {
+				`die' "Missing values not allowed; `r(N)' missing values of `var' found" 
+				exit 198
+			}
+		}
+		else {
+			if r(N) {
+				qui drop if missing(`var')
+				`dit' "Warning: `r(N)' observations that are missing `var' were dropped because the user specified {bf:ignoremissing}"
+				local warning `warning' "Warning: `r(N)' observations that are missing `var' were dropped because the user specified the ignoremissing option."
+			}
+		}
+    }
+	
 	* negative incomes;
 	foreach v of local alllist {;
 		if "``v''"!="" {;
@@ -965,6 +987,8 @@ program define ceqef
 	* ppp conversion
 	if (`ppp'==-1 & `cpisurvey'==-1 & `cpibase'==-1) {
 		local _ppp = 0
+		local divideby = 1
+		local ppp_calculated = 1
 		`dit' "Warning: results by income group and bin not produced since {bf:ppp} option not specified."
 	}
 	else local _ppp = 1
@@ -995,7 +1019,8 @@ program define ceqef
 	foreach x of local programlist {
 		local allprogs `allprogs' ``x'' // so allprogs has the actual variable names
 	}
-	
+
+
 	* columns including disaggregated components and broader categories
 	local broadcats dtransfersp dtaxescontribs inkind alltaxes alltaxescontribs alltransfers 
 	local dtransfersp `pensions' `dtransfers' 
@@ -1369,24 +1394,6 @@ program define ceqef
 	}
 	
 	#delimit;
-	*******General Options*********;
-	if `"`weight'"' != "" {;
-		local wgt `"[`weight'`exp']"';
-    };
-	// qui di "; 
-	if "`exp'"=="" & "`r(wvar)'"!="" local w `r(wvar)';
-	if "`exp'"!="" local w `exp';
-	if "`w'"!="" {;
-		tempvar weightvar;
-		qui gen `weightvar' = `w'*`hsize';
-		local w `weightvar';
-	};
-	else local w "`hsize'";
-		if "`w'"!="" {;
-		local pw "[pw = `w']";
-		local aw "[aw = `w']";
-	};
-	
 	
 	*Effectiveness matrices for each income concept;
 	foreach y of local 	alllist{;//generate matrices for results;
@@ -1419,6 +1426,7 @@ program define ceqef
 						if "`tax_`rw'_`cc''"!=""{;
 							tempvar taxesef;
 							gen double `taxesef'=abs(`tax_`rw'_`cc'');
+							
 						};
 						if "`ben_`rw'_`cc''"!=""{;
 							tempvar benef;
@@ -1436,9 +1444,10 @@ program define ceqef
 							if wordcount("`tax_`rw'_`cc''")>0 & wordcount("`ben_`rw'_`cc''")>0{;
 								tempvar ystar;
 								gen double `ystar'=``rw'';
-								
-								ceqtaxstar [w=`w'], startinc(``rw'') taxes(`taxesef');			
-								ceqbenstar [w=`w'], startinc(``rw'') ben(`benef');
+								*set trace on ;
+								ceqtaxstar `pw', startinc(``rw'') taxes(`taxesef');	
+								*set trace off ;
+								ceqbenstar `pw', startinc(``rw'') ben(`benef');
 								replace `ystar'=____ybenstar if ____id_benstar==1 & ____id_taxstar!=1;
 								replace `ystar'=____ytaxstar if ____id_taxstar==1 & ____id_benstar!=1;
 								tempvar temptax;
@@ -1450,25 +1459,27 @@ program define ceqef
 								cap drop `temptax' `tempben';
 							};
 							if wordcount("`tax_`rw'_`cc''")>0 & wordcount("`ben_`rw'_`cc''")==0{;
-								ceqtaxstar [w=`w'], startinc(``rw'') taxes(`taxesef');
+								*set trace on;
+								ceqtaxstar `pw' , startinc(``rw'') taxes(`taxesef');
+								*set trace off;
 								tempvar ystar;
 								gen double `ystar'=____ytaxstar;
 								cap drop ____ytaxstar ____ybenstar ____id_benstar ____id_taxstar;
 
 							};
 							if wordcount("`tax_`rw'_`cc''")==0 & wordcount("`ben_`rw'_`cc''")>0{;
-								ceqbenstar [w=`w'], startinc(``rw'') ben(`benef');					
+								ceqbenstar `pw', startinc(``rw'') ben(`benef');					
 								tempvar ystar;
 								gen double `ystar'=____ybenstar;
 								cap drop ____ytaxstar ____ybenstar ____id_benstar ____id_taxstar;
 
 							};
-							covgini ``cc'' `pw';//gini of column income;
+							covconc ``cc'' `pw';//gini of column income;
 							local g1_`cc'=r(gini);
 							di "`rw' ``rw''";
-							covgini ``rw'' `pw';//gini of row income;
+							covconc ``rw'' `pw';//gini of row income;
 							local g2_`rw'=r(gini);
-							covgini `ystar' `pw';//gini of star income;
+							covconc `ystar' `pw';//gini of star income;
 							local g_star=r(gini);
 							local imef=(`g2_`rw''-`g1_`cc'')/(`g2_`rw''-`g_star');
 							matrix `rw'_ef[1,`_`cc'']=`imef';
@@ -1566,7 +1577,7 @@ program define ceqef
 										
 											****For Impact effectiveness there can only be a negative effect, we use the harm formula Ch. 5 CEQ Handbook;
 											if `mp_`i'_`p'_`rc''<0{;
-												ceqtaxharm [w=`w'], endinc(``cc'') taxes(`int_tax');			
+												ceqtaxharm `pw', endinc(``cc'') taxes(`int_tax');			
 												tempvar yharm;
 												gen double `yharm'=____ytaxharm;
 												cap drop ____ytaxharm   ____id_taxharm;
@@ -1712,7 +1723,7 @@ program define ceqef
 													tempvar bentouse;
 													gen double `bentouse'=abs(`vtouse1'-`vtouse2');
 													
-													ceqbensp  [w=`w'], startinc(`vtouse2') ben(`bentouse') zz(`_pline') obj1(`p1_`y'_orig') obj2(`p2_`y'_orig');	
+													ceqbensp  `pw', startinc(`vtouse2') ben(`bentouse') zz(`_pline') obj1(`p1_`y'_orig') obj2(`p2_`y'_orig');	
 													matrix `rw'_ef[`rw_se_`p'_`i'',`_`cc''] = r(sp_ef_pov_`i');	
 
 													
@@ -1750,7 +1761,7 @@ program define ceqef
 							};
 							else{;
 							
-								_ceqspend [w=`w'],inc(``cc'') sptax(`int_tax');
+								_ceqspend `pw',inc(``cc'') sptax(`int_tax');
 								local spef=r(sp_ef);
 								matrix `rw'_ef[17,`_`cc''] =`spef';
 							};
@@ -1768,7 +1779,7 @@ program define ceqef
 								matrix `rw'_ef[17,`_`cc''] = .;
 							};
 							else{;
-								_ceqspend [w=`w'],inc(``cc'') spben(`int_ben');
+								_ceqspend `pw',inc(``cc'') spben(`int_ben');
 								local spef=r(sp_ef);
 								matrix `rw'_ef[17,`_`cc''] =`spef';
 
@@ -1793,7 +1804,7 @@ program define ceqef
 									local z= ``p'';
 								};	
 						
-								ceqbeck `aw',preinc(``rw'_ppp') postinc(``cc'_ppp') zline(`z');
+								ceqbeck `aw' ,preinc(``rw'_ppp') postinc(``cc'_ppp') zline(`z');
 								local rowbk=`rbk_`p'';
 								matrix `rw'_ef[`rowbk',`_`cc'']=r(VEE);//Vertical Expenditure Efficiency;
 								local rowbk=`rowbk'+1;
@@ -1850,7 +1861,7 @@ program define ceqef
 									if wordcount("`tax_`rw'_`cc''")>0 & wordcount("`ben_`rw'_`cc''")==0{;
 									*noisily di in green "HEEEEEEEEEEEEEEREEEEE" in red "`rw' to `cc'";
 
-									*set trace on;
+
 										_fifgpmc `aw',taxes(`taxesef') startinc(``rw'_ppp') endinc(``cc'_ppp') z(`z');
 										local rowfi=`rfi_`p'';
 										matrix `rw'_ef[`rowfi',`_`cc'']=r(MCEF_t);
@@ -1861,7 +1872,7 @@ program define ceqef
 										local rowfi=`rowfi'+1;
 						
 				
-										*set trace off;
+
 										*noisily di r(MCEF_t);
 										*noisily di r(MCEF_pc);
 										*noisily di r(MCEF_n);
