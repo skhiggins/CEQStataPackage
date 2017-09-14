@@ -269,9 +269,9 @@ program define ceqeduc, rclass
 	local g5  "y < `cut3'"
 	local g6  "`cut3' < y < `cut4'"
 	local g7  "`cut4' < y < `cut5'"
-	local g8  "y > `cut3'"
-	local g9  "y > `cut5'"
-	local g10 "y > `cut4'"
+	local g8  "y > `cut5'"
+	local g9  "y > `cut4'"
+	local g10 "y > `cut3'"
 	
 	** NO... options
 	if wordcount("`nodecile' `nogroup' `nocentile' `nobin'")==4 {
@@ -412,22 +412,22 @@ program define ceqeduc, rclass
 		if "``v''"!="" {
 			** groups
 			if `_ppp' {
-				tempvar `v'_group2
-				qui gen ``v'_group2' = . 
+				*tempvar `v'_group2
+				qui gen `v'_group2 = . 
 				forval gp=1/6 {
-					qui replace ``v'_group2' = `gp' if ``v'_ppp'>=`cut`=`gp'-1'' & ``v'_ppp'<`cut`gp''
+					qui replace `v'_group2 = `gp' if ``v'_ppp'>=`cut`=`gp'-1'' & ``v'_ppp'<`cut`gp''
 					// this works because I set `cut0' = 0 and `cut6' = infinity
 				}
-				qui replace ``v'_group2' = 1 if ``v'_ppp' < 0
+				qui replace `v'_group2 = 1 if ``v'_ppp' < 0
 			}
 		}
 	}
-	
 	local group2 = 6
 
 	**********************
 	** CALCULATE RESULTS *
 	**********************
+
 	local _0_ "pri"
 	local _1_ "pub"
 	local matrices_list target total_pub total_pri target_pub target_pri
@@ -438,28 +438,34 @@ program define ceqeduc, rclass
 				tempname `v'_`mat'
 				matrix ``v'_`mat'' = J(4,6,.)
 			}
+			tab `v'_group2 `public'
 			forval gp = 1/6 {
 				local ee = 0
 				foreach educ of local educ_levels {
 					local ++ee
 					if "``educ''"=="" continue
-					
+					/*tab `public' if  ``educ'' == 1
+					tab `public' if  ``educ'age' == 1 */
 					// Target population
-					qui summ `one' if ``educ'age'==1 & ``v'_group2'==`gp' `aw'
+
+					qui summ `one' if ``educ'age'==1 & `v'_group2==`gp' `aw'
 					matrix ``v'_target'[`ee',`gp'] = r(sum)
 					
 					// Total attending public/private
 					forval pp=0/1 {
+						
 						qui summ `one' if ``educ''==1 & `public'==`pp' ///
-							& ``v'_group2'==`gp' `aw'
+							& `v'_group2==`gp' `aw'
+							
 						matrix ``v'_total_`_`pp'_''[`ee',`gp'] = r(sum)
-							// `_`pp'_' is "pri" or "pub"
+						// `_`pp'_' is "pri" or "pub"
+						
 					}
 					
 					// Target attending public/private
 					forval pp=0/1 {
 						qui summ `one' if ``educ'age'==1 & `public'==`pp' /// 
-							& ``v'_group2'==`gp'  & ``educ''==1  `aw' 
+							& `v'_group2==`gp'  & ``educ''==1  `aw' 
 						matrix ``v'_target_`_`pp'_''[`ee',`gp'] = r(sum)
 					}
 					
@@ -514,20 +520,32 @@ program define ceqeduc, rclass
 		local therow = `startrow'
 		foreach v of local alllist {
 			if "``v''"!="" {
+				
 				foreach mat of local matrices_list {
 					foreach sub of local submatrices {
 						tempname `v'_`mat'_`sub'
-					}
-					matrix ``v'_`mat'_extp' = `v'_`mat'[1...,1..2]
+					} 
+
+					matrix ``v'_`mat'_extp' = `v'_`mat'[1...,1..2] // Marc: need to re make these temp mats
 					matrix ``v'_`mat'_poor' = `v'_`mat'[1...,3]
 					matrix ``v'_`mat'_rest' = `v'_`mat'[1...,4..6]
 					matrix ``v'_`mat'_tot'  = `v'_`mat'[1...,7]
+
+					/*
+					if strpos("`mat'","pri") {
+						noi mat list  ``v'_`mat'_extp' 
+						noi mat list  ``v'_`mat'_poor' 
+						noi mat list  ``v'_`mat'_rest' 
+						noi mat list  ``v'_`mat'_tot' 
+					} */
+
+					
 					
 					if "`mat'"=="target" local thecol `startcol_o'
 					else if strpos("`mat'","pub") ///
 						local thecol = `thecol' + `horzincrement'
 					// if "pri" it goes below, not to the side
-					
+
 					if !strpos("`mat'","pri") local putrow = `therow'
 					else local putrow = `therow' + `pp_increment'
 					
@@ -568,7 +586,7 @@ program define ceqeduc, rclass
 		
 		// putexcel
 		qui putexcel `titlesprint' `versionprint' `resultset' `cutoffs' `warningprint' using `"`using'"', modify keepcellformat sheet("`sheet'")
-		qui di "
+		// "
 	}
 	
     *********

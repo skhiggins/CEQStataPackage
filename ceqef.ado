@@ -191,7 +191,8 @@ program define ceqtaxstar, rclass
 
 			sum ____taxstar [aw=`exp']
 			// Ensuring that we how allocating the exact amount of tax available
-			assert round(`tot',.1) == round(r(sum),.1)
+			*assert round(`tot',.1) == round(r(sum),.1)
+			nois assert abs((`tot' - r(sum))/`tot') < 0.0001
 			// Generating optimal income 
 			cap drop ____id_taxstar
 			cap drop ____ytaxstar
@@ -270,7 +271,8 @@ program define ceqbenstar, rclass
 
 			sum ____benstar [aw=`exp']
 			// Ensuring that we how allocating the exact amount of benefits available
-			nois assert round(`tot',.1) == round(r(sum),.1)
+			*nois assert round(`tot',.1) ==  round(r(sum),.1)
+			nois assert abs((`tot' - r(sum))/`tot') < 0.0001
 			
 			
 			cap drop ____id_benstar
@@ -826,7 +828,7 @@ program define ceqef
 	local die display as error in smcl;
 	local command ceqef;
 	local version 1.6;
-	`dit' "Running version `version' of `command' on `c(current_date)' at `c(current_time)'" _n "   (please report this information if reporting a bug to mgbrooks208@gmail.com)";
+	`dit' "Running version `version' of `command' on `c(current_date)' at `c(current_time)'" _n "   (please report this information if reporting a bug to sean.higgins@ceqinstitute.org and marc.brooks@ceqinstitute.org)";
 	qui{;
 	* weight (if they specified hhsize*hhweight type of thing);
 	if strpos("`exp'","*")> 0 { ;
@@ -871,6 +873,9 @@ program define ceqef
 	* PRESERVE AND MODIFY *
 	***********************;
 	set type double;
+
+
+
 	preserve;
 	if wordcount("`if' `in'")!=0 quietly keep `if' `in';
 	
@@ -1577,8 +1582,8 @@ program define ceqef
 								*set trace off;
 
 								if  r(twarn) ==1 { ;
-									nois `dit' "Sum of `bname_`rw'_`cc'' exceed ``rw'', so impact effectiveness indicator not produced from ``rw'' to ``cc''" ;
-									local warning `warning' "Sum of `bname_`rw'_`cc'' exceed ``rw'', so impact effectiveness indicator not produced from ``rw'' to ``cc''" ;								} ;
+									nois `dit' "Sum of `tname_`rw'_`cc'' exceed ``rw'', so impact effectiveness indicator not produced from ``rw'' to ``cc''" ;
+									local warning `warning' "Sum of `tname_`rw'_`cc'' exceed ``rw'', so impact effectiveness indicator not produced from ``rw'' to ``cc''" ;								} ;
 								else {;
 									tempvar ystar;
 									gen double `ystar'=____ytaxstar;
@@ -1634,17 +1639,20 @@ program define ceqef
 							 tempvar int_ben_ppp;
 							 gen double  `int_ben_ppp'=(`int_ben'/`divideby')*(1/`ppp_calculated');
 							 */
-							 tempvar `rw'_ppp;
-							 gen double ``rw'_ppp'=(``rw''/`divideby')*(1/`ppp_calculated');
-							 tempvar `cc'_ppp;
-							 gen double ``cc'_ppp'=(``cc''/`divideby')*(1/`ppp_calculated');
-							 tempvar ystar_ppp;
-							 gen double `ystar_ppp'=(`ystar'/`divideby')*(1/`ppp_calculated');
-							 local row=2;
+							 
+							tempvar `rw'_ppp;
+							gen double ``rw'_ppp'=(``rw''/`divideby')*(1/`ppp_calculated');
+							tempvar `cc'_ppp;
+							gen double ``cc'_ppp'=(``cc''/`divideby')*(1/`ppp_calculated');
+							tempvar ystar_ppp;
+							gen double `ystar_ppp'=(`ystar'/`divideby')*(1/`ppp_calculated');
+							
+							local row=2;
+							
 							*noisily di in red "Begin of POV IMPACT EFF. `rw' `cc' Row= `row'";
 
 							*Only taxes MC<0 so harm formula);
-							if wordcount("`tax_`rw'_`cc''")>0 & wordcount("`ben_`rw'_`cc''")==0{;
+							if (wordcount("`tax_`rw'_`cc''")>0 & wordcount("`ben_`rw'_`cc''")==0) {;
 								*if wordcount("`ben_`rw'_`cc''")==0) & wordcount("`tax_`rw'_`cc''")>0 {;
 								foreach p in `plopts'{;
 									if "``p''"!=""{;
@@ -1699,55 +1707,61 @@ program define ceqef
 										
 											****For Impact effectiveness there can only be a negative effect, we use the harm formula Ch. 5 CEQ Handbook;
 											if `mp_`i'_`p'_`rc''<0{;
-												ceqtaxharm `pw', endinc(``cc'') taxes(`tax_`rw'_`cc'');			
-												tempvar yharm;
-												gen double `yharm'=____ytaxharm;
-												cap drop ____ytaxharm   ____id_taxharm;
-												tempvar yharm_ppp;
-												gen `yharm_ppp'=(`yharm'/`divideby')*(1/`ppp_calculated');
+												ceqtaxharm `pw', endinc(``cc'') taxes(`tax_`rw'_`cc'');
+												if r(thwarn) == 1 { ;
+													nois `dit' "Sum of `tname_`rw'_`cc'' exceed ``rw'', so impact effectiveness indicator not produced from ``rw'' to ``cc''" ;
+									                local warning `warning' "Sum of `tname_`rw'_`cc'' exceed ``rw'', so impact effectiveness indicator not produced from ``rw'' to ``cc''" ;
+													local row=`row'+1;	
+												} ;
+												else { ;			
+													tempvar yharm;
+													gen double `yharm'=____ytaxharm;
+													cap drop ____ytaxharm   ____id_taxharm;
+													tempvar yharm_ppp;
+													gen `yharm_ppp'=(`yharm'/`divideby')*(1/`ppp_calculated');
+									
+									
+													if "``p''"!="" {	;
+														if substr("`p'",1,2)=="pl" {; // these are the PPP lines;
+															local _pline = ``p'';
+															local vtouseh `yharm_ppp';//h is for harm;
+														};
+									
+														else if _`p'_isscalar==1 { ;  // if pov line is scalar, // (note this local defined above);
+															local _pline = ``p''; // set `_pline' as that scalar and;
+															local vtouseh `yharm'   ;
+														};
+														else if _`p'_isscalar==0 {; // if pov line is variable,;
+															tempvar `v'_normalizedh ; // create temporary variable that is income...;
+															qui gen ``v'_normalizedh' = `yharm'/``p'' ;// normalized by pov line;  
+															local _pline = 1            ;           // and normalized pov line is 1;
+															local vtouseh ``v'_normalizedh'; // use normalized income in the calculations;					
+														};
 								
 								
-												if "``p''"!="" {	;
-													if substr("`p'",1,2)=="pl" {; // these are the PPP lines;
-														local _pline = ``p'';
-														local vtouseh `yharm_ppp';//h is for harm;
-													};
-								
-													else if _`p'_isscalar==1 { ;  // if pov line is scalar, // (note this local defined above);
-														local _pline = ``p''; // set `_pline' as that scalar and;
-														local vtouseh `yharm'   ;
-													};
-													else if _`p'_isscalar==0 {; // if pov line is variable,;
-														tempvar `v'_normalizedh ; // create temporary variable that is income...;
-														qui gen ``v'_normalizedh' = `yharm'/``p'' ;// normalized by pov line;  
-														local _pline = 1            ;           // and normalized pov line is 1;
-														local vtouseh ``v'_normalizedh'; // use normalized income in the calculations;					
-													};
-							
-							
-													tempvar zyzfgt1_h zyzfgt2_h;
-													qui gen `zyzfgt1_h' = max((`_pline'-`vtouseh')/`_pline',0) ;// normalized povety gap of each individual;
-													qui gen `zyzfgt2_h' = `zyzfgt1_h'^2 ;                           // square of normalized poverty gap;							
-													
-													
-													qui summ `zyzfgt`i'_h' `aw', meanonly; // `if' `in' restrictions already taken care of by `touse' above;	
-													local p`i'_h=r(mean);
-													
-													local mst_p`i'_h=`p`i'_3' - `p`i'_h';//Ideal MC with tax formula;
-													local eft_`i'_h=(`mp_`i'_`p'_`rc''/`mst_p`i'_h')*(-1);
-													*return scalar eft_`i'_h =  `eft_`i'_h';//Impact effectiveness indicator, v has the variable name of the transfer, y=income, p=poverty line ;
-													
-													local row=`row'+1;					
-													matrix `rw'_ef[`rw_ie_`p'_`i'',`_`cc''] = `eft_`i'_h';
+														tempvar zyzfgt1_h zyzfgt2_h;
+														qui gen `zyzfgt1_h' = max((`_pline'-`vtouseh')/`_pline',0) ;// normalized povety gap of each individual;
+														qui gen `zyzfgt2_h' = `zyzfgt1_h'^2 ;                           // square of normalized poverty gap;							
+														
+														
+														qui summ `zyzfgt`i'_h' `aw', meanonly; // `if' `in' restrictions already taken care of by `touse' above;	
+														local p`i'_h=r(mean);
+														
+														local mst_p`i'_h=`p`i'_3' - `p`i'_h';//Ideal MC with tax formula;
+														local eft_`i'_h=(`mp_`i'_`p'_`rc''/`mst_p`i'_h')*(-1);
+														*return scalar eft_`i'_h =  `eft_`i'_h';//Impact effectiveness indicator, v has the variable name of the transfer, y=income, p=poverty line ;
+														
+														local row=`row'+1;					
+														matrix `rw'_ef[`rw_ie_`p'_`i'',`_`cc''] = `eft_`i'_h';
 
-													*noisily di in green "Doing POV IMPACT EFF. TAXES `rw' `cc' Row= `row'";
+														*noisily di in green "Doing POV IMPACT EFF. TAXES `rw' `cc' Row= `row'";
 
-													/*local row=`row'+1;
-													matrix p_ie_`y'[`row',`col'] = `eft_2_h';
-													matrix p_se_`y'[`row',`col'] = .;*/
+														/*local row=`row'+1;
+														matrix p_ie_`y'[`row',`col'] = `eft_2_h';
+														matrix p_se_`y'[`row',`col'] = .;*/
+														};
 													};
 												};
-								
 											else{;
 												local row=`row'+1;
 												matrix `rw'_ef[`rw_ie_`p'_`i'',`_`cc''] =.;
@@ -1760,7 +1774,7 @@ program define ceqef
 							};
 							*Only Benefits;
 							local rowsp=18;
-							if wordcount("`tax_`rw'_`cc''")==0 & wordcount("`ben_`rw'_`cc''")>0{;
+							if wordcount("`tax_`rw'_`cc''")==0 &  wordcount("`ben_`rw'_`cc''")>0{;
 								if wordcount("`povlines'")>0 {; // otherwise produces inequality only;
 									foreach p in `plopts'  { ;// plopts includes all lines;
 										if "``p''"!="" {	;
@@ -1844,8 +1858,8 @@ program define ceqef
 													****Poverty Spending effectiveness;
 													tempvar bentouse;
 													gen double `bentouse'=abs(`vtouse1'-`vtouse2');
-													
-													ceqbensp  `pw', startinc(`vtouse2') ben(`bentouse') zz(`_pline') obj1(`p1_`y'_orig') obj2(`p2_`y'_orig');	
+													//! The capture below is a patch, pending changes coming.
+													cap ceqbensp  `pw', startinc(`vtouse2') ben(`bentouse') zz(`_pline') obj1(`p1_`y'_orig') obj2(`p2_`y'_orig');	
 													matrix `rw'_ef[`rw_se_`p'_`i'',`_`cc''] = r(sp_ef_pov_`i');	
 
 													
