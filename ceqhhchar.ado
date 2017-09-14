@@ -528,6 +528,7 @@ program define ceqhhchar, rclass
 				local ++row
 				
 				local ++col
+				*mat list frontmatter`v'
 			}
 		}
 	}
@@ -551,7 +552,6 @@ program define ceqhhchar, rclass
 					qui summ `char' `aw'
 					matrix results`vrank'_`x'[`=``x''+1',`col'] = r(mean)
 				}
-				
 				// Population totals
 				matrix pop`vrank'_`x' = J(`=``x''+1',2,.)
 				forval i=1/``x'' {
@@ -567,6 +567,8 @@ program define ceqhhchar, rclass
 				
 				qui summ `one' 
 				matrix pop`vrank'_`x'[`=``x''+1',2] = r(sum)
+
+				
 			}
 		}
 	}
@@ -575,7 +577,7 @@ program define ceqhhchar, rclass
 	** SAVE RESULTS *
 	*****************
 	if `"`using'"'!="" {
-		qui di "
+		// "
 		`dit' `"Writing to "`using'"; may take several minutes"'
 		// Export to Excel (matrices)
 		local vertincrement = 3
@@ -584,14 +586,18 @@ program define ceqhhchar, rclass
 		local resultset
 		local rfrontmatter = 9
 		local rdec   = 14 // row where decile results start
-		local rgroup2 = `rdec' + `dec' + `vertincrement'
-		local rcent  = `rgroup' + `group2' + `vertincrement'
+		local rgroup2 = `rdec' + `dec' + `vertincrement' // dec = 10
+		local rcent  = `rgroup2' + `group2' + `vertincrement' // group2 = 6
 		local rbin   = `rcent' + `cent' + `vertincrement'
+		
+
 		foreach vrank of local alllist {
 			if "``vrank''"!="" {
 				local startcol = `startcol_o'
-				returncol `startcol'
-				local resultset`vrank' `resultset`vrank'' `r(col)'`rfrontmatter'=matrix(frontmatter`vrank')
+				returncol `startcol_o'
+				local resultset`vrank' `resultset`vrank'' `r(col)'`rfrontmatter'=matrix(frontmatter`vrank') // Starts col 6
+				*nois di `" `r(col)'`rfrontmatter'=matrix(frontmatter`vrank') "'
+				*mat list frontmatter`vrank'
 				foreach x in `_dec' `_group2' `_cent' `_bin' {
 					returncol `startcol'
 					local resultset`vrank' `resultset`vrank'' `r(col)'`r`x''=matrix(results`vrank'_`x')
@@ -628,8 +634,8 @@ program define ceqhhchar, rclass
 		}	
 		
 		// Export to Excel (group cutoffs)
-		local lowcol = 1 
-		local hicol = 2
+		local lowcol = 3 
+		local hicol = 4
 		foreach x in low hi {
 			returncol ``x'col'
 			local _`x'col `r(col)'
@@ -638,9 +644,11 @@ program define ceqhhchar, rclass
 			local therow = `rgroup2' + `i' - 1
 			if `i'==1 { 
 				local cutoffs `cutoffs' `_hicol'`therow'=(`cut`i'')
+				nois di "`_hicol'`therow'"
 			}
 			else {
 			local cutoffs `cutoffs' `_lowcol'`therow'=(`cut`=`i'-1'') `_hicol'`therow'=(`cut`i'')
+			
 			}
 		}
 		
@@ -662,9 +670,11 @@ program define ceqhhchar, rclass
 		// putexcel
 		foreach vrank of local alllist {
 			if "``vrank''"!="" {
+				set trace on
 				qui putexcel `titlesprint' `versionprint' `titles' ///
 					`resultset`vrank'' `cutoffs' `warningprint' using `"`using'"', /// " 
 					modify keepcellformat sheet("`sheet`vrank''")
+				set trace off
 			}
 		}
 	}

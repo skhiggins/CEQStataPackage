@@ -581,7 +581,7 @@ program define ceqindchar, rclass
 	** SAVE RESULTS *
 	*****************
 	if `"`using'"'!="" {
-		qui di "
+		// "
 		`dit' `"Writing to "`using'"; may take several minutes"'
 		// Export to Excel (matrices)
 		local vertincrement = 3
@@ -591,7 +591,7 @@ program define ceqindchar, rclass
 		local rfrontmatter = 9
 		local rdec   = 14 // row where decile results start
 		local rgroup2 = `rdec' + `dec' + `vertincrement'
-		local rcent  = `rgroup' + `group2' + `vertincrement'
+		local rcent  = `rgroup2' + `group2' + `vertincrement'
 		local rbin   = `rcent' + `cent' + `vertincrement'
 		foreach vrank of local alllist {
 			if "``vrank''"!="" {
@@ -634,8 +634,8 @@ program define ceqindchar, rclass
 		}	
 		
 		// Export to Excel (group cutoffs)
-		local lowcol = 1 
-		local hicol = 2
+		local lowcol = 3 
+		local hicol = 4
 		foreach x in low hi {
 			returncol ``x'col'
 			local _`x'col `r(col)'
@@ -668,9 +668,11 @@ program define ceqindchar, rclass
 		// putexcel
 		foreach vrank of local alllist {
 			if "``vrank''"!="" {
+				set trace on
 				qui putexcel `titlesprint' `versionprint' `titles' ///
 					`resultset`vrank'' `cutoffs' `warningprint' using `"`using'"', /// " 
 					modify keepcellformat sheet("`sheet`vrank''")
+				set trace off
 			}
 		}
 	}

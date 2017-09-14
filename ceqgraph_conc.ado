@@ -634,7 +634,7 @@ capture program define ceqgraph_conc, rclass
 			`die' "Writing graphs to excel requires Stata 14.1 or newer. {bf:Using} option is not allowed."
 		}
 		else {
-			qui di " 
+			// " 
 			version 14.1
 			`dit' `"Writing to "`using'"; may take several minutes"'
 			local startcol_o = 4 // this one will stay fixed (column D)
@@ -673,28 +673,35 @@ capture program define ceqgraph_conc, rclass
 			local versionprint A4=("Results produced by version `version' of `command' on `c(current_date)' at `c(current_time)'")
 			
 			// putexcel
-			local i=0    // for change of columns
-			local r=7    // for change of rows
-			/*foreach v of local alllist {
-				if "``v''"=="" continue
-				qui putexcel clear 
-				qui putexcel set `"`using'"', modify sheet("`sheet'")  //"
-				local incrow = `_`v''-1
-				local graphrow = (`incrow')*26 + 8*/
+			// qui putexcel clear 
 			qui putexcel set `"`using'"', modify sheet("`sheet'")  //"
-			local graphprint ""
-			foreach list_ of local list_of_cols {
-				//if "``m''"=="" continue
-				if "``list_''"=="" continue //
-				local list__ = subinstr("`list_'","_cols","",.)
-				local col`list_' = 2 + (`i'*6)     // start with column B and then move 6 columns to the right for each intervention
-				returncol `col`list_''
-				local ++i
-				local list_name = subinstr("`list__'","_"," ",.)  // change direct_taxes to direct taxes, for example
-				local listname = strproper("`list_name'")
-				local graphprint `graphprint' `r(col)'7=("`listname'")
-				local graphprint `graphprint' `r(col)'8=picture("`path'`graphname'_`list__'_m.png")
-			} 
+			*set trace on 
+			local incrow = 0
+			foreach v of local alllist {
+				if "``v''"=="" continue
+				*local incrow = `_`v''-1
+				local graphrow = (`incrow')*26 + 8 
+				
+				local graphprint ""
+				local i=0    // for change of columns
+				foreach list_ of local list_of_cols {
+					//if "``m''"=="" continue
+					if "``list_''"=="" continue //
+					local list__ = subinstr("`list_'","_cols","",.)
+					local col`list_' = 2 + (`i'*6)     // start with column B and then move 6 columns to the right for each intervention
+					returncol `col`list_''
+					local ++i
+					local list_name = subinstr("`list__'","_"," ",.)  // change direct_taxes to direct taxes, for example
+					local listname = strproper("`list_name'")
+					nois di `"putexcel `graphprint' `r(col)'`graphrow'=picture("`path'`graphname'_`list__'_`v'.png")"'
+					qui putexcel `graphprint' `r(col)'`=`graphrow'-1'=("`listname'")
+					qui putexcel `graphprint' `r(col)'`graphrow'=picture("`path'`graphname'_`list__'_`v'.png")
+					local i = `i' + 1
+				} 
+				local incrow = `incrow' + 1
+			}
+			*set trace off
+			/*
 			local i=0
 			foreach list_ of local list_of_cols {
 				//if "``mp''"=="" continue
@@ -774,9 +781,11 @@ capture program define ceqgraph_conc, rclass
 				local graphprint `graphprint' `r(col)'157=("`listname'")
 				local graphprint `graphprint' `r(col)'158=picture("`path'`graphname'_`list__'_f")
 			}
-			
+			*/
 			// putexcel
+			set trace on
 			qui putexcel `titlesprint' `versionprint' `graphprint' `warningprint' // by default, all existing cell formatting is preserved 
+			set trace off
 		}
 	}
 	
