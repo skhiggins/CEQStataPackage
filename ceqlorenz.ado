@@ -677,8 +677,9 @@ program define ceqlorenz, rclass
 								matrix frontmatter[`=`row'+`i'',`_`v''] = .
 							}
 						}
-						local row = `row' + 3 // want to add three whether or not `p' option specified since those matrices are in the MWB
+						
 					}
+				local row = `row' + 3 // want to add three whether or not `p' option specified since those matrices are in the MWB
 				}
 			}
 		}
