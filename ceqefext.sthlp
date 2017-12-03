@@ -95,7 +95,9 @@
 {cmd:ceqefext} calculates the CEQ effectiveness indicators. Indicators include spending effectiveness and impact
 effectiveness indicators for Gini, headcount index, poverty gap, and squared poverty gap for a number of poverty lines. 
 The effectiveness indicators of fiscal interventions are compared with respect to market income, market income + pensions, 
-net market income, gross income, and disposable income.
+net market income, gross income, and disposable income. For this reason fiscal interventions are necessary for ceqefext 
+to run, if they are excluded from the command there will be an error. With the fiscal intervention options, total taxes 
+and total benefits are used to estimate the impact effeectivness from one income concept to another.
 
 {pstd}
 The extended income concepts are created from the CEQ core income concepts, specified with the options 
