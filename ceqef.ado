@@ -2025,9 +2025,9 @@ program define ceqef
 													****Poverty Spending effectiveness;
 													tempvar bentouse;
 													gen double `bentouse'=abs(`vtouse1'-`vtouse2');
-													//! The capture below is a patch, pending changes coming.
-													cap ceqbensp  `pw', startinc(`vtouse2') ben(`bentouse') zz(`_pline') obj1(`p1_`y'_orig') obj2(`p2_`y'_orig');	
-													matrix `rw'_ef[`rw_se_`p'_`i'',`_`cc''] = r(sp_ef_pov_`i');	
+													//! Uncomment out once fixed
+													/*cap ceqbensp  `pw', startinc(`vtouse2') ben(`bentouse') zz(`_pline') obj1(`p1_`y'_orig') obj2(`p2_`y'_orig');	
+													matrix `rw'_ef[`rw_se_`p'_`i'',`_`cc''] = r(sp_ef_pov_`i')*/;	
 
 													
 												};
