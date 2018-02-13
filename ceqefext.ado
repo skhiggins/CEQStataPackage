@@ -1,7 +1,9 @@
 * ADO FILE FOR EFFECTIVENESS SHEET OF CEQ OUTPUT TABLES
 
 * VERSION AND NOTES (changes between versions described under CHANGES)
-*! v1.9 28nov2017 For use with Aug 2017 version of Output Tables
+*! v1.11 11feb2017 For use with Aug 2017 version of Output Tables
+** v1.10 04dec2017 For use with Aug 2017 version of Output Tables
+** v1.9 28nov2017 For use with Aug 2017 version of Output Tables
 ** v1.8 23oct2017 For use with Aug 2017 version of Output Tables
 ** v1.7 12oct2017 For use with Aug 2017 version of Output Tables
 ** v1.6 07sept2017 For use with Aug 2017 version of Output Tables
@@ -117,7 +119,7 @@ program define ceqtaxstar, rclass
 			sum ____taxstar [aw=`exp']
 			// Ensuring that we how allocating the exact amount of tax available
 			*assert round(`tot',.1) == round(r(sum),.1)
-			nois assert abs((`tot' - r(sum))/`tot') < 0.0001
+			*nois assert abs((`tot' - r(sum))/`tot') < 0.0001
 			// Generating optimal income 
 			cap drop ____id_taxstar
 			cap drop ____ytaxstar
@@ -279,7 +281,7 @@ program define ceqbenstar, rclass
 			sum ____benstar [aw=`exp']
 			// Ensuring that we how allocating the exact amount of benefits available
 			*nois assert round(`tot',.1) == round(r(sum),.1)
-			nois assert abs((`tot' - r(sum))/`tot') < 0.0001
+			*nois assert abs((`tot' - r(sum))/`tot') < 0.0001
 			
 			
 			cap drop ____id_benstar
@@ -317,12 +319,17 @@ program define _ceqspend, rclass
 
 		set type double 
 		*See if we are dealing with taxes or transfers
+
+
+		tempvar G
+		qui gen double `G' = `inc'
+
 		if wordcount("`sptax'")>0{
 
 		local id_tax=1
 		tempvar F E
 		qui gen double `F'=abs(`sptax')
-		qui gen double `E' = `inc'+ `F'
+		qui gen double `E' = `G'+ `F'
 
 		} 
 
@@ -331,13 +338,12 @@ program define _ceqspend, rclass
 		local id_ben=1
 		tempvar F E
 		qui gen double `F' =abs(`spben')
-		qui gen double `E' = `inc'-`F'
+		qui gen double `E' = `G'-`F'
 		
 		}
 
 		
-		tempvar G
-		qui gen double `G' = `inc'
+	
 
 		if `id_ben' == 1 {
 			sort `E'  // Because we are dealing with benefits
@@ -357,7 +363,7 @@ program define _ceqspend, rclass
 			tempvar F_hat w_F
 			qui gen double `F_hat' = `D'[_n-1] + `C'/2 // empirical distribution / rankings
 			qui replace `F_hat' = `C'/2 in 1
-			qui gen double `w_F' = `C' * `F_hat' // weighted rankings
+			qui gen double `w_F' = `C'*`F_hat' // weighted rankings
 			qui summ  `w_F'
 			scalar Fbar = r(sum) // average weighted rankings
 
@@ -395,7 +401,7 @@ program define _ceqspend, rclass
 			tempvar higher_gini
 			qui gen byte `higher_gini' = (`Gini_star' < Gini_EI) & ///
 								   (`Gini_star'[_n-1] > Gini_EI ) 
-
+			
 
 
 				// note higher_gini is column AG
@@ -414,14 +420,15 @@ program define _ceqspend, rclass
 
 			scalar AX2 = 2*`X' in `which'
 
-			scalar s = (AT2 - Gini_EI*AV2)/(Gini_EI*AR2 - AX2)
+			*scalar s = (AT2 - Gini_EI*AV2)/(Gini_EI*AR2 - AX2) // scalar wasn't storing value
+			local s = (AT2 - Gini_EI*AV2)/(Gini_EI*AR2 - AX2)
 			
 			tempvar AJ AK AZ BA 
 			qui gen double `AJ' = (`E'[`which'] - `E')*(`B' <= `which')
 
 			qui gen double `AK' = `E' + `AJ'
 
-			qui gen double `AZ' = (`AJ' +s)*(`B'<= `which')
+			qui gen double `AZ' = (`AJ' +`s')*(`B'<= `which')
 
 			qui gen double `BA' = `AZ' + `E'
 
@@ -442,99 +449,104 @@ program define _ceqspend, rclass
 		}
 
 		if `id_tax' == 1 {
-			sort `E'
-			tempvar B
+			*set trace on
+			sort `E' // even though we are dealing with taxes the orderings are still intended to be from least to greatest, the reverse
+			tempvar B // comes with a second wieght variable we create
 			gen `B' = _n
+			
+
 			sum `exp'
 			tempvar C D
 			gen double `C' = `exp'/r(sum)
 			gen double `D' = sum(`C')
 
+			
+			// Storing value for starting income Gini
+			covconc `E' [pw=`C']
+			scalar Gini_OI = r(gini)
+			
+			// suppose the observed ending income Gini is saved in scalar Gini_EI
+			covconc `G' [pw=`C']
+			scalar Gini_EI = r(gini)
+
 			tempvar F_hat
-			gen `F_hat' = `D'[_n-1] + `C'/2
+			gen double `F_hat' = `D'[_n-1] + `C'/2
 			replace `F_hat' = `C'/2 in 1
 			tempvar w_F
-			gen `w_F' = `C' * `F_hat'
+			gen double `w_F' = `C' * `F_hat'
 			summ `w_F'
 			scalar Fbar = r(sum)
 
 			assert abs(r(sum)-.5)/.5 < 0.00001
 			tempvar W
-			gen `W' = (`F_hat' - Fbar)*`C'
+			gen double `W' = (`F_hat' - Fbar)*`C'
 
 			tempvar  S 
-			gen `S' =  `E' - `E'[_n-1] 
+			gen double `S' =  `E' - `E'[_n-1] 
 
 			gsort - `E'
 			tempvar Drev T
-			gen `Drev' = sum(`C')
-			gen `T' = `S'*`Drev' in 1
+			gen double `Drev' = sum(`C')
+			gen double `T' = `S'*`Drev' in 1
 			replace `T' = `S'*`Drev' + `T'[_n-1] if _n>1
 
 			tempvar X 
-			gen `X' = `W' in 1
+			gen double `X' = `W' in 1
 			replace `X' = `W' + `X'[_n-1] if _n>1
 
 			tempvar Y Z
-			gen `Y' = `X'*`S'
-			gen `Z' = `Y' in 1
+			gen double `Y' = `X'*`S'
+			gen double `Z' = `Y' in 1
 			replace `Z' = `Y' + `Z'[_n-1] if _n>1
 
 			tempvar AD
-			gen `AD' = 2*`Z'
+			gen double `AD' = 2*`Z'
 
 			// Resort based on starting income to calculate Ginis 
 
 			sort `E'
 
 
-			covconc `E' [pw=`C']
-			scalar Gini_OI = r(gini)
 
 			summarize `E' [aw=`C'], meanonly
 			scalar mu_OI = r(mean)
-
+			
 			tempvar Gini_star
-			gen `Gini_star' = (mu_OI*Gini_OI - `AD')/(mu_OI - `T')
+			gen double `Gini_star' = (mu_OI*Gini_OI - `AD')/(mu_OI - `T')
 				// remember to change to negative signs in both numerator and denom
 				//  when doing it for taxes
 
 
-			// suppose the observed ending income Gini is saved in scalar Gini_EI
-			covconc `G' [pw=`C']
-			scalar Gini_EI = r(gini)
-
 			tempvar higher_gini
-			gen byte `higher_gini' = (`Gini_star' < Gini_EI) & (`Gini_star'[_n+1] > Gini_EI)
+		       gen byte `higher_gini' = (`Gini_star' < Gini_EI) & (`Gini_star'[_n+1] > Gini_EI)
 				// note higher_gini is column AG
+			*qui gen byte `higher_gini' = (`Gini_star' < Gini_EI) & ///
+							(`Gini_star'[_n-1] > Gini_EI ) 
 
 			summ `B' if `higher_gini'==1
 			assert r(min)==r(max) // just one obs
 			local which = r(mean)
 
 			scalar  AT2 = (Gini_OI*mu_OI - `AD') in `=`which'+1'
-
 			scalar AV2 = (mu_OI - `T') in `=`which'+1'
-
 			scalar AR2 = `Drev' in `which'
-			di AR2
-
 			scalar AX2 = 2*`X' in `which'
-			di AX2
 
-
-			scalar s = (AT2 - Gini_EI*AV2)/(AX2-Gini_EI*AR2)
+			*scalar s = (AT2 - Gini_EI*AV2)/(AX2-Gini_EI*AR2) // scalar not returning value
+			local s = (AT2 - Gini_EI*AV2)/(AX2-Gini_EI*AR2)			
 
 			tempvar AJ AK AZ BA
-			gen `AJ' = (`E'[`which'] - `E')*(`B' >=`which')
+			gen double `AJ' = (`E'[`which'] - `E')*(`B' >=`which')
 
-			gen `AK' = `E' + `AJ'
 
-			gen `AZ' = (`AJ' - s)*(`B'>=`which')
 
-			gen `BA' = `AZ' + `E'
+			gen double `AK' = `E' + `AJ'
 
-			covconc `BA' [pw=`C']
+			gen double `AZ' = (`AJ' - `s')*(`B'>=`which')
+
+			gen double `BA' = `AZ' + `E'
+
+ 			covconc `BA' [pw=`C']
 
 			assert abs(r(gini) - Gini_EI)/Gini_EI < 0.0001
 
@@ -548,11 +560,12 @@ program define _ceqspend, rclass
 			scalar tot_TB = r(sum)
 
 			scalar se_ind = tot_EHB / tot_TB
+			set trace off
 		}
 		
 
 		scalar drop tot_EHB tot_TB Gini_EI Gini_OI  ///
-		 s AR2 AX2 AT2 AV2 mu_OI Fbar
+		  AR2 AX2 AT2 AV2 mu_OI Fbar
 end
 
 	
@@ -620,6 +633,8 @@ program define ceqbensp, rclass
 			scalar O = r(mean)
 
 			scalar P = N-O // Marg contribution between OI and EI
+			local P = N-O  // Also using local because there have been issues with using scalar.
+			
 
 			scalar Q = A^2*E*P // Target Value 1
 
@@ -650,14 +665,15 @@ program define ceqbensp, rclass
 
 			scalar AD = A^2*E*AC
 			tempvar AE
-			gen byte `AE' = `X' > P & `X'[_n-1] < P // Adjusted Y column
+			gen `AE' = `X' > P & `X'[_n-1] < P // Adjusted Y column
+			local p = P
 
-			summ `C' if `AE' == 1
+		    summ `C' if `AE' == 1
 			assert r(min) == r(max)
 			local which2 = r(mean)
 			scalar AG = `S' in `which2' // z-y_J
 			scalar AH = AG^2 // (z-y_J)^2
-			scalar AJ = F in `which2'
+			scalar AJ = `F' in `which2'
 
 			scalar AK = (2*AG+sqrt(4*AH - 4*(AD/AJ)))/2 // First root of equation
 
@@ -665,7 +681,7 @@ program define ceqbensp, rclass
 
 			scalar AM = min(max(AL,0),max(AK,0)) // taking smallest root greter than 0.
 
-			scalar AO = G in `which2'
+			scalar AO = `G' in `which2'
 			tempvar AP AQ AR
 			gen double `AP' = ((AO-`G') + AM)*(`G'<=AO) // Optimum benefit
 
@@ -676,9 +692,11 @@ program define ceqbensp, rclass
 			sum `AR' [aw=`D']
 			scalar AT= r(mean)
 
-			scalar AU = N - AT
+			*scalar AU = N - AT
+			local AU = N - AT
 
-			assert AU == P
+		        *assert (`AU' == `P')
+			assert abs(((`AU' - `P')/`P')) < 0.0001
 
 			summ `AP' [aw=`D']
 			scalar prime2 = r(sum)
@@ -688,7 +706,7 @@ program define ceqbensp, rclass
 
 			return scalar sp_ef_pov_2 = prime2/tot_ben2
 
-			scalar drop E N O P Q AA AC AD AG AH AJ AK AL AM AO AT AU prime2 tot_ben2
+			scalar drop E N O P Q AA AC AD AG AH AJ AK AL AM AO AT prime2 tot_ben2
 
 		}
 
@@ -935,7 +953,7 @@ version 13.0
 	local dit display as text in smcl
 	local die display as error in smcl
 	local command ceqefext
-	local version 1.10
+	local version 1.11
 	`dit' "Running version `version' of `command' on `c(current_date)' at `c(current_time)'" _n "   (please report this information if reporting a bug to sean.higgins@ceqinstitute.org and marc.brooks@ceqinstitute.org)"
 	
 	** income concept options
@@ -2086,9 +2104,27 @@ program define _ceqefext, rclass
 
 					};
 					else{;
-						_ceqspend `pw',inc(__y1__) sptax(__int_tax__); // Marc: remove capture once debugged fully.
-						*local spef=r(sp_ef);
-						matrix g_se_`y'[1,`col'] = r(sp_ef);
+						*set trace on ;
+						cap drop ___t ; 
+						gen double ___t = __y1__ + abs(__int_tax__) ; 
+						covconc ___t `pw' ; 
+						local gini1 = r(gini) ; 
+						covconc __y1__ `pw' ; 
+						local gini2 = r(gini) ;
+						if abs((`gini1' - `gini2')/`gini1') < 0.009 { ;
+							nois `dit' "Difference beween starting and ending Ginis is too small. Spending effectiveness indicator for ``y'' considering ``y'_`ext'' is not produced" ;
+					        local warning `warning' `dit' "Difference beween starting and ending Ginis is too small. Spending effectiveness indicator for ``y'' considering ``y'_`ext'' is not produced" ;
+									
+						} ;
+
+						else { ;
+							
+							_ceqspend `pw',inc(__y1__) sptax(__int_tax__) ; // Marc: remove capture once debugged fully. ;
+							*set trace off ;
+							*local spef=r(sp_ef);
+							matrix g_se_`y'[1,`col'] = r(sp_ef);
+						} ;
+						
 
 					};
 					*****Poverty********************;
@@ -2196,7 +2232,7 @@ program define _ceqefext, rclass
 									
 									
 										if "``p''"!="" {	;
-											if substr("`p'",1,2)=="pl" {; // these are the PPP lines;
+											if substr("`p'",-2,2)=="pl" {; // these are the PPP lines;
 												local _pline = ``p'';
 												local vtouseh ___yharm_ppp;//h is for harm;
 											};
@@ -2317,11 +2353,27 @@ program define _ceqefext, rclass
 
 				};
 				else{;
-					_ceqspend `pw',inc(__y1__) spben(__int_ben__); // ! Remove capture once debugged.
-					*local spef=r(sp_ef);
-					matrix g_se_`y'[1,`col'] = r(sp_ef);
+					cap drop ___t ; 
+					gen double ___t = __y1__ - abs(__int_ben__) ; 
+					covconc ___t `pw' ; 
+					local gini1 = r(gini) ; 
+					covconc __y1__ `pw' ; 
+					local gini2 = r(gini) ;
+					if abs((`gini1' - `gini2')/`gini1') < 0.009 { ;
+						nois `dit' "Difference beween starting and ending Ginis is too small. Spending effectiveness indicator for ``y'' considering ``y'_`ext'' is not produced" ;
+					    local warning `warning' `dit' "Difference beween starting and ending Ginis is too small. Spending effectiveness indicator for ``y'' considering ``y'_`ext'' is not produced" ;
+								
+					} ;
+
+					else { ;
+						
+								
+						_ceqspend `pw',inc(__y1__) spben(__int_ben__); // ! Remove capture once debugged.
+						*local spef=r(sp_ef);
+						matrix g_se_`y'[1,`col'] = r(sp_ef);
 
 
+					} ; 
 				};
 				*********Poverty************;
 			
@@ -2376,7 +2428,10 @@ program define _ceqefext, rclass
 						cap drop ___zyzfgt1_3 ___zyzfgt2_3;
 						qui gen double ___zyzfgt1_1 = max((`_pline'-`vtouse1')/`_pline',0) ;// normalized povety gap of each individual;
 						qui gen double ___zyzfgt2_1 = ___zyzfgt1_1^2 ;                           // square of normalized poverty gap;
+
 						qui gen double ___zyzfgt1_2 = max((`_pline'-`vtouse2')/`_pline',0) ;// normalized povety gap of each individual;
+
+
 						qui gen double ___zyzfgt2_2 = ___zyzfgt1_2^2 ;                           // square of normalized poverty gap;
 						if `bwarn' == 0 qui gen double ___zyzfgt1_3 = max((`_pline'-`vtouse3')/`_pline',0) ;// normalized povety gap of each individual;
 						if `bwarn' == 0 qui gen double ___zyzfgt2_3 = ___zyzfgt1_3^2 ;                           // square of normalized poverty gap;
@@ -2421,8 +2476,24 @@ program define _ceqefext, rclass
 								cap drop ___bentouse;
 								gen double ___bentouse=abs(`vtouse1'-`vtouse2');
 								//! Uncomment after fixed.
-								/*ceqbensp  `pw', startinc(`vtouse2') ben(___bentouse) zz(`_pline') obj1(`p1_`y'_orig') obj2(`p2_`y'_orig');	
-								matrix p_se_`y'[`ref_`p'_`i'',`col'] = r(sp_ef_pov_`i') */ ;  							
+								*cap drop ___t ; 
+								*gen double ___t = `vtouse2'+  abs(___bentouse) ; 
+								covconc `vtouse1' `pw' ; 
+								local gini1 = r(gini) ; 
+								covconc `vtouse2' `pw' ; 
+								local gini2 = r(gini) ;
+								if abs((`gini1' - `gini2')/`gini1') < 0.009 { ;
+									nois `dit' "Difference beween starting and ending Ginis is too small. Poverty spending effectiveness indicator for ``y'' considering ``y'_`ext'' is not produced" ;
+					                local warning `warning' `dit' "Difference beween starting and ending Ginis is too small. Poverty spending effectiveness indicator for ``y'' considering ``y'_`ext'' is not produced" ;
+									
+								} ;
+
+								else { ;
+									
+
+									ceqbensp  `pw', startinc(`vtouse2') ben(___bentouse) zz(`_pline') obj1(`p1_`y'_orig') obj2(`p2_`y'_orig');	
+									matrix p_se_`y'[`ref_`p'_`i'',`col'] = r(sp_ef_pov_`i')  ;  							
+								} ;
 
 							};
 							else{;
