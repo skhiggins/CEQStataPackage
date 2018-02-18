@@ -9,9 +9,7 @@ import os # for shell commands like change directory
 import shutil # for shell commands like copy
 
 # DIRECTORIES
-os.chdir('C:/Dropbox/CEQGates/ado_files')
-copyto = 'C:/Dropbox/CEQGates/Handbook/3. CEQ Ado files working folder/ceq'
-	# copyto contains the shared folder where the .zip will be copied
+os.chdir('C:/Dropbox/CEQGates/CEQStataPackage')
 
 # LISTS
 ados = [
@@ -72,6 +70,3 @@ for file in ados_sthlps:
 	print 'adding %s to %s' % (file, myzip)
 	zf.write(file,compress_type=compression)
 zf.close()
-
-# COPY TO CEQ METHODOLOGY SHARED DROPBOX FOLDER
-shutil.copy(myzip,copyto)
