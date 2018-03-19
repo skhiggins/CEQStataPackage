@@ -670,11 +670,11 @@ program define ceqhhchar, rclass
 		// putexcel
 		foreach vrank of local alllist {
 			if "``vrank''"!="" {
-				set trace on
+				*set trace on
 				qui putexcel `titlesprint' `versionprint' `titles' ///
 					`resultset`vrank'' `cutoffs' `warningprint' using `"`using'"', /// " 
 					modify keepcellformat sheet("`sheet`vrank''")
-				set trace off
+				*set trace off
 			}
 		}
 	}

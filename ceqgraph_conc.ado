@@ -783,9 +783,9 @@ capture program define ceqgraph_conc, rclass
 			}
 			*/
 			// putexcel
-			set trace on
+			*set trace on
 			qui putexcel `titlesprint' `versionprint' `graphprint' `warningprint' // by default, all existing cell formatting is preserved 
-			set trace off
+			*set trace off
 		}
 	}
 	
