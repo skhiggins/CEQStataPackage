@@ -718,7 +718,7 @@ program define _ceqspend, rclass
 			scalar tot_TB = r(sum)
 
 			scalar se_ind = tot_EHB / tot_TB
-			set trace off
+			*set trace off
 		}
 		
 
