@@ -1,1 +1,3 @@
 tests/data/pof3.dta
+*.sublime-project
+*.sublime-workspace

@@ -1,0 +1,103 @@
+-----------------------------------------------------------------------------------------------------------------
+      name:  <unnamed>
+       log:  C:\Users\ivang\Documents\GitHub\CEQStataPackage\tests/logs/test-ceq_parse_using.log
+  log type:  text
+ opened on:   1 Apr 2018, 17:00:07
+
+. 
+. **************
+. ** Preamble **
+. **************
+. 
+. version 13.0
+
+. set more off
+
+. tempfile myfile
+
+. sysuse auto, clear
+(1978 Automobile Data)
+
+. 
+. ***********
+. ** Tests **
+. ***********
+. 
+. // Test #1
+. // Return nothing in the ideal case,
+. // even if `using' have many "." characters (see issue #24)
+. foreach open in "" "open" {
+  2.         local options cmd("mycmd") open("`open'")
+  3.         foreach xxx in "xls" "xlsx" {
+  4.                 capture : rm "`myfile'.`xxx'"
+  5.                 quietly : export excel "`myfile'.`xxx'", replace
+  6.                 ceq_parse_using using "`myfile'.`xxx'", `options'
+  7.         }
+  8. }
+
+. // Test #2
+. // Return error 198 if `"`using'"' doesn't have xls or xlsx extension
+. foreach open in "" "open" {
+  2.         local options cmd("mycmd") open("`open'")
+  3.         foreach xxx in "docx" "pptx" {
+  4.                 capture : rm "`myfile'.`xxx'"
+  5.                 quietly : export excel "`myfile'.`xxx'"
+  6.                 capture : ceq_parse_using using "`myfile'.`xxx'", `options'
+  7.                 assert (_rc == 198)
+  8.         }
+  9. }
+
+. // Test #3
+. // Return error 601 if `"`using'"' doesn't exist
+. foreach open in "" "open" {
+  2.         local options cmd("mycmd") open("`open'")
+  3.         foreach xxx in "xls" "xlsx" {
+  4.                 capture : rm "`myfile'.`xxx'"
+  5.                 capture : ceq_parse_using using "`myfile'.`xxx'", `options'
+  6.                 assert (_rc == 601)
+  7.         }
+  8. }
+
+. // Test #4
+. // Update `open' to nothing if `"`using'"' has " " characters
+. foreach open in "" "open" {
+  2.         local options cmd("mycmd") open("`open'")
+  3.         foreach xxx in "xls" "xlsx" {
+  4.                 capture : rm "`myfile' .`xxx'"
+  5.                 quietly : export excel "`myfile' .`xxx'"
+  6.                 ceq_parse_using using "`myfile' .`xxx'", `options'
+  7.                 assert ("`open'" == "")
+  8.         }  
+  9. }
+Warning: `"C:\Users\ivang\AppData\Local\Temp\ST_00000001.tmp .xls"' contains spaces; open option will not be exec
+> uted. File can be opened manually after mycmd runs.
+Warning: `"C:\Users\ivang\AppData\Local\Temp\ST_00000001.tmp .xlsx"' contains spaces; open option will not be exe
+> cuted. File can be opened manually after mycmd runs.
+
+. // Test #5
+. // Clear the information set by "putexcel set" if no error is found
+. foreach open in "" "open" {
+  2.         local options cmd("mycmd") open("`open'")
+  3.         foreach xxx in "xls" "xlsx" {
+  4.                 capture : rm "`myfile'.`xxx'"
+  5.                 putexcel set "`myfile'.`xxx'"
+  6.                 quietly : export excel "`myfile'.`xxx'", replace
+  7.                 ceq_parse_using using "`myfile'.`xxx'", `options'
+  8.                 capture : putexcel describe
+  9.                 assert (_rc == 198)
+ 10.         }
+ 11. }
+
+. 
+. **************
+. ** CLEAN UP **
+. **************
+. 
+. capture : rm "`mwb'.xlsx"
+
+. log close
+      name:  <unnamed>
+       log:  C:\Users\ivang\Documents\GitHub\CEQStataPackage\tests/logs/test-ceq_parse_using.log
+  log type:  text
+ closed on:   1 Apr 2018, 17:00:07
+-----------------------------------------------------------------------------------------------------------------
