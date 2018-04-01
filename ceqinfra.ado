@@ -385,9 +385,9 @@ program define ceqinfra, rclass
 	local g5  "y < `cut3'"
 	local g6  "`cut3' < y < `cut4'"
 	local g7  "`cut4' < y < `cut5'"
-	local g8  "y > `cut3'"
-	local g9  "y > `cut5'"
-	local g10 "y > `cut4'"
+	local g8  "y > `cut5'"
+	local g9  "y > `cut4'"
+	local g10 "y > `cut3'"
 	
 	** NO... options
 	if wordcount("`nodecile' `nogroup' `nocentile' `nobin'")==4 {
