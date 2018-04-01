@@ -1,0 +1,299 @@
+{smcl}
+{com}{sf}{ul off}{txt}{.-}
+      name:  {res}<unnamed>
+       {txt}log:  {res}C:\Users\ivang\Documents\GitHub\CEQStataPackage\tests/logs/test-issue#21.smcl
+  {txt}log type:  {res}smcl
+ {txt}opened on:  {res} 1 Apr 2018, 11:38:45
+{txt}
+{com}. version 13.0
+{txt}
+{com}. 
+. ************
+. ** LOCALS **
+. ************
+. 
+. // Temportal objects
+. tempfile mwb
+{txt}
+{com}. 
+. // For CEQ commands
+. #delimit ;
+{txt}delimiter now ;
+{com}. local income_options_SA1
+>         market(ym_SA1)
+>         mpluspensions(yp_SA1)
+>         netmarket(yn_SA1)
+>         gross(yg_SA1)
+>         disposable(yd_SA1)
+>         consumable(yc_SA1)
+>         final(yf_SA1);
+{txt}
+{com}. local direct_options_SA1
+>         pensions(pc_contributory_pen)
+>         dtransfers(
+>                 pc_BolsaFamilia 
+>                 pc_scholarships 
+>                 pc_BPC 
+>                 pc_special_pensions 
+>                 pc_unemployment_ben
+>                 pc_other_transfers
+>                 pc_milk_ben
+>         )
+>         dtaxes(
+>                 pc_income_taxes
+>                 pc_property_taxes
+>         )
+>         contribs(
+>                 pc_contribs_to_pen
+>                 pc_other_contributions 
+>                 pc_FGTS
+>         );
+{txt}
+{com}. local indirect_options
+>         subsidies(pc_energy_subsidies)
+>         indtaxes(pc_indirect_taxes);
+{txt}
+{com}. local inkind_options
+>         health(pc_health_ben)
+>         education(
+>                 pc_preschool_educ_ben
+>                 pc_primary_educ_ben
+>                 pc_secondary_educ_ben
+>                 pc_special_educ_ben
+>                 pc_vocational_educ_ben
+>                 pc_tertiary_educ_ben
+>         );
+{txt}
+{com}. #delimit cr
+{txt}delimiter now cr
+{com}. 
+. **********
+. ** DATA **
+. **********
+. 
+. use "tests/data/pof3.dta", clear // available upon request
+{txt}
+{com}. keep if (yg_SA1 != .)
+{txt}(8558 observations deleted)
+
+{com}. sample 1
+{txt}(179412 observations deleted)
+
+{com}. 
+. **********
+. ** TEST **
+. **********
+. 
+. #delimit ;
+{txt}delimiter now ;
+{com}. ceqgraph conc using "`mwb'",
+>         `income_options_SA1'
+>         `direct_options_SA1'
+>         `indirect_options'
+>         `inkind_options'
+>         hhid(code_uc)
+>         path("tests/data")
+>         country("My country")
+>         surveyyear("YYYY/MM")
+>         authors("Author#1, Author#2, Author#3");
+{txt}Running version 2.3 of ceqgraph conc on  1 Apr 2018 at 11:38:46
+   (please report this information if reporting a bug to sean.higgins@ceqinstitute.org)
+Warning: Fiscal intervention variable(s) pc_milk_ben, pc_income_taxes, pc_property_taxes, pc_contribs_to_pen, pc_other_contributions, pc_FGTS, pc_energy_subsidies, pc_health_ben not stored in double format. This may lead to substantial discrepancies in the MWB due to rounding error.
+{res}{txt}(note: file tests/data/conc_direct_transfers_m.gph not found)
+{res}{txt}(file tests/data/conc_direct_transfers_m.gph saved)
+(note: file tests/data/conc_direct_transfers_m.png not found)
+(file tests/data/conc_direct_transfers_m.png written in PNG format)
+{res}{txt}(note: file tests/data/conc_direct_taxes_m.gph not found)
+{res}{txt}(file tests/data/conc_direct_taxes_m.gph saved)
+(note: file tests/data/conc_direct_taxes_m.png not found)
+(file tests/data/conc_direct_taxes_m.png written in PNG format)
+{res}{txt}(note: file tests/data/conc_indirect_subsidies_m.gph not found)
+{res}{txt}(file tests/data/conc_indirect_subsidies_m.gph saved)
+(note: file tests/data/conc_indirect_subsidies_m.png not found)
+(file tests/data/conc_indirect_subsidies_m.png written in PNG format)
+{res}{txt}(note: file tests/data/conc_indirect_taxes_m.gph not found)
+{res}{txt}(file tests/data/conc_indirect_taxes_m.gph saved)
+(note: file tests/data/conc_indirect_taxes_m.png not found)
+(file tests/data/conc_indirect_taxes_m.png written in PNG format)
+{res}{txt}(note: file tests/data/conc_inkind_m.gph not found)
+{res}{txt}(file tests/data/conc_inkind_m.gph saved)
+(note: file tests/data/conc_inkind_m.png not found)
+(file tests/data/conc_inkind_m.png written in PNG format)
+{res}{txt}(note: file tests/data/conc_summary_m.gph not found)
+{res}{txt}(file tests/data/conc_summary_m.gph saved)
+(note: file tests/data/conc_summary_m.png not found)
+(file tests/data/conc_summary_m.png written in PNG format)
+{res}{txt}(note: file tests/data/conc_direct_transfers_mp.gph not found)
+{res}{txt}(file tests/data/conc_direct_transfers_mp.gph saved)
+(note: file tests/data/conc_direct_transfers_mp.png not found)
+(file tests/data/conc_direct_transfers_mp.png written in PNG format)
+{res}{txt}(note: file tests/data/conc_direct_taxes_mp.gph not found)
+{res}{txt}(file tests/data/conc_direct_taxes_mp.gph saved)
+(note: file tests/data/conc_direct_taxes_mp.png not found)
+(file tests/data/conc_direct_taxes_mp.png written in PNG format)
+{res}{txt}(note: file tests/data/conc_indirect_subsidies_mp.gph not found)
+{res}{txt}(file tests/data/conc_indirect_subsidies_mp.gph saved)
+(note: file tests/data/conc_indirect_subsidies_mp.png not found)
+(file tests/data/conc_indirect_subsidies_mp.png written in PNG format)
+{res}{txt}(note: file tests/data/conc_indirect_taxes_mp.gph not found)
+{res}{txt}(file tests/data/conc_indirect_taxes_mp.gph saved)
+(note: file tests/data/conc_indirect_taxes_mp.png not found)
+(file tests/data/conc_indirect_taxes_mp.png written in PNG format)
+{res}{txt}(note: file tests/data/conc_inkind_mp.gph not found)
+{res}{txt}(file tests/data/conc_inkind_mp.gph saved)
+(note: file tests/data/conc_inkind_mp.png not found)
+(file tests/data/conc_inkind_mp.png written in PNG format)
+{res}{txt}(note: file tests/data/conc_summary_mp.gph not found)
+{res}{txt}(file tests/data/conc_summary_mp.gph saved)
+(note: file tests/data/conc_summary_mp.png not found)
+(file tests/data/conc_summary_mp.png written in PNG format)
+{res}{txt}(note: file tests/data/conc_direct_transfers_n.gph not found)
+{res}{txt}(file tests/data/conc_direct_transfers_n.gph saved)
+(note: file tests/data/conc_direct_transfers_n.png not found)
+(file tests/data/conc_direct_transfers_n.png written in PNG format)
+{res}{txt}(note: file tests/data/conc_direct_taxes_n.gph not found)
+{res}{txt}(file tests/data/conc_direct_taxes_n.gph saved)
+(note: file tests/data/conc_direct_taxes_n.png not found)
+(file tests/data/conc_direct_taxes_n.png written in PNG format)
+{res}{txt}(note: file tests/data/conc_indirect_subsidies_n.gph not found)
+{res}{txt}(file tests/data/conc_indirect_subsidies_n.gph saved)
+(note: file tests/data/conc_indirect_subsidies_n.png not found)
+(file tests/data/conc_indirect_subsidies_n.png written in PNG format)
+{res}{txt}(note: file tests/data/conc_indirect_taxes_n.gph not found)
+{res}{txt}(file tests/data/conc_indirect_taxes_n.gph saved)
+(note: file tests/data/conc_indirect_taxes_n.png not found)
+(file tests/data/conc_indirect_taxes_n.png written in PNG format)
+{res}{txt}(note: file tests/data/conc_inkind_n.gph not found)
+{res}{txt}(file tests/data/conc_inkind_n.gph saved)
+(note: file tests/data/conc_inkind_n.png not found)
+(file tests/data/conc_inkind_n.png written in PNG format)
+{res}{txt}(note: file tests/data/conc_summary_n.gph not found)
+{res}{txt}(file tests/data/conc_summary_n.gph saved)
+(note: file tests/data/conc_summary_n.png not found)
+(file tests/data/conc_summary_n.png written in PNG format)
+{res}{txt}(note: file tests/data/conc_direct_transfers_g.gph not found)
+{res}{txt}(file tests/data/conc_direct_transfers_g.gph saved)
+(note: file tests/data/conc_direct_transfers_g.png not found)
+(file tests/data/conc_direct_transfers_g.png written in PNG format)
+{res}{txt}(note: file tests/data/conc_direct_taxes_g.gph not found)
+{res}{txt}(file tests/data/conc_direct_taxes_g.gph saved)
+(note: file tests/data/conc_direct_taxes_g.png not found)
+(file tests/data/conc_direct_taxes_g.png written in PNG format)
+{res}{txt}(note: file tests/data/conc_indirect_subsidies_g.gph not found)
+{res}{txt}(file tests/data/conc_indirect_subsidies_g.gph saved)
+(note: file tests/data/conc_indirect_subsidies_g.png not found)
+(file tests/data/conc_indirect_subsidies_g.png written in PNG format)
+{res}{txt}(note: file tests/data/conc_indirect_taxes_g.gph not found)
+{res}{txt}(file tests/data/conc_indirect_taxes_g.gph saved)
+(note: file tests/data/conc_indirect_taxes_g.png not found)
+(file tests/data/conc_indirect_taxes_g.png written in PNG format)
+{res}{txt}(note: file tests/data/conc_inkind_g.gph not found)
+{res}{txt}(file tests/data/conc_inkind_g.gph saved)
+(note: file tests/data/conc_inkind_g.png not found)
+(file tests/data/conc_inkind_g.png written in PNG format)
+{res}{txt}(note: file tests/data/conc_summary_g.gph not found)
+{res}{txt}(file tests/data/conc_summary_g.gph saved)
+(note: file tests/data/conc_summary_g.png not found)
+(file tests/data/conc_summary_g.png written in PNG format)
+{res}{txt}(note: file tests/data/conc_direct_transfers_d.gph not found)
+{res}{txt}(file tests/data/conc_direct_transfers_d.gph saved)
+(note: file tests/data/conc_direct_transfers_d.png not found)
+(file tests/data/conc_direct_transfers_d.png written in PNG format)
+{res}{txt}(note: file tests/data/conc_direct_taxes_d.gph not found)
+{res}{txt}(file tests/data/conc_direct_taxes_d.gph saved)
+(note: file tests/data/conc_direct_taxes_d.png not found)
+(file tests/data/conc_direct_taxes_d.png written in PNG format)
+{res}{txt}(note: file tests/data/conc_indirect_subsidies_d.gph not found)
+{res}{txt}(file tests/data/conc_indirect_subsidies_d.gph saved)
+(note: file tests/data/conc_indirect_subsidies_d.png not found)
+(file tests/data/conc_indirect_subsidies_d.png written in PNG format)
+{res}{txt}(note: file tests/data/conc_indirect_taxes_d.gph not found)
+{res}{txt}(file tests/data/conc_indirect_taxes_d.gph saved)
+(note: file tests/data/conc_indirect_taxes_d.png not found)
+(file tests/data/conc_indirect_taxes_d.png written in PNG format)
+{res}{txt}(note: file tests/data/conc_inkind_d.gph not found)
+{res}{txt}(file tests/data/conc_inkind_d.gph saved)
+(note: file tests/data/conc_inkind_d.png not found)
+(file tests/data/conc_inkind_d.png written in PNG format)
+{res}{txt}(note: file tests/data/conc_summary_d.gph not found)
+{res}{txt}(file tests/data/conc_summary_d.gph saved)
+(note: file tests/data/conc_summary_d.png not found)
+(file tests/data/conc_summary_d.png written in PNG format)
+{res}{txt}(note: file tests/data/conc_direct_transfers_c.gph not found)
+{res}{txt}(file tests/data/conc_direct_transfers_c.gph saved)
+(note: file tests/data/conc_direct_transfers_c.png not found)
+(file tests/data/conc_direct_transfers_c.png written in PNG format)
+{res}{txt}(note: file tests/data/conc_direct_taxes_c.gph not found)
+{res}{txt}(file tests/data/conc_direct_taxes_c.gph saved)
+(note: file tests/data/conc_direct_taxes_c.png not found)
+(file tests/data/conc_direct_taxes_c.png written in PNG format)
+{res}{txt}(note: file tests/data/conc_indirect_subsidies_c.gph not found)
+{res}{txt}(file tests/data/conc_indirect_subsidies_c.gph saved)
+(note: file tests/data/conc_indirect_subsidies_c.png not found)
+(file tests/data/conc_indirect_subsidies_c.png written in PNG format)
+{res}{txt}(note: file tests/data/conc_indirect_taxes_c.gph not found)
+{res}{txt}(file tests/data/conc_indirect_taxes_c.gph saved)
+(note: file tests/data/conc_indirect_taxes_c.png not found)
+(file tests/data/conc_indirect_taxes_c.png written in PNG format)
+{res}{txt}(note: file tests/data/conc_inkind_c.gph not found)
+{res}{txt}(file tests/data/conc_inkind_c.gph saved)
+(note: file tests/data/conc_inkind_c.png not found)
+(file tests/data/conc_inkind_c.png written in PNG format)
+{res}{txt}(note: file tests/data/conc_summary_c.gph not found)
+{res}{txt}(file tests/data/conc_summary_c.gph saved)
+(note: file tests/data/conc_summary_c.png not found)
+(file tests/data/conc_summary_c.png written in PNG format)
+{res}{txt}(note: file tests/data/conc_direct_transfers_f.gph not found)
+{res}{txt}(file tests/data/conc_direct_transfers_f.gph saved)
+(note: file tests/data/conc_direct_transfers_f.png not found)
+(file tests/data/conc_direct_transfers_f.png written in PNG format)
+{res}{txt}(note: file tests/data/conc_direct_taxes_f.gph not found)
+{res}{txt}(file tests/data/conc_direct_taxes_f.gph saved)
+(note: file tests/data/conc_direct_taxes_f.png not found)
+(file tests/data/conc_direct_taxes_f.png written in PNG format)
+{res}{txt}(note: file tests/data/conc_indirect_subsidies_f.gph not found)
+{res}{txt}(file tests/data/conc_indirect_subsidies_f.gph saved)
+(note: file tests/data/conc_indirect_subsidies_f.png not found)
+(file tests/data/conc_indirect_subsidies_f.png written in PNG format)
+{res}{txt}(note: file tests/data/conc_indirect_taxes_f.gph not found)
+{res}{txt}(file tests/data/conc_indirect_taxes_f.gph saved)
+(note: file tests/data/conc_indirect_taxes_f.png not found)
+(file tests/data/conc_indirect_taxes_f.png written in PNG format)
+{res}{txt}(note: file tests/data/conc_inkind_f.gph not found)
+{res}{txt}(file tests/data/conc_inkind_f.gph saved)
+(note: file tests/data/conc_inkind_f.png not found)
+(file tests/data/conc_inkind_f.png written in PNG format)
+{res}{txt}(note: file tests/data/conc_summary_f.gph not found)
+{res}{txt}(file tests/data/conc_summary_f.gph saved)
+(note: file tests/data/conc_summary_f.png not found)
+(file tests/data/conc_summary_f.png written in PNG format)
+{err}Writing graphs to excel requires Stata 14.1 or newer. {bf:Using} option is not allowed.
+{txt}
+{com}. #delimit cr
+{txt}delimiter now cr
+{com}. 
+. **************
+. ** CLEANING **
+. **************
+. 
+. // Remove graphs
+. foreach type in "direct" "indirect" "inkind" "summary" {c -(}
+{txt}  2{com}.         local files : dir "tests/data" files "conc_`type'_*", respectcase
+{txt}  3{com}.         foreach file in `files' {c -(}
+{txt}  4{com}.                 local myregex = "^(conc_`type')(.)*(\.(gph|png))$"
+{txt}  5{com}.                 if regexm(`"`file'"', "`myregex'") {c -(}
+{txt}  6{com}.                         capture : rm "tests/data/`file'"
+{txt}  7{com}.                 {c )-}
+{txt}  8{com}.         {c )-}
+{txt}  9{com}. {c )-}
+{txt}
+{com}. 
+. // Close log-file
+. log close
+      {txt}name:  {res}<unnamed>
+       {txt}log:  {res}C:\Users\ivang\Documents\GitHub\CEQStataPackage\tests/logs/test-issue#21.smcl
+  {txt}log type:  {res}smcl
+ {txt}closed on:  {res} 1 Apr 2018, 11:39:43
+{txt}{.-}
+{smcl}
+{txt}{sf}{ul off}
