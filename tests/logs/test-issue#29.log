@@ -1,0 +1,118 @@
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+      name:  <unnamed>
+       log:  C:\Users\ivang\Documents\GitHub\CEQStataPackage\tests/logs/test-issue#29.log
+  log type:  text
+ opened on:   1 Apr 2018, 19:50:08
+
+. version 13.0
+
+. set more off
+
+. 
+. ************
+. ** LOCALS **
+. ************
+. 
+. // Temporal master workbook (mwb)
+. clear
+
+. tempfile mwb
+
+. putexcel set "`mwb'.xlsx", replace
+
+. putexcel A1 = ("")
+file C:\Users\ivang\AppData\Local\Temp\ST_00000001.tmp.xlsx saved
+
+. 
+. // PPP conversion factors
+. local ppp       = 1.5713184
+
+. local cpibase   = 79.560051
+
+. local cpisurvey = 95.203354
+
+. 
+. // CEQ commands options
+. #delimit ;
+delimiter now ;
+. local income_options_SA1
+>         market(ym_SA1)
+>         mpluspensions(yp_SA1)
+>         netmarket(yn_SA1)
+>         gross(yg_SA1)
+>         disposable(yd_SA1)
+>         consumable(yc_SA1)
+>         final(yf_SA1);
+
+. local ppp_options
+>         ppp(`ppp')
+>         cpibase(`cpibase')
+>         cpisurvey(`cpisurvey')
+>         baseyear(2005)
+>         yearly;
+
+. #delimit cr
+delimiter now cr
+. 
+. 
+. **********
+. ** DATA **
+. **********
+. 
+. use "tests\data\pof3.dta", clear
+
+. drop if missing(yg_SA1)
+(8558 observations deleted)
+
+. sample 1
+(179412 observations deleted)
+
+. 
+. // Recode dummy variables
+. replace agua_canalizada = agua_canalizada - 1
+(1812 real changes made)
+
+. 
+. ***********
+. ** TESTS **
+. ***********
+. 
+. #delimit ;
+delimiter now ;
+. // Call ceqinfra
+> ceqinfra agua_canalizada [pweight = w] using "`mwb'.xlsx",
+>         `income_options_SA1' 
+>         `ppp_options'
+>         hhid(code_uc);
+Running version 1.3 of ceqinfra on  1 Apr 2018 at 19:50:09
+   (please report this information if reporting a bug to sean.higgins@ceqinstitute.org)
+Writing to "C:\Users\ivang\AppData\Local\Temp\ST_00000001.tmp.xlsx"; may take several minutes
+
+. // Import a subset of the generated mwb
+> import excel "`mwb'.xlsx",
+>         sheet("E21. Infrastructure Access") 
+>         cellrange(K15:M15)
+>         clear;
+
+. // Check the contents of cells K15:M15
+> assert (K == "y > 50");
+
+. assert (L == "y > 10");
+
+. assert (M == "y > 4");
+
+. #delimit cr
+delimiter now cr
+. 
+. **************
+. ** CLEAN UP **
+. **************
+. 
+. capture : rm "`mwb'.xlsx"
+
+. log close
+      name:  <unnamed>
+       log:  C:\Users\ivang\Documents\GitHub\CEQStataPackage\tests/logs/test-issue#29.log
+  log type:  text
+ closed on:   1 Apr 2018, 19:50:09
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
