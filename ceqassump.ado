@@ -659,8 +659,17 @@ program define ceqassump, rclass
 			local _`x'col `r(col)'
 		}
 		forval i=1/6 {
-			local therow = `rgroup2' + `i'  
-			local cutoffs `cutoffs' `_lowcol'`therow'=(`cut`=`i'-1'') `_hicol'`therow'=(`cut`i'')
+			local therow = `rgroup2' + `i' - 1
+			if (`i' < 6) {
+				local cutoffi_lo = "`_lowcol'`therow'=(`cut`=`i'-1'')"
+				local cutoffi_hi = "`_hicol'`therow'=(`cut`i'')"
+			}
+			else {
+				local final_cutoff = "`cut5' And More"
+				local cutoffi_lo   = `"`_lowcol'`therow'=("`final_cutoff'")"'
+			}
+			local cutoffi = `"`cutoffi_lo' `cutoffi_hi'"'
+			local cutoffs = `"`cutoffs' `cutoffi'"'
 		}
 		local rpovlines = 16 
 		forval i=1/3 {
