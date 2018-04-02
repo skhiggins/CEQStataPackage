@@ -1,0 +1,123 @@
+-----------------------------------------------------------------------------------------------------------------
+      name:  <unnamed>
+       log:  C:\Users\ivang\Documents\GitHub\CEQStataPackage\tests/logs/test-issue#30.log
+  log type:  text
+ opened on:   1 Apr 2018, 21:53:03
+
+. version 13.0
+
+. 
+. ************
+. ** LOCALS **
+. ************
+. 
+. // PPP conversion factors
+. local ppp       = 1.5713184
+
+. local cpibase   = 79.560051
+
+. local cpisurvey = 95.203354
+
+. 
+. // Temporal workbook
+. tempfile mwb
+
+. putexcel set "`mwb'.xlsx", replace
+
+. putexcel A1 = ("")
+file C:\Users\ivang\AppData\Local\Temp\ST_00000001.tmp.xlsx saved
+
+. 
+. // For CEQ commands
+. #delimit ;
+delimiter now ;
+. local cut_options
+>         cut1(01.25)
+>         cut2(01.90)
+>         cut3(03.20)
+>         cut4(05.50)
+>         cut5(10.00);
+
+. local ppp_options
+>         ppp(`ppp')
+>         cpibase(`cpibase')
+>         cpisurvey(`cpisurvey')
+>         baseyear(2005)
+>         yearly;
+
+. #delimit cr
+delimiter now cr
+. 
+. **********
+. ** DATA **
+. **********
+. 
+. use "tests/data/pof3.dta", clear // available upon request
+
+. keep if (yg_SA1 != .)
+(8,558 observations deleted)
+
+. sample 1
+(179,412 observations deleted)
+
+. 
+. **********
+. ** TEST **
+. **********
+. 
+. #delimit ;
+delimiter now ;
+. ceqassump ym_SA1 ym_norent using "`mwb'.xlsx",
+>         `cut_options'
+>         `ppp_options'
+>         hhid(code_uc)
+>         country("My country")
+>         surveyyear("YYYY/MM")
+>         authors("Author#1, Author#2, Author#3");
+Running version 1.5 of ceqassump on  1 Apr 2018 at 21:53:03
+   (please report this information if reporting a bug to sean.higgins@ceqinstitute.org)
+Writing to "C:\Users\ivang\AppData\Local\Temp\ST_00000001.tmp.xlsx"; may take several minutes
+
+. import excel using "`mwb'.xlsx",
+>         sheet("E28. Assumption Testing") 
+>         cellrange(A57:B62)
+>         clear;
+
+. assert A[1] == "0";
+
+.              assert B[1] == 1.25;
+
+. assert A[2] == "1.25";
+
+.           assert B[2] == 1.9;
+
+. assert A[3] == "1.9";
+
+.            assert B[3] == 3.2;
+
+. assert A[4] == "3.2";
+
+.            assert B[4] == 5.5;
+
+. assert A[5] == "5.5";
+
+.            assert B[5] == 10;
+
+. assert A[6] == "10 And More";
+
+. #delimit cr
+delimiter now cr
+. 
+. **************
+. ** CLEAN UP **
+. **************
+. 
+. // Close log-file
+. capture : rm "`mwb'.xlsx"
+
+. log close
+      name:  <unnamed>
+       log:  C:\Users\ivang\Documents\GitHub\CEQStataPackage\tests/logs/test-issue#30.log
+  log type:  text
+ closed on:   1 Apr 2018, 21:53:03
+-----------------------------------------------------------------------------------------------------------------
