@@ -45,7 +45,8 @@ ados = [
 	'ceqassump',
 	'oppincidence',
 	'incomecdf',
-	'ceqppp'
+	'ceqppp',
+	'covconc'
 ]
 ados_only = [
 	'ceqdientropy',
@@ -67,6 +68,6 @@ compression = zipfile.ZIP_DEFLATED
 zf = zipfile.ZipFile(myzip, mode='w')
 	# note: mode='w' to write a new file; mode='a' to append to an existing file
 for file in ados_sthlps:
-	print 'adding %s to %s' % (file, myzip)
+	print('adding %s to %s' % (file, myzip))
 	zf.write(file,compress_type=compression)
 zf.close()
