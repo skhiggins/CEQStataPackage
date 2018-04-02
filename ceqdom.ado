@@ -473,30 +473,7 @@ program define ceqdom, rclass sortpreserve;//General program for dominance;
 	if wordcount("`inctypewarn'")>0 local warning `warning' "Warning: Income variable(s) `inctypewarn' not stored in double format. This may lead to substantial discrepancies in the MWB due to rounding error.";
 	
 	* make sure using is xls or xlsx;
-	cap putexcel clear;
-	if `"`using'"'!="" {;
-		local period = strpos(`"`using'"',".");
-		if `period'>0 { ;// i.e., if `"`using'"' contains .;
-			local ext = substr(`"`using'"',`period',.);
-			if "`ext'"!=".xls" & "`ext'"!=".xlsx" {;
-				noisily `die' "File extension must be .xls or .xlsx to write to an existing CEQ Master Workbook (requires Stata 13 or newer)";
-				exit 198;
-			};
-		};
-		else {;
-			local using `"`using'.xlsx"';
-			noisily `dit' `"File extension of {bf:using} not specified, .xlsx assumed"';
-		};
-		// give error if file doesn't exist:;
-		confirm file "`using'";
-	};
-	else {; // if "`using'"=="";
-		noisily `dit' "Warning: No file specified with {bf:using}, results saved in {bf:return list} but not exported to Output Tables";
-	};
-	if strpos(`"`using'"'," ")>0 & "`open'"!="" {; // has spaces in filename;
-		noisily `dit' `"Warning: `"`using'"' contains spaces, {bf:open} option will not be executed. File can be opened manually after `command' runs."';
-		local open "";// so that it won't try to open below;
-	};
+	ceq_parse_using using `"`using'"', cmd("ceqdom") open("open");
 	
 	
 	* make sure -domineq- is installed;

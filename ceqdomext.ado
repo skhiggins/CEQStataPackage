@@ -906,35 +906,8 @@ program define _ceqdomext, rclass
 	}
 	
 	** make sure using is xls or xlsx
-	cap putexcel clear
-	if `"`using'"'!="" {
-		qui di " // for Notepad++ syntax highlighting
-		local period = strpos("`using'",".")
-		if `period'>0 { // i.e., if `"`using'"' contains .
-			local ext = substr("`using'",`period',.)
-			if "`ext'"!=".xls" & "`ext'"!=".xlsx" {
-				`die' "File extension must be .xls or .xlsx to write to an existing CEQ Master Workbook (requires Stata 13 or newer)"
-				exit 198
-			}
-		}
-		else {
-			local using `"`using'.xlsx"'
-			qui di "
-			`dit' "File extension of {bf:using} not specified; .xlsx assumed"
-		}
-		// give error if file doesn't exist:
-		confirm file `"`using'"'
-		qui di "
-	}
-	else { // if "`using'"==""
-		`dit' "Warning: No file specified with {bf:using}; results saved in {bf:return list} but not exported to Output Tables"
-	}
-	if strpos(`"`using'"'," ")>0 & "`open'"!="" { // has spaces in filename
-		qui di "
-		`dit' `"Warning: `"`using'"' contains spaces; {bf:open} option will not be executed. File can be opened manually after `command' runs."'
-		local open "" // so that it won't try to open below
-	}	
-	
+	ceq_parse_using using `"`using'"', cmd("ceqdomext") open("open")
+
 	** create new variables for program categories
 
 	if wordcount("`allprogs'")>0 ///
