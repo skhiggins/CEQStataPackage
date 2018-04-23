@@ -850,6 +850,9 @@ program define ceqfiscal, rclass
 				foreach pr in ``vrank'' `programcols' {
 					if "`pr'"!="" {	
 						forval i=1/``x'' { // 1/100 for centiles, etc.
+							foreach var of varlist `pr' {
+								local varname "`var'"
+							}
 							** CONCENTRATION
 							// Concentration totals LCU
 							qui summ `pr' if ``vrank'_`x''==`i' `aw'
@@ -859,7 +862,12 @@ program define ceqfiscal, rclass
 							mata:  I`vrank'_pcLCU_`x'[`i',`col'] = `mean'
 							if `_ppp' {
 								// Concentration totals PPP
-								qui summ ``pr'_ppp' if ``vrank'_`x''==`i' `aw'
+								if strpos("`market'`mpluspensions'`netmarket'`gross'`taxable'`disposable'`consumable'`final'","`varname'")!=0 {
+									qui summ ``vrank'_ppp' if ``vrank'_`x''==`i' `aw'
+								}
+								else {
+									qui summ ``pr'_ppp' if ``vrank'_`x''==`i' `aw'
+								}
 								if r(sum)==0 local mean = 0
 								else local mean = `r(mean)'
 								mata: I`vrank'_totPPP_`x'[`i',`col'] = `r(sum)'
