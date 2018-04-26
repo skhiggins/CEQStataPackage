@@ -1,7 +1,8 @@
 ** ADO FILE FOR FISCAL INTERVENTIONS SHEET OF CEQ OUTPUT TABLES
 
 ** VERSION AND NOTES (changes between versions described under CHANGES)
-*! v5.0 029jun2017 For use with July 2017 version of Output Tables
+*! v5.1 23apr2018 For use with Feb 2018 version of Output Tables
+** v5.0 029jun2017 For use with July 2017 version of Output Tables
 ** v4.9 01jun2017 For use with May 2017 version of Output Tables
 ** v4.8 22may2017 For use with Oct 2016 version of Output Tables
 ** v4.7 16may2017 For use with Oct 2016 version of Output Tables
@@ -30,6 +31,7 @@
 ** (beta version; please report any bugs), written by Sean Higgins sean.higgins@ceqinstitute.org
 
 ** CHANGES
+**   04-23-2018 Update the total/per capita PPP amount for income
 **   06-29-2017 Replacing covconc with improved version by Paul Corral
 **   06-09-2017 Chaning locals prior to(5-27-2017) with group in name to group2
 **   05-27-2017 Add additional options to print meta-information
@@ -194,7 +196,7 @@ program define ceqfiscal, rclass
 	local dit display as text in smcl
 	local die display as error in smcl
 	local command ceqfiscal
-	local version 5.0
+	local version 5.1
 	`dit' "Running version `version' of `command' on `c(current_date)' at `c(current_time)'" _n "   (please report this information if reporting a bug to sean.higgins@ceqinstitute.org)"
 	
 	** income concepts
