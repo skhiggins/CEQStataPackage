@@ -7,6 +7,10 @@ import zipfile
 import zlib
 import os # for shell commands like change directory
 import shutil # for shell commands like copy
+import datetime
+
+# DATE FOR STAMP
+now = datetime.datetime.now()
 
 # DIRECTORIES
 os.chdir('C:/Dropbox/CEQGates/CEQStataPackage')
@@ -52,7 +56,8 @@ ados_only = [
 	'ceqdientropy',
 	'ceqdifgt',
 	'ceqdigini',
-	'ceqdinineq'
+	'ceqdinineq',
+	'ceq_parse_using'
 ]
 ados_sthlps = []
 for ado in ados:
@@ -71,3 +76,18 @@ for file in ados_sthlps:
 	print('adding %s to %s' % (file, myzip))
 	zf.write(file,compress_type=compression)
 zf.close()
+
+# CREATE THE .pkg FILE:
+pkg = open('ceq.pkg', 'w')
+
+pkg.write('v 3\n')
+pkg.write("d 'ceq': Estimates fiscal incidence and exports results directly to the CEQ Master Workbook\n")
+pkg.write('d \n')
+pkg.write('d Distribution date: ' + now.strftime("%Y%m%d") + '\n')
+pkg.write('d \n')
+
+for file_ in ados_sthlps:
+	pkg.write('f ' + file_ + '\n')
+
+pkg.close()
+

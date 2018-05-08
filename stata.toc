@@ -1,0 +1,6 @@
+v 3
+d 'ceq': Calculate fiscal impoverishment and fiscal gains to the poor
+d Sean Higgins, University of California, Berkeley
+d Rodrigo Aranda, Tulane University
+d Rosie Li, University of Southern California
+p ceq
