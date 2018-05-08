@@ -1,7 +1,8 @@
 ** ADO FILE FOR POPULATION SHEET OF CEQ OUTPUT TABLES
 
 ** VERSION AND NOTES (changes between versions described under CHANGES)
-*! v3.7 29jun2017 For use with July 2017 version of Output Tables
+*! v3.8 07may2018 For use with Feb 2018 version of Output Tables
+** v3.7 29jun2017 For use with July 2017 version of Output Tables
 ** v3.6 01jun2017 For use with June 2017 version of Output Tables
 ** v3.5 12jan2017 For use with Oct 2016 version of Output Tables
 ** v3.4 24sep2016 For use with Jun 2016 version of Output Tables
@@ -24,6 +25,7 @@
 *! (beta version; please report any bugs), written by Sean Higgins sean.higgins@ceqinstitute.org
 
 ** CHANGES
+**   05-07-2018 Fix issues with total amounts by decile
 **   06-29-2017 Replacing covcon with improved version by Paul Corral
 **	 06-01-2017 Add additional options to print meta-information
 ** 	 01-12-2017 Set the data type of all newly generated variables to be double
@@ -155,7 +157,7 @@ program define ceqconc, rclass
 	local dit display as text in smcl
 	local die display as error in smcl
 	local command ceqconc
-	local version 3.7
+	local version 3.8
 	`dit' "Running version `version' of `command' on `c(current_date)' at `c(current_time)'" _n "   (please report this information if reporting a bug to sean.higgins@ceqinstitute.org)"
 	
 	** income concepts
@@ -220,7 +222,7 @@ program define ceqconc, rclass
 	}
 	if wordcount("`inctypewarn'")>0 `dit' "Warning: Income variable(s) `inctypewarn' not stored in double format. This may lead to substantial discrepancies in the MWB due to rounding error."
 	if wordcount("`inctypewarn'")>0 local warning `warning' "Warning: Income variable(s) `inctypewarn' not stored in double format. This may lead to substantial discrepancies in the MWB due to rounding error."
-	
+
 	
 	************************
 	** PRESERVE AND MODIFY *
@@ -239,7 +241,7 @@ program define ceqconc, rclass
 		qui by `hhid': drop if _n>1 // faster than duplicates drop
 		local hsize `members'
 	}
-	
+		
 	
 	***********************
 	** SVYSET AND WEIGHTS *
@@ -292,7 +294,7 @@ program define ceqconc, rclass
 	**************************
 	** VARIABLE MODIFICATION *
 	**************************
-	
+
 	#delimit ;
 	local relevar `varlist' `allprogs'      
 				  `w' `psu' `strata' 
@@ -590,6 +592,10 @@ program define ceqconc, rclass
 				foreach ss in totLCU pcLCU totPPP pcPPP {
 					mata: C`vrank'_`ss'_`x' = J(``x'',`cols',.)
 				}
+				foreach ss in totLCU pcLCU totPPP pcPPP {
+					mata: C`vrank'_`ss'_`x'_totalrow = J(1,`cols',.)
+				}		
+				
 				foreach ss in shares cumshare {
 					mata: C`vrank'_`ss'_`x' = J(`=``x''+1',`cols',.)
 				}
@@ -612,15 +618,31 @@ program define ceqconc, rclass
 								mata:  C`vrank'_pcPPP_`x'[`i',`_`v''] = `mean'	
 								
 							}
-						}				
+						}
+
+						qui summ ``v'' `aw'	
+						if r(sum)==0 local mean = 0		
+						else local mean = `r(mean)'	
+						mata: C`vrank'_totLCU_`x'_totalrow[1,`_`v''] = `r(sum)'
+						mata:  C`vrank'_pcLCU_`x'_totalrow[1,`_`v''] = `mean'	
+
+						if `_ppp' {
+							// Lorenz PPP
+							qui summ ``v'_ppp' `aw'
+							if r(sum)==0 local mean = 0
+							else local mean = `r(mean)'
+							mata: C`vrank'_totPPP_`x'_totalrow[1,`_`v''] = `r(sum)'
+							mata:  C`vrank'_pcPPP_`x'_totalrow[1,`_`v''] = `mean'			
+						}										
 					}
 				}
 				** totals rows
 				foreach ss in totLCU pcLCU totPPP pcPPP {
-					mata: C`vrank'_`ss'_`x'_totalrow = J`x'*C`vrank'_`ss'_`x'
+					* mata: C`vrank'_`ss'_`x'_totalrow = J`x'*C`vrank'_`ss'_`x'
 					// add totals rows to matrix:
 					mata: C`vrank'_`ss'_`x' = C`vrank'_`ss'_`x' \ C`vrank'_`ss'_`x'_totalrow 
 				}
+
 				foreach v of local alllist { // have to do it col by col due to possible missing values
 					if "`v'"!="" {
 						** shares matrix 
@@ -631,6 +653,7 @@ program define ceqconc, rclass
 						mata: C`vrank'_cumshare_`x'[`=``x''+1',`_`v''] = C`vrank'_cumshare_`x'[``x'',`_`v''] // last row
 					}
 				}	
+
 				** fiscal incidence
 				mata: C`vrank'_fi_`vrank'_`x' = diag(C`vrank'_totLCU_`x'[.,`_`vrank'']:^-1)*C`vrank'_totLCU_`x' ///
 					- J(`=``x''+1',`cols',1) // subtract off 1 so no change is 0%
