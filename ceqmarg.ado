@@ -1,7 +1,8 @@
 ** ADO FILE FOR MARGINAL EFFECTS
 
 ** VERSION AND NOTES (changes between versions described under CHANGES)
-*! v1.6 29jun2017 For use with July 2017 version of Output Tables
+*! v1.7 10jun2018 For use with July 2017 version of Output Tables
+** v1.6 29jun2017 For use with July 2017 version of Output Tables
 ** v1.5 02jun2017 For use with Jun 2017 version of Output Tables
 ** v1.4 16may2017 For use with Oct 2016 version of Output Tables
 ** v1.3 06apr2017 For use with Oct 2016 version of Output Tables
@@ -11,6 +12,7 @@
 ** (beta version; please report any bugs), written by Sean Higgins sean.higgins@ceqinstitute.org
 
 ** CHANGES
+**   06-10-2018 Add the negatives option
 **   06-29-2017 Replacing covconc with improved version by Paul Corral
 **   05-27-2017 Add additional options to print meta-information
 **   05-16-2017 Fix command name mistake
@@ -158,7 +160,7 @@ program define ceqmarg, rclass
 	local dit display as text in smcl
 	local die display as error in smcl
 	local command ceqmarg
-	local version 1.6
+	local version 1.7
 	`dit' "Running version `version' of `command' on `c(current_date)' at `c(current_time)'" _n "   (please report this information if reporting a bug to sean.higgins@ceqinstitute.org)"
 	
 	** income concepts
@@ -499,6 +501,28 @@ program define ceqmarg, rclass
 	scalar _d_`v_alltaxes'         = "All taxes"
 	scalar _d_`v_alltaxescontribs' = "All taxes and contributions"
 
+    // for display of negative fiscal intervention warning
+	local d_`v_pensions'         = "All contributory pensions"
+	local d_`v_dtransfers'       = "All direct transfers excl contributory pensions"
+	local d_`v_dtransfersp'      = "All direct transfers incl contributory pensions"
+	local d_`v_contribs'         = "All contributions"
+	local d_`v_dtaxes'           = "All direct taxes"
+	local d_`v_dtaxescontribs'   = "All direct taxes and contributions"
+	local d_`v_subsidies'        = "All indirect subsidies"
+	local d_`v_indtaxes'         = "All indirect taxes"
+	local d_`v_health'           = "Net health transfers"
+	local d_`v_education'        = "Net education transfers"
+	local d_`v_otherpublic'      = "Net other public transfers" // LOH need to fix that this is showing up even when I don't specify the option
+	local d_`v_inkind'           = "All net in-kind transfers"
+	local d_`v_userfeeshealth'   = "All health user fees"
+	local d_`v_userfeeseduc'     = "All education user fees"
+	local d_`v_userfeesother'    = "All other user fees"
+	local d_`v_userfees'	       = "All user fees"
+	/* local _d_`v_netinkind'        = "All net inkind transfers"   local of specfic net inkind transfers created before */
+	local d_`v_alltransfers'     = "All net transfers and subsidies excl contributory pensions"
+	local d_`v_alltransfersp'    = "All net transfers and subsidies incl contributory pensions"
+	local d_`v_alltaxes'         = "All taxes"
+	local d_`v_alltaxescontribs' = "All taxes and contributions"
 	
 	** results
 	local supercols totLCU totPPP pcLCU pcPPP shares cumshare 
@@ -614,7 +638,7 @@ program define ceqmarg, rclass
 					`dit' "Warning: `r(N)' negative values of ``v''. Concentration Coefficient and Kakwani Index not produced. To produce specify the option {bf:negatives}"
 					local warning `warning' "Warning: `r(N)' negative values of ``v''. Concentration Coefficient and Kakwani Index not produced. To produce specify the option {negatives}."
 				}
-				if "`negatives'"!="" {
+				else {
 					`dit' "Warning: `r(N)' negative values of ``v''. Concentration Coefficient and Kakwani Index are not well behaved."
 					local warning `warning' "Warning: `r(N)' negative values of ``v''. Concentration Coefficient and Kakwani Index are not well behaved."
 				}
@@ -630,11 +654,11 @@ program define ceqmarg, rclass
 				qui count if `pr'<0
 				local negcount = r(N)
 				if `negcount'>0 {
-					if "`negative'"=="" {
+					if "`negatives'"=="" {
 						`dit' "Warning: `negcount' negative values of `d_`pr''. Concentration Coefficient and Kakwani Index not produced. To produce specify the option {bf:negatives}."
 						local warning `warning' "Warning: `negcount' negative values of `d_`pr''. Concentration Coefficient and Kakwani Index not produced. To produce specify the option {negatives}."
 					}
-					if "`negatives'"!="" {
+					else {
 						`dit' "Warning: `negcount' negative values of `d_`pr''. Concentration Coefficient and Kakwani Index are not well behaved."
 						local warning `warning' "Warning: `negcount' negative values of `d_`pr''. Concentration Coefficient and Kakwani Index are not well behaved."
 					}
@@ -644,12 +668,12 @@ program define ceqmarg, rclass
 				qui count if `pr'>0
 				local negcount = r(N)
 				if `negcount'>0 {
-					if "`negative'"=="" {
+					if "`negatives'"=="" {
 						`dit' "Warning: `negcount' positive values of `d_`pr'' (variable stored as negative values). Concentration Coefficient and Kakwani Index not produced. To produce specify the option {bf:negatives}."
 						local warning `warning' "Warning: `negcount' positive values of `d_`pr'' (variable stored as negative values). Concentration Coefficient and Kakwani Index not produced. To produce specify the option {negatives}."
 					}
-					if "`negatives'"!="" {
-						`dit' "Warning: `negcount' positive values of `d_`pr'' (variable stored as negative values). Concentration Coefficient and Kakwani Index are not well behaved."
+					else {
+						`dit' "Warning: `negcount' negative values of `d_`pr'' (variable stored as negative values). Concentration Coefficient and Kakwani Index are not well behaved."
 						local warning `warning' "Warning: `negcount' positive values of `d_`pr'' (variable stored as negative values). Concentration Coefficient and Kakwani Index are not well behaved."
 					}
 				}
