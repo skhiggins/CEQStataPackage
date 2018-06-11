@@ -499,6 +499,28 @@ program define ceqmarg, rclass
 	scalar _d_`v_alltaxes'         = "All taxes"
 	scalar _d_`v_alltaxescontribs' = "All taxes and contributions"
 
+    // for display of negative fiscal intervention warning
+	local d_`v_pensions'         = "All contributory pensions"
+	local d_`v_dtransfers'       = "All direct transfers excl contributory pensions"
+	local d_`v_dtransfersp'      = "All direct transfers incl contributory pensions"
+	local d_`v_contribs'         = "All contributions"
+	local d_`v_dtaxes'           = "All direct taxes"
+	local d_`v_dtaxescontribs'   = "All direct taxes and contributions"
+	local d_`v_subsidies'        = "All indirect subsidies"
+	local d_`v_indtaxes'         = "All indirect taxes"
+	local d_`v_health'           = "Net health transfers"
+	local d_`v_education'        = "Net education transfers"
+	local d_`v_otherpublic'      = "Net other public transfers" // LOH need to fix that this is showing up even when I don't specify the option
+	local d_`v_inkind'           = "All net in-kind transfers"
+	local d_`v_userfeeshealth'   = "All health user fees"
+	local d_`v_userfeeseduc'     = "All education user fees"
+	local d_`v_userfeesother'    = "All other user fees"
+	local d_`v_userfees'	       = "All user fees"
+	/* local _d_`v_netinkind'        = "All net inkind transfers"   local of specfic net inkind transfers created before */
+	local d_`v_alltransfers'     = "All net transfers and subsidies excl contributory pensions"
+	local d_`v_alltransfersp'    = "All net transfers and subsidies incl contributory pensions"
+	local d_`v_alltaxes'         = "All taxes"
+	local d_`v_alltaxescontribs' = "All taxes and contributions"
 	
 	** results
 	local supercols totLCU totPPP pcLCU pcPPP shares cumshare 
@@ -614,7 +636,7 @@ program define ceqmarg, rclass
 					`dit' "Warning: `r(N)' negative values of ``v''. Concentration Coefficient and Kakwani Index not produced. To produce specify the option {bf:negatives}"
 					local warning `warning' "Warning: `r(N)' negative values of ``v''. Concentration Coefficient and Kakwani Index not produced. To produce specify the option {negatives}."
 				}
-				if "`negatives'"!="" {
+				else {
 					`dit' "Warning: `r(N)' negative values of ``v''. Concentration Coefficient and Kakwani Index are not well behaved."
 					local warning `warning' "Warning: `r(N)' negative values of ``v''. Concentration Coefficient and Kakwani Index are not well behaved."
 				}
@@ -630,11 +652,11 @@ program define ceqmarg, rclass
 				qui count if `pr'<0
 				local negcount = r(N)
 				if `negcount'>0 {
-					if "`negative'"=="" {
+					if "`negatives'"=="" {
 						`dit' "Warning: `negcount' negative values of `d_`pr''. Concentration Coefficient and Kakwani Index not produced. To produce specify the option {bf:negatives}."
 						local warning `warning' "Warning: `negcount' negative values of `d_`pr''. Concentration Coefficient and Kakwani Index not produced. To produce specify the option {negatives}."
 					}
-					if "`negatives'"!="" {
+					else {
 						`dit' "Warning: `negcount' negative values of `d_`pr''. Concentration Coefficient and Kakwani Index are not well behaved."
 						local warning `warning' "Warning: `negcount' negative values of `d_`pr''. Concentration Coefficient and Kakwani Index are not well behaved."
 					}
@@ -644,12 +666,12 @@ program define ceqmarg, rclass
 				qui count if `pr'>0
 				local negcount = r(N)
 				if `negcount'>0 {
-					if "`negative'"=="" {
+					if "`negatives'"=="" {
 						`dit' "Warning: `negcount' positive values of `d_`pr'' (variable stored as negative values). Concentration Coefficient and Kakwani Index not produced. To produce specify the option {bf:negatives}."
 						local warning `warning' "Warning: `negcount' positive values of `d_`pr'' (variable stored as negative values). Concentration Coefficient and Kakwani Index not produced. To produce specify the option {negatives}."
 					}
-					if "`negatives'"!="" {
-						`dit' "Warning: `negcount' positive values of `d_`pr'' (variable stored as negative values). Concentration Coefficient and Kakwani Index are not well behaved."
+					else {
+						`dit' "Warning: `negcount' negative values of `d_`pr'' (variable stored as negative values). Concentration Coefficient and Kakwani Index are not well behaved."
 						local warning `warning' "Warning: `negcount' positive values of `d_`pr'' (variable stored as negative values). Concentration Coefficient and Kakwani Index are not well behaved."
 					}
 				}
