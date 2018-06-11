@@ -1,7 +1,8 @@
 ** ADO FILE FOR MARGINAL EFFECTS
 
 ** VERSION AND NOTES (changes between versions described under CHANGES)
-*! v1.6 29jun2017 For use with July 2017 version of Output Tables
+*! v1.7 10jun2018 For use with July 2017 version of Output Tables
+** v1.6 29jun2017 For use with July 2017 version of Output Tables
 ** v1.5 02jun2017 For use with Jun 2017 version of Output Tables
 ** v1.4 16may2017 For use with Oct 2016 version of Output Tables
 ** v1.3 06apr2017 For use with Oct 2016 version of Output Tables
@@ -11,6 +12,7 @@
 ** (beta version; please report any bugs), written by Sean Higgins sean.higgins@ceqinstitute.org
 
 ** CHANGES
+**   06-10-2018 Add the negatives option
 **   06-29-2017 Replacing covconc with improved version by Paul Corral
 **   05-27-2017 Add additional options to print meta-information
 **   05-16-2017 Fix command name mistake
@@ -158,7 +160,7 @@ program define ceqmarg, rclass
 	local dit display as text in smcl
 	local die display as error in smcl
 	local command ceqmarg
-	local version 1.6
+	local version 1.7
 	`dit' "Running version `version' of `command' on `c(current_date)' at `c(current_time)'" _n "   (please report this information if reporting a bug to sean.higgins@ceqinstitute.org)"
 	
 	** income concepts
