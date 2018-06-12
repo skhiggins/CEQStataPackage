@@ -1,84 +1,112 @@
 /***
-	TESTS - ISSUE #30
-	do file created by Ivan Gutierrez, ivangutierrez1988@gmail.com
-	last revised Apr 1, 2018
+	TESTS - ISSUE #36
+	Rosie Li
 */
 
 *********
 ** LOG **
 *********
-
+clear all
+cd "C:/Users/Rosie/Dropbox/CEQ_ado/"
 capture : log close
-log using "tests/logs/test-issue#30.log", text replace
+log using "test-issue#30.log", replace
 version 13.0
 
 ************
 ** LOCALS **
 ************
 
-// PPP conversion factors
-local ppp       = 1.5713184
-local cpibase   = 79.560051
-local cpisurvey = 95.203354
-
-// Temporal workbook
+// Temportal objects
 tempfile mwb
-putexcel set "`mwb'.xlsx", replace
-putexcel A1 = ("")
 
 // For CEQ commands
 #delimit ;
-local cut_options
-	cut1(01.25)
-	cut2(01.90)
-	cut3(03.20)
-	cut4(05.50)
-	cut5(10.00);
-local ppp_options
-	ppp(`ppp')
-	cpibase(`cpibase')
-	cpisurvey(`cpisurvey')
-	baseyear(2005)
-	yearly;
+local income_options_SA1
+	market(ym_SA1)
+	/*mpluspensions(yp_SA1)
+	netmarket(yn_SA1)
+	gross(yg_SA1)
+	disposable(yd_SA1)
+	consumable(yc_SA1)
+	final(yf_SA1)*/;
+local direct_options_SA1
+	pensions(pc_contributory_pen)
+	dtransfers(
+		pc_BolsaFamilia 
+		pc_scholarships 
+		pc_BPC 
+		pc_special_pensions 
+		pc_unemployment_ben
+		pc_other_transfers
+		pc_milk_ben
+	)
+	dtaxes(
+		pc_income_taxes
+		pc_property_taxes
+	)
+	contribs(
+		pc_contribs_to_pen
+		pc_other_contributions 
+		pc_FGTS
+	);
+local indirect_options
+	subsidies(pc_energy_subsidies)
+	indtaxes(pc_indirect_taxes);
+local inkind_options
+	health(pc_health_ben)
+	education(
+		pc_preschool_educ_ben
+		pc_primary_educ_ben
+		pc_secondary_educ_ben
+		pc_special_educ_ben
+		pc_vocational_educ_ben
+		pc_tertiary_educ_ben
+	);
 #delimit cr
 
 **********
 ** DATA **
 **********
 
-use "tests/data/pof3.dta", clear // available upon request
+use "pof3.dta", clear // available upon request
 keep if (yg_SA1 != .)
-sample 1
+set seed 2018421
+sample 0.1
+
+count
+// replace pc_energy_subsidies = - pc_energy_subsidies in 1/20
 
 **********
 ** TEST **
 **********
 
 #delimit ;
-ceqassump ym_SA1 ym_norent using "`mwb'.xlsx",
-	`cut_options'
-	`ppp_options'
-	hhid(code_uc)
-	country("My country")
-	surveyyear("YYYY/MM")
-	authors("Author#1, Author#2, Author#3");
-import excel using "`mwb'.xlsx",
-	sheet("E28. Assumption Testing") 
-	cellrange(A57:B62)
-	clear;
-assert A[1] == "0";             assert B[1] == 1.25;
-assert A[2] == "1.25";          assert B[2] == 1.9;
-assert A[3] == "1.9";           assert B[3] == 3.2;
-assert A[4] == "3.2";           assert B[4] == 5.5;
-assert A[5] == "5.5";           assert B[5] == 10;
-assert A[6] == "10 And More";
-#delimit cr
+
+ceqassump_jun10 ym_SA1 using "MEX_NAT_Reruns_CEQMWB2017_E28_2011PPP_Feb07_2018.xlsx",
+	ppp(1)
+	cpibase(103.15684)
+	cpisurvey(108.69572)	
+	hhid(code_uc);
+
+#delimit cr	
+
+
 
 **************
-** CLEAN UP **
+** CLEANING **
 **************
+
+// Remove graphs
+// foreach type in "direct" "indirect" "inkind" "summary" {
+// 	local files : dir "tests/data" files "conc_`type'_*", respectcase
+// 	foreach file in `files' {
+// 		local myregex = "^(conc_`type')(.)*(\.(gph|png))$"
+// 		if regexm(`"`file'"', "`myregex'") {
+// 			capture : rm "tests/data/`file'"
+// 		}
+// 	}
+// }
 
 // Close log-file
-capture : rm "`mwb'.xlsx"
 log close
-// endof(test-issue#30.do)
+exit

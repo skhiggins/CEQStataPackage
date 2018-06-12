@@ -1,7 +1,8 @@
 ** ADO FILE FOR POPULATION SHEET OF CEQ Master Workbook Section E
 
 ** VERSION AND NOTES (changes between versions described under CHANGES)
-*! v1.5 29jun2017 For use with July 2017 version of Output Tables
+*! v1.6 11jun2018 For use with July 2017 version of Output Tables
+** v1.5 29jun2017 For use with July 2017 version of Output Tables
 ** v1.4 01jun2017 For use with June 2017 version of Output Tables
 ** v1.3 27mar2017 For use with Oct 2016 version of Output Tables
 ** v1.2 12jan2017 For use with Oct 2016 version of Output Tables
@@ -10,6 +11,7 @@
 ** (beta version; please report any bugs), written by Sean Higgins sean.higgins@ceqinstitute.org
 
 ** CHANGES
+**   06-11-2018 Fix issue with income distribution by group
 **   06-29-2017 Replacing covcon with improved version by Paul Corral
 **	  06-01-2017 Add additional options to print meta-information
 **    03-27-2017 Fix row alignmnet (bug pointed out by Sandra Martinez)
@@ -162,7 +164,7 @@ program define ceqassump, rclass
 	local dit display as text in smcl
 	local die display as error in smcl
 	local command ceqassump
-	local version 1.5
+	local version 1.6
 	`dit' "Running version `version' of `command' on `c(current_date)' at `c(current_time)'" _n "   (please report this information if reporting a bug to sean.higgins@ceqinstitute.org)"
 	
 	** income concepts
@@ -299,7 +301,7 @@ program define ceqassump, rclass
 	
 	** NO... options
 	if "`nodecile'"=="" local _dec dec
-	if "`nogroup'"=="" & (`_ppp') local _group group
+	if "`nogroup'"=="" & (`_ppp') local _group2 group2
 	
 	** make sure using is xls or xlsx
 	cap putexcel clear
