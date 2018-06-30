@@ -2,7 +2,8 @@
 ** ADO FILE FOR EFFECTIVENESS SHEET OF CEQ OUTPUT TABLES
 
 ** VERSION AND NOTES (changes between versions described under CHANGES)
-*! v1.9 11feb2017 For use with Aug 2017 version of Output Tables
+*! v1.10 30jun2018 
+** v1.9 11feb2018 For use with Aug 2017 version of Output Tables
 ** v1.8 04dec2017 For use with Aug 2017 version of Output Tables
 ** v1.7 28nov2017 For use with Aug 2017 version of Output Tables
 ** v1.6 14aug2017 For use with July 2017 version of Output Tables
@@ -13,6 +14,7 @@
 ** (beta version; please report any bugs), written by Rodrigo Aranda raranda@tulane.edu
 
 ** CHANGES
+**  v1.10 Fixed ystar_ppp issue, (#50 on Github)
 **	v1.9 Modified ceqbensp to use Ali's formula 
 **  v1.8 Including warning for when fiscal intervention options are not specified.
 **  v1.7 Mofidied _ceqspend to use Ali's formula.
@@ -1009,7 +1011,7 @@ program define ceqef
 	local dit display as text in smcl;
 	local die display as error in smcl;
 	local command ceqef;
-	local version 1.9;
+	local version 1.10;
 	`dit' "Running version `version' of `command' on `c(current_date)' at `c(current_time)'" _n "   (please report this information if reporting a bug to sean.higgins@ceqinstitute.org and marc.brooks@ceqinstitute.org)"; //";
 	qui{;
 	* weight (if they specified hhsize*hhweight type of thing);
