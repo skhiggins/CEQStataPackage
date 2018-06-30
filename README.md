@@ -5,13 +5,13 @@ Commands to complete a Commitment to Equity (CEQ) Assessment and export results 
 
 ## Installation
 To install the stable version directly through Stata:
-```
+```stata
 update all
 ssc install ceq, replace
 ```
 
 To install the development version directly through Stata:
-```
+```stata
 net install ceq, from("https://raw.githubusercontent.com/skhiggins/CEQStataPackage/master/")
 ```
 
