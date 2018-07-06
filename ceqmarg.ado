@@ -1,7 +1,8 @@
 ** ADO FILE FOR MARGINAL EFFECTS
 
 ** VERSION AND NOTES (changes between versions described under CHANGES)
-*! v1.7 10jun2018 For use with July 2017 version of Output Tables
+*! v1.8 01jul2018 For use with July 2017 version of Output Tables
+** v1.7 10jun2018 For use with July 2017 version of Output Tables
 ** v1.6 29jun2017 For use with July 2017 version of Output Tables
 ** v1.5 02jun2017 For use with Jun 2017 version of Output Tables
 ** v1.4 16may2017 For use with Oct 2016 version of Output Tables
@@ -12,6 +13,7 @@
 ** (beta version; please report any bugs), written by Sean Higgins sean.higgins@ceqinstitute.org
 
 ** CHANGES
+**   07-01-2018 Include marginal contribution in the coverage of the negatives option
 **   06-10-2018 Add the negatives option
 **   06-29-2017 Replacing covconc with improved version by Paul Corral
 **   05-27-2017 Add additional options to print meta-information
@@ -160,7 +162,7 @@ program define ceqmarg, rclass
 	local dit display as text in smcl
 	local die display as error in smcl
 	local command ceqmarg
-	local version 1.7
+	local version 1.8
 	`dit' "Running version `version' of `command' on `c(current_date)' at `c(current_time)'" _n "   (please report this information if reporting a bug to sean.higgins@ceqinstitute.org)"
 	
 	** income concepts
@@ -635,12 +637,12 @@ program define ceqmarg, rclass
 			qui count if ``v''<0 // note `v' is e.g. m, ``v'' is varname
 			if r(N) {
 				if "`negatives'"=="" {
-					`dit' "Warning: `r(N)' negative values of ``v''. Concentration Coefficient and Kakwani Index not produced. To produce specify the option {bf:negatives}"
-					local warning `warning' "Warning: `r(N)' negative values of ``v''. Concentration Coefficient and Kakwani Index not produced. To produce specify the option {negatives}."
+					`dit' "Warning: `r(N)' negative values of ``v''. Concentration Coefficient, Kakwani Index, and Marginal Contribution not produced. To produce specify the option {bf:negatives}"
+					local warning `warning' "Warning: `r(N)' negative values of ``v''. Concentration Coefficient, Kakwani Index, and Marginal Contribution not produced. To produce specify the option {negatives}."
 				}
 				else {
-					`dit' "Warning: `r(N)' negative values of ``v''. Concentration Coefficient and Kakwani Index are not well behaved."
-					local warning `warning' "Warning: `r(N)' negative values of ``v''. Concentration Coefficient and Kakwani Index are not well behaved."
+					`dit' "Warning: `r(N)' negative values of ``v''. Concentration Coefficient, Kakwani Index, and Marginal Contribution are not well behaved."
+					local warning `warning' "Warning: `r(N)' negative values of ``v''. Concentration Coefficient, Kakwani Index, and Marginal Contribution are not well behaved."
 				}
 			}
 		}
@@ -655,12 +657,12 @@ program define ceqmarg, rclass
 				local negcount = r(N)
 				if `negcount'>0 {
 					if "`negatives'"=="" {
-						`dit' "Warning: `negcount' negative values of `d_`pr''. Concentration Coefficient and Kakwani Index not produced. To produce specify the option {bf:negatives}."
-						local warning `warning' "Warning: `negcount' negative values of `d_`pr''. Concentration Coefficient and Kakwani Index not produced. To produce specify the option {negatives}."
+						`dit' "Warning: `negcount' negative values of `d_`pr''. Concentration Coefficient, Kakwani Index, and Marginal Contribution not produced. To produce specify the option {bf:negatives}."
+						local warning `warning' "Warning: `negcount' negative values of `d_`pr''. Concentration Coefficient, Kakwani Index, and Marginal Contribution not produced. To produce specify the option {negatives}."
 					}
 					else {
-						`dit' "Warning: `negcount' negative values of `d_`pr''. Concentration Coefficient and Kakwani Index are not well behaved."
-						local warning `warning' "Warning: `negcount' negative values of `d_`pr''. Concentration Coefficient and Kakwani Index are not well behaved."
+						`dit' "Warning: `negcount' negative values of `d_`pr''. Concentration Coefficient, Kakwani Index, and Marginal Contribution are not well behaved."
+						local warning `warning' "Warning: `negcount' negative values of `d_`pr''. Concentration Coefficient, Kakwani Index, and Marginal Contribution are not well behaved."
 					}
 				}
 			}
@@ -1002,6 +1004,7 @@ program define ceqmarg, rclass
 					qui count if `pr'>0
 					local negcount = r(N)
 				}
+
 				if `negcount'>0 {
 					if "`negatives'"=="" {
 						matrix frontmatter`v'[`row',`col'] = .
@@ -1017,10 +1020,17 @@ program define ceqmarg, rclass
 					local nokakwani = 0 
 				}
 				local ++row
-				
+
 				// Kakwani (Kakwani_transfer is -Kakwani_transfer)
 				if `nokakwani'==1 {
-					matrix frontmatter`v'[`row',`col'] = .
+					if strpos("`transfercols'","`pr'") { // i.e., if a transfer
+						scalar _K_`v'_pr = _G_`v' - _C_`v'_pr
+						matrix frontmatter`v'[`row',`col'] = .
+					}
+					else { // a tax
+						scalar _K_`v'_pr = _C_`v'_pr - _G_`v'
+						matrix frontmatter`v'[`row',`col'] = .
+					}
 				}
 				else {
 					if strpos("`transfercols'","`pr'") { // i.e., if a transfer
@@ -1044,7 +1054,12 @@ program define ceqmarg, rclass
 					qui covconc ``v'_w_`pr'' `pw'
 					scalar _gini_w = r(gini)
 					
-					matrix frontmatter`v'[`row',`col'] = _gini_wo - _gini_w
+					if `nokakwani'==1 {
+						matrix frontmatter`v'[`row',`col'] = .
+					}
+					else {
+						matrix frontmatter`v'[`row',`col'] = _gini_wo - _gini_w
+					}
 				} // else leave it as missing
 				local ++row
 				
@@ -1117,16 +1132,30 @@ program define ceqmarg, rclass
 						scalar _dMRR_dg = _dM_dg - _dMVE_dg
 						
 						// Put results in matrix
-						matrix VE_RR`v'[`row',`col'] = _MVE_pr
-						local ++row
-						matrix VE_RR`v'[`row',`col'] = _MRR_pr
-						local ++row 
-						matrix VE_RR`v'[`row',`col'] = _dM_dg
-						local ++row
-						matrix VE_RR`v'[`row',`col'] = _dMVE_dg
-						local ++row 
-						matrix VE_RR`v'[`row',`col'] = _dMRR_dg
-						local ++row 
+						if `nokakwani'==1 {
+							matrix VE_RR`v'[`row',`col'] = .
+							local ++row
+							matrix VE_RR`v'[`row',`col'] = .
+							local ++row 
+							matrix VE_RR`v'[`row',`col'] = .
+							local ++row
+							matrix VE_RR`v'[`row',`col'] = .
+							local ++row 
+							matrix VE_RR`v'[`row',`col'] = .
+							local ++row 
+						}
+						else {
+							matrix VE_RR`v'[`row',`col'] = _MVE_pr
+							local ++row
+							matrix VE_RR`v'[`row',`col'] = _MRR_pr
+							local ++row 
+							matrix VE_RR`v'[`row',`col'] = _dM_dg
+							local ++row
+							matrix VE_RR`v'[`row',`col'] = _dMVE_dg
+							local ++row 
+							matrix VE_RR`v'[`row',`col'] = _dMRR_dg
+							local ++row 
+						}
 					}
 					else {
 						local row = `row' + 5 // rows for that starting and ending income concept will be blank
