@@ -1,0 +1,174 @@
+---------------------------------------------------------------------------------------------------------------
+      name:  <unnamed>
+       log:  C:\Users\Rosie\Dropbox\CEQ_ado\test-issue#36.log
+  log type:  text
+ opened on:   1 Jul 2018, 17:27:30
+
+. version 13.0
+
+. 
+. ************
+. ** LOCALS **
+. ************
+. 
+. // Temportal objects
+. tempfile mwb
+
+. 
+. // For CEQ commands
+. #delimit ;
+delimiter now ;
+. local income_options_SA1
+>         market(ym_SA1)
+>         /*mpluspensions(yp_SA1)
+>         netmarket(yn_SA1)
+>         gross(yg_SA1) */
+>         disposable(yd_SA1)
+>         /*consumable(yc_SA1)
+>         final(yf_SA1)*/;
+
+. local test_interventions
+>         dtaxes(pc_income_taxes_test)
+> ;
+
+.         local direct_options_SA1
+>         pensions(pc_contributory_pen)
+>         dtransfers(
+>                 pc_BolsaFamilia 
+>                 pc_scholarships 
+>                 pc_BPC 
+>                 pc_special_pensions 
+>                 pc_unemployment_ben
+>                 pc_other_transfers
+>                 pc_milk_ben
+>         )
+>         dtaxes(
+>                 pc_income_taxes
+>                 pc_property_taxes
+>         )
+>         contribs(
+>                 pc_contribs_to_pen
+>                 pc_other_contributions 
+>                 pc_FGTS
+>         );
+
+. local indirect_options
+>         subsidies(pc_energy_subsidies)
+>         indtaxes(pc_indirect_taxes);
+
+. local inkind_options
+>         health(pc_health_ben)
+>         education(
+>                 pc_preschool_educ_ben
+>                 pc_primary_educ_ben
+>                 pc_secondary_educ_ben
+>                 pc_special_educ_ben
+>                 pc_vocational_educ_ben
+>                 pc_tertiary_educ_ben
+>         );
+
+. #delimit cr
+delimiter now cr
+. 
+. **********
+. ** DATA **
+. **********
+. 
+. use "pof3.dta", clear // available upon request
+
+. keep if (yg_SA1 != .)
+(8,558 observations deleted)
+
+. set seed 2018421
+
+. sample 0.1
+(181,043 observations deleted)
+
+. 
+. count
+  181
+
+. replace pc_energy_subsidies = - pc_energy_subsidies in 1/20
+(9 real changes made)
+
+. gen pc_income_taxes_test = pc_income_taxes 
+
+. replace pc_income_taxes_test = - pc_income_taxes in 1/40
+(11 real changes made)
+
+. 
+. 
+. **********
+. ** TEST **
+. **********
+. 
+. #delimit ;
+delimiter now ;
+. /*
+> ceqextend_jun9 using "MEX_NAT_Reruns_CEQMWB2017_E12_2011PPP_Feb07_2018.xlsx",
+>         `income_options_SA1'
+>         ppp(1)
+>         cpibase(103.15684)
+>         cpisurvey(108.69572)    
+>         negatives
+>         /*`direct_options_SA1'*/
+>         `indirect_options'
+>         /*`inkind_options'*/
+>         hhid(code_uc);
+> */
+> 
+>         ceqmarg_test using "MEX_NAT_Reruns_CEQMWB2017_E13_2011PPP_Feb07_2018.xlsx",
+>         `income_options_SA1'
+>         negatives
+>         ppp(1)
+>         cpibase(103.15684)
+>         cpisurvey(108.69572)    
+>         /*`direct_options_SA1'*/
+>         `test_interventions'
+>         /*`indirect_options'*/
+>         /*`inkind_options'*/
+>         hhid(code_uc);
+Running version 1.7 of ceqmarg on  1 Jul 2018 at 17:27:30
+   (please report this information if reporting a bug to sean.higgins@ceqinstitute.org)
+Warning: variable pc_income_taxes_test not labeled
+Warning: daily, monthly, or yearly options not specified; variables assumed to be in yearly local currency unit
+> s
+Warning: 11 negative values of pc_income_taxes_test. Concentration Coefficient, Kakwani Index, and Marginal Con
+> tribution are not well behaved.
+Warning: 11 negative values of All direct taxes. Concentration Coefficient, Kakwani Index, and Marginal Contrib
+> ution are not well behaved.
+Warning: 11 negative values of All direct taxes and contributions. Concentration Coefficient, Kakwani Index, an
+> d Marginal Contribution are not well behaved.
+Warning: 11 negative values of All taxes. Concentration Coefficient, Kakwani Index, and Marginal Contribution a
+> re not well behaved.
+Warning: 11 negative values of All taxes and contributions. Concentration Coefficient, Kakwani Index, and Margi
+> nal Contribution are not well behaved.
+Writing to "MEX_NAT_Reruns_CEQMWB2017_E13_2011PPP_Feb07_2018.xlsx"; may take several minutes
+
+. #delimit cr     
+delimiter now cr
+. 
+. 
+. 
+. **************
+. ** CLEANING **
+. **************
+. 
+. // Remove graphs
+. // foreach type in "direct" "indirect" "inkind" "summary" {
+. //      local files : dir "tests/data" files "conc_`type'_*", respectcase
+. //      foreach file in `files' {
+. //              local myregex = "^(conc_`type')(.)*(\.(gph|png))$"
+. //              if regexm(`"`file'"', "`myregex'") {
+. //                      capture : rm "tests/data/`file'"
+. //              }
+. //      }
+. // }
+. 
+. // Close log-file
+. log close
+      name:  <unnamed>
+       log:  C:\Users\Rosie\Dropbox\CEQ_ado\test-issue#36.log
+  log type:  text
+ closed on:   1 Jul 2018, 17:27:32
+---------------------------------------------------------------------------------------------------------------
