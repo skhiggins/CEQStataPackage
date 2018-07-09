@@ -2,7 +2,7 @@
       name:  <unnamed>
        log:  C:\Users\Rosie\Dropbox\CEQ_ado\test-issue#36.log
   log type:  text
- opened on:  10 Jun 2018, 22:41:03
+ opened on:   1 Jul 2018, 17:27:30
 
 . version 13.0
 
@@ -22,12 +22,16 @@ delimiter now ;
 >         market(ym_SA1)
 >         /*mpluspensions(yp_SA1)
 >         netmarket(yn_SA1)
->         gross(yg_SA1)
+>         gross(yg_SA1) */
 >         disposable(yd_SA1)
->         consumable(yc_SA1)
+>         /*consumable(yc_SA1)
 >         final(yf_SA1)*/;
 
-. local direct_options_SA1
+. local test_interventions
+>         dtaxes(pc_income_taxes_test)
+> ;
+
+.         local direct_options_SA1
 >         pensions(pc_contributory_pen)
 >         dtransfers(
 >                 pc_BolsaFamilia 
@@ -87,6 +91,12 @@ delimiter now cr
 . replace pc_energy_subsidies = - pc_energy_subsidies in 1/20
 (9 real changes made)
 
+. gen pc_income_taxes_test = pc_income_taxes 
+
+. replace pc_income_taxes_test = - pc_income_taxes in 1/40
+(11 real changes made)
+
+. 
 . 
 . **********
 . ** TEST **
@@ -94,7 +104,8 @@ delimiter now cr
 . 
 . #delimit ;
 delimiter now ;
-. ceqextend_jun9 using "MEX_NAT_Reruns_CEQMWB2017_E12_2011PPP_Feb07_2018.xlsx",
+. /*
+> ceqextend_jun9 using "MEX_NAT_Reruns_CEQMWB2017_E12_2011PPP_Feb07_2018.xlsx",
 >         `income_options_SA1'
 >         ppp(1)
 >         cpibase(103.15684)
@@ -104,38 +115,37 @@ delimiter now ;
 >         `indirect_options'
 >         /*`inkind_options'*/
 >         hhid(code_uc);
-Running version 5.0 of ceqextend on 10 Jun 2018 at 22:41:04
+> */
+> 
+>         ceqmarg_test using "MEX_NAT_Reruns_CEQMWB2017_E13_2011PPP_Feb07_2018.xlsx",
+>         `income_options_SA1'
+>         negatives
+>         ppp(1)
+>         cpibase(103.15684)
+>         cpisurvey(108.69572)    
+>         /*`direct_options_SA1'*/
+>         `test_interventions'
+>         /*`indirect_options'*/
+>         /*`inkind_options'*/
+>         hhid(code_uc);
+Running version 1.7 of ceqmarg on  1 Jul 2018 at 17:27:30
    (please report this information if reporting a bug to sean.higgins@ceqinstitute.org)
-negatives
-Warning: Fiscal intervention variable(s) pc_energy_subsidies not stored in double format. This may lead to subs
-> tantial discrepancies in the MWB due to rounding error.
+Warning: variable pc_income_taxes_test not labeled
 Warning: daily, monthly, or yearly options not specified; variables assumed to be in yearly local currency unit
 > s
-Warning: Market Income - Indirect taxes - ICMS, IPI (household per capita) has 8 negative values. The Gini coef
-> ficient, Theil index, poverty gap, squared poverty gap and concentration coefficient are no longer well behav
-> ed.
-Warning: Market Income - All indirect taxes has 8 negative values. The Gini coefficient, Theil index, poverty g
-> ap, squared poverty gap and concentration coefficient are no longer well behaved.
-Warning: Market Income - All taxes has 8 negative values. The Gini coefficient, Theil index, poverty gap, squar
-> ed poverty gap and concentration coefficient are no longer well behaved.
-Warning: Market Income - All taxes and contributions has 8 negative values. The Gini coefficient, Theil index, 
-> poverty gap, squared poverty gap and concentration coefficient are no longer well behaved.
-Writing to "MEX_NAT_Reruns_CEQMWB2017_E12_2011PPP_Feb07_2018.xlsx"; may take several minutes
- D3=("10 Jun 2018") E3=("1") G3=("103.15684") H3=("108.69572") I3=("1.053693773481235") 
+Warning: 11 negative values of pc_income_taxes_test. Concentration Coefficient, Kakwani Index, and Marginal Con
+> tribution are not well behaved.
+Warning: 11 negative values of All direct taxes. Concentration Coefficient, Kakwani Index, and Marginal Contrib
+> ution are not well behaved.
+Warning: 11 negative values of All direct taxes and contributions. Concentration Coefficient, Kakwani Index, an
+> d Marginal Contribution are not well behaved.
+Warning: 11 negative values of All taxes. Concentration Coefficient, Kakwani Index, and Marginal Contribution a
+> re not well behaved.
+Warning: 11 negative values of All taxes and contributions. Concentration Coefficient, Kakwani Index, and Margi
+> nal Contribution are not well behaved.
+Writing to "MEX_NAT_Reruns_CEQMWB2017_E13_2011PPP_Feb07_2018.xlsx"; may take several minutes
 
-. /*
->         ceqmarg_jun9 using "MEX_NAT_Reruns_CEQMWB2017_E13_2011PPP_Feb07_2018.xlsx",
->         `income_options_SA1'
->         negatives
->         ppp(1)
->         cpibase(103.15684)
->         cpisurvey(108.69572)    
->         /*`direct_options_SA1'*/
->         `indirect_options'
->         /*`inkind_options'*/
->         hhid(code_uc);
-> */      
-> #delimit cr     
+. #delimit cr     
 delimiter now cr
 . 
 . 
@@ -160,5 +170,5 @@ delimiter now cr
       name:  <unnamed>
        log:  C:\Users\Rosie\Dropbox\CEQ_ado\test-issue#36.log
   log type:  text
- closed on:  10 Jun 2018, 22:41:21
+ closed on:   1 Jul 2018, 17:27:32
 ---------------------------------------------------------------------------------------------------------------

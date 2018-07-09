@@ -25,10 +25,14 @@ local income_options_SA1
 	market(ym_SA1)
 	/*mpluspensions(yp_SA1)
 	netmarket(yn_SA1)
-	gross(yg_SA1)
+	gross(yg_SA1) */
 	disposable(yd_SA1)
-	consumable(yc_SA1)
+	/*consumable(yc_SA1)
 	final(yf_SA1)*/;
+local test_interventions
+	dtaxes(pc_income_taxes_test)
+;
+	
 local direct_options_SA1
 	pensions(pc_contributory_pen)
 	dtransfers(
@@ -75,13 +79,16 @@ sample 0.1
 
 count
 replace pc_energy_subsidies = - pc_energy_subsidies in 1/20
+gen pc_income_taxes_test = pc_income_taxes 
+replace pc_income_taxes_test = - pc_income_taxes in 1/40
+
 
 **********
 ** TEST **
 **********
 
 #delimit ;
-
+/*
 ceqextend_jun9 using "MEX_NAT_Reruns_CEQMWB2017_E12_2011PPP_Feb07_2018.xlsx",
 	`income_options_SA1'
 	ppp(1)
@@ -92,18 +99,20 @@ ceqextend_jun9 using "MEX_NAT_Reruns_CEQMWB2017_E12_2011PPP_Feb07_2018.xlsx",
 	`indirect_options'
 	/*`inkind_options'*/
 	hhid(code_uc);
-/*
-	ceqmarg_jun9 using "MEX_NAT_Reruns_CEQMWB2017_E13_2011PPP_Feb07_2018.xlsx",
+*/
+
+	ceqmarg_test using "MEX_NAT_Reruns_CEQMWB2017_E13_2011PPP_Feb07_2018.xlsx",
 	`income_options_SA1'
 	negatives
 	ppp(1)
 	cpibase(103.15684)
 	cpisurvey(108.69572)	
 	/*`direct_options_SA1'*/
-	`indirect_options'
+	`test_interventions'
+	/*`indirect_options'*/
 	/*`inkind_options'*/
 	hhid(code_uc);
-*/	
+
 #delimit cr	
 
 
