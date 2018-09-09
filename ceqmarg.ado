@@ -1,7 +1,7 @@
 ** ADO FILE FOR MARGINAL EFFECTS
 
 ** VERSION AND NOTES (changes between versions described under CHANGES)
-*! v1.8 01jul2018 For use with July 2017 version of Output Tables
+*! v1.8 5sep2018 For use with July 2017 version of Output Tables
 ** v1.7 10jun2018 For use with July 2017 version of Output Tables
 ** v1.6 29jun2017 For use with July 2017 version of Output Tables
 ** v1.5 02jun2017 For use with Jun 2017 version of Output Tables
@@ -13,7 +13,7 @@
 ** (beta version; please report any bugs), written by Sean Higgins sean.higgins@ceqinstitute.org
 
 ** CHANGES
-**   07-01-2018 Include marginal contribution in the coverage of the negatives option
+**   09-05-2018 Make the negatives option effective for negative income + fiscal intervention values
 **   06-10-2018 Add the negatives option
 **   06-29-2017 Replacing covconc with improved version by Paul Corral
 **   05-27-2017 Add additional options to print meta-information
@@ -995,16 +995,26 @@ program define ceqmarg, rclass
 				qui covconc `pr' `pw', rank(``v'')
 				scalar _C_`v'_pr = r(conc)
 				//  check for negatives
+				qui summ ``v'_w_`pr''
+				if r(mean)>0 {
+					qui count if ``v'_w_`pr''<0
+					local negcount1 = r(N)
+				}
+				else {
+					qui count if ``v'_w_`pr''>0
+					local negcount1 = r(N)
+				}
+
 				qui summ `pr'
 				if r(mean)>0 {
 					qui count if `pr'<0
-					local negcount = r(N)
+					local negcount2 = r(N)
 				}
 				else {
 					qui count if `pr'>0
-					local negcount = r(N)
+					local negcount2 = r(N)
 				}
-
+				local negcount = `negcount1' + `negcount2'
 				if `negcount'>0 {
 					if "`negatives'"=="" {
 						matrix frontmatter`v'[`row',`col'] = .
@@ -1200,9 +1210,16 @@ program define ceqmarg, rclass
 								}
 								
 								qui ceqpov `v_w_touse' `aw', z(`_pline')
-								forval i=0/2 {
-									scalar _pov_w_`i' = r(pov`i')
-									matrix poverty`v'[`=`row'+`i'',`col'] = _pov_wo_`i' - _pov_w_`i'
+								if `nokakwani'==1 {
+									forval i=0/2 {
+										matrix poverty`v'[`=`row'+`i'',`col'] = .
+									}
+								}
+								else {
+									forval i=0/2 {
+										scalar _pov_w_`i' = r(pov`i')
+										matrix poverty`v'[`=`row'+`i'',`col'] = _pov_wo_`i' - _pov_w_`i'
+									}
 								}
 							}
 							local row = `row' + 3 // want to add three whether or not `p' option specified since those matrices are in the MWB
