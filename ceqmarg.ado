@@ -1,7 +1,8 @@
 ** ADO FILE FOR MARGINAL EFFECTS
 
 ** VERSION AND NOTES (changes between versions described under CHANGES)
-*! v1.8 5sep2018 For use with July 2017 version of Output Tables
+*! v1.9 31oct2018 For use with July 2017 version of Output Tables
+** v1.8 5sep2018 For use with July 2017 version of Output Tables
 ** v1.7 10jun2018 For use with July 2017 version of Output Tables
 ** v1.6 29jun2017 For use with July 2017 version of Output Tables
 ** v1.5 02jun2017 For use with Jun 2017 version of Output Tables
@@ -13,6 +14,7 @@
 ** (beta version; please report any bugs), written by Sean Higgins sean.higgins@ceqinstitute.org
 
 ** CHANGES
+**   10-31-2018 Make the negatives option effective for cases where post intervention incomes are negative (previously )
 **   09-05-2018 Make the negatives option effective for negative income + fiscal intervention values
 **   06-10-2018 Add the negatives option
 **   06-29-2017 Replacing covconc with improved version by Paul Corral
@@ -162,7 +164,7 @@ program define ceqmarg, rclass
 	local dit display as text in smcl
 	local die display as error in smcl
 	local command ceqmarg
-	local version 1.8
+	local version 1.9
 	`dit' "Running version `version' of `command' on `c(current_date)' at `c(current_time)'" _n "   (please report this information if reporting a bug to sean.higgins@ceqinstitute.org)"
 	
 	** income concepts
@@ -723,7 +725,6 @@ program define ceqmarg, rclass
 			local zip_marg`y' `zip_marg`y'' `pr'
 		}
 	}
-
 	foreach pr in `dtransfers' `v_dtransfers' {
 		foreach y in `m__' `mp__' `n__' {
 			tempvar `y'_`pr' 
@@ -764,10 +765,12 @@ program define ceqmarg, rclass
 			local zip_marg`y' `zip_marg`y'' `pr'
 		}
 	}
+
 	foreach pr in `dtaxes' `v_dtaxes' `contribs' `v_contribs' `v_dtaxescontribs' {
 		foreach y in `m__' `mp__' `g__' {
 			tempvar `y'_`pr'
 			qui gen double ``y'_`pr'' = ``y'' + `pr' // plus because you already made taxes negative!
+			noi su ``y'_`pr''
 			scalar _d_``y'_`pr'' = "`d_`y'' - " + _d_`pr' // written as minus since taxes thought of as positive values
 			local marg`y' `marg`y'' ``y'_`pr''
 			local `y'_wo_`pr' ``y'' // income without the intervention
@@ -995,26 +998,42 @@ program define ceqmarg, rclass
 				qui covconc `pr' `pw', rank(``v'')
 				scalar _C_`v'_pr = r(conc)
 				//  check for negatives
-				qui summ ``v'_w_`pr''
-				if r(mean)>0 {
-					qui count if ``v'_w_`pr''<0
-					local negcount1 = r(N)
+
+				if "``v'_wo_`pr''"!="" & "``v'_w_`pr''"!="" {
+					qui summ ``v'_wo_`pr''
+					if r(mean)>0 {
+						qui count if ``v'_wo_`pr''<0
+						local negcount1 = r(N)
+					}
+					else {
+						qui count if ``v'_wo_`pr''>0
+						local negcount1 = r(N)
+					}
+					qui summ ``v'_w_`pr''
+					if r(mean)>0 {
+						qui count if ``v'_w_`pr''<0
+						local negcount2 = r(N)
+					}
+					else {
+						qui count if ``v'_w_`pr''>0
+						local negcount2 = r(N)
+					}					
 				}
 				else {
-					qui count if ``v'_w_`pr''>0
-					local negcount1 = r(N)
+					local negcount1 = 0
+					local negcount2 = 0
 				}
 
 				qui summ `pr'
 				if r(mean)>0 {
 					qui count if `pr'<0
-					local negcount2 = r(N)
+					local negcount3 = r(N)
 				}
 				else {
 					qui count if `pr'>0
-					local negcount2 = r(N)
+					local negcount3 = r(N)
 				}
-				local negcount = `negcount1' + `negcount2'
+				local negcount = `negcount1' + `negcount2' + `negcount3'
 				if `negcount'>0 {
 					if "`negatives'"=="" {
 						matrix frontmatter`v'[`row',`col'] = .
