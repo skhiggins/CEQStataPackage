@@ -1,7 +1,8 @@
 * ADO FILE FOR EFFECTIVENESS SHEET OF CEQ OUTPUT TABLES
 
 * VERSION AND NOTES (changes between versions described under CHANGES)
-*! v1.11 11feb2017 For use with Aug 2017 version of Output Tables
+*! v1.12 31may201p For use with Aug 2017 version of Output Tables
+** v1.11 11feb2017 For use with Aug 2017 version of Output Tables
 ** v1.10 04dec2017 For use with Aug 2017 version of Output Tables
 ** v1.9 28nov2017 For use with Aug 2017 version of Output Tables
 ** v1.8 23oct2017 For use with Aug 2017 version of Output Tables
@@ -30,7 +31,7 @@
 *		in order to prevent a variable build up that causes Stata software with a lower memory capacity to error.
 * v1.10 Include error for when fiscal intervention variables aren't included.
 * v1.11 Modified version _ceqspend based on Ali's formula
-
+* v1.12 Solved issue #61 in github
 * NOTES
 * 
 
@@ -2141,8 +2142,8 @@ program define _ceqefext, rclass
 
 									cap drop  ___`v'_normalized1  ___`v'_normalized2 ;
 									cap drop  ___`v'_normalized3 ;
-									qui gen ___`v'_normalized1 = `y1'/``p'' ;// normalized by pov line;  
-									qui gen ___`v'_normalized2 = `yo'/``p'' ;// normalized by pov line;
+									qui gen ___`v'_normalized1 = __y1__/``p'' ;// normalized by pov line @@change;  
+									qui gen ___`v'_normalized2 = __yo__/``p'' ;// normalized by pov line  @@change;
 									if `twarn' == 0 qui gen ___`v'_normalized3 = ___ystar/``p'' ;// normalized by pov line;
 
 									local _pline = 1            ;           // and normalized pov line is 1;
@@ -2389,10 +2390,14 @@ program define _ceqefext, rclass
 							if `bwarn' == 0 qui gen ___`v'_normalized6 = ___ystar/``p'' ;// normalized by pov line;
 
 							local _pline = 1            ;           // and normalized pov line is 1;
-							local vtouse1 ``v'_normalized4'; // use normalized income in the calculations;
-							local vtouse2 ``v'_normalized5'; // use normalized income in the calculations;
-							local vtouse3 ``v'_normalized6'; // use normalized income in the calculations;
-
+							/*
+							local vtouse1 ``v'_normalized4'; // use normalized income in the calculations @@change;
+							local vtouse2 ``v'_normalized5'; // use normalized income in the calculations @@change;
+							local vtouse3 ``v'_normalized6'; // use normalized income in the calculations @@change;
+							*/
+							local vtouse1 ___`v'_normalized4; // use normalized income in the calculations @@change;
+							local vtouse2 ___`v'_normalized5; // use normalized income in the calculations @@change;
+							local vtouse3 ___`v'_normalized6; // use normalized income in the calculations @@change;
 						};
 						
 						
