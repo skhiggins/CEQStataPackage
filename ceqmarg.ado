@@ -1,7 +1,8 @@
 ** ADO FILE FOR MARGINAL EFFECTS
 
 ** VERSION AND NOTES (changes between versions described under CHANGES)
-*! v1.9 31oct2018 For use with July 2017 version of Output Tables
+*! v2.0 30may2019 For use with July 2017 version of Output Tables
+** v1.9 31oct2018 For use with July 2017 version of Output Tables
 ** v1.8 5sep2018 For use with July 2017 version of Output Tables
 ** v1.7 10jun2018 For use with July 2017 version of Output Tables
 ** v1.6 29jun2017 For use with July 2017 version of Output Tables
@@ -14,6 +15,7 @@
 ** (beta version; please report any bugs), written by Sean Higgins sean.higgins@ceqinstitute.org
 
 ** CHANGES
+**   05-30-2019 Program is no longer omitting the calculation of the marginal contributions to poverty (headcount) when it finds negative income values
 **   10-31-2018 Make the negatives option effective for cases where post intervention incomes are negative (previously )
 **   09-05-2018 Make the negatives option effective for negative income + fiscal intervention values
 **   06-10-2018 Add the negatives option
@@ -28,7 +30,6 @@
 ** NOTES
 
 ** TO DO
-
 *************************
 ** PRELIMINARY PROGRAMS *
 *************************
@@ -164,7 +165,7 @@ program define ceqmarg, rclass
 	local dit display as text in smcl
 	local die display as error in smcl
 	local command ceqmarg
-	local version 1.9
+	local version 2.0
 	`dit' "Running version `version' of `command' on `c(current_date)' at `c(current_time)'" _n "   (please report this information if reporting a bug to sean.higgins@ceqinstitute.org)"
 	
 	** income concepts
@@ -770,7 +771,7 @@ program define ceqmarg, rclass
 		foreach y in `m__' `mp__' `g__' {
 			tempvar `y'_`pr'
 			qui gen double ``y'_`pr'' = ``y'' + `pr' // plus because you already made taxes negative!
-			noi su ``y'_`pr''
+			qui su ``y'_`pr'' //@@ added qui
 			scalar _d_``y'_`pr'' = "`d_`y'' - " + _d_`pr' // written as minus since taxes thought of as positive values
 			local marg`y' `marg`y'' ``y'_`pr''
 			local `y'_wo_`pr' ``y'' // income without the intervention
@@ -1125,7 +1126,7 @@ program define ceqmarg, rclass
 							// see equations 9 in "Formulas for Sheet E13" from Ali Enami
 						
 						// Calculate denominator for derivatives
-						summ ``Z'' `aw', meanonly
+						qui summ ``Z'' `aw', meanonly /* @@ aded qui*/
 						scalar _total_`Z' = r(sum)
 						scalar _`v'_to_`Z'_denom = _total_`Z'/_total_`v'
 						
@@ -1231,7 +1232,8 @@ program define ceqmarg, rclass
 								qui ceqpov `v_w_touse' `aw', z(`_pline')
 								if `nokakwani'==1 {
 									forval i=0/2 {
-										matrix poverty`v'[`=`row'+`i'',`col'] = .
+										scalar _pov_w_`i' = r(pov`i')  //@@ Added this line so we can get marg cont of poverty with negatives*//
+										matrix poverty`v'[`=`row'+`i'',`col'] = _pov_wo_`i' - _pov_w_`i' //@@ Added _pov_wo_`i' - _pov_w_`i' instead of .*//
 									}
 								}
 								else {

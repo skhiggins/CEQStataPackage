@@ -1,7 +1,7 @@
 * ADO FILE FOR EFFECTIVENESS SHEET OF CEQ OUTPUT TABLES
 
 * VERSION AND NOTES (changes between versions described under CHANGES)
-*! v1.12 31may201p For use with Aug 2017 version of Output Tables
+*! v1.12 31may2019 For use with Aug 2017 version of Output Tables
 ** v1.11 11feb2017 For use with Aug 2017 version of Output Tables
 ** v1.10 04dec2017 For use with Aug 2017 version of Output Tables
 ** v1.9 28nov2017 For use with Aug 2017 version of Output Tables
@@ -954,7 +954,7 @@ version 13.0
 	local dit display as text in smcl
 	local die display as error in smcl
 	local command ceqefext
-	local version 1.11
+	local version 1.12
 	`dit' "Running version `version' of `command' on `c(current_date)' at `c(current_time)'" _n "   (please report this information if reporting a bug to sean.higgins@ceqinstitute.org and marc.brooks@ceqinstitute.org)"
 	
 	** income concept options
@@ -2436,8 +2436,8 @@ program define _ceqefext, rclass
 						local mp_2_`p'_`y'=`p2_`y'_2'-`p2_`y'_orig';//Observed MC;
 						if `bwarn' == 0 local mp_2_`p'_`y'_s=`p2_`y'_2'-`p2_`y'_3_st';//Star MC;
 						// If warning was produced we should skip this section.
-						if `bwarn' == 0 local mp_1_`p'_`y'_s= 1 ;
-						if `bwarn' == 0 local mp_2_`p'_`y'_s= 1 ;
+						if `bwarn' != 0 local mp_1_`p'_`y'_s= 1 ;
+						if `bwarn' != 0 local mp_2_`p'_`y'_s= 1 ;
 						forval i=1/2 {;
 							****Poverty Impact effectiveness;
 							****For Impact effectiveness with Transfers there can only be a positive effect;

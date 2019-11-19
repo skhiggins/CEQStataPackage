@@ -1,7 +1,8 @@
 ** ADO FILE FOR FISCAL INTERVENTIONS SHEET OF CEQ MASTER WORKBOOK SECTION E
 
 ** VERSION AND NOTES (changes between versions described under CHANGES)
-*! v1.8 01jun2017 For use with July 2017 version of CEQ Master Workbook 2016
+*! v1.9 11sep2019 For use with July 2017 version of CEQ Master Workbook 2016
+** v1.8 01jun2017 For use with July 2017 version of CEQ Master Workbook 2016
 ** v1.7 02apr2017 For use with Oct 2016 version of CEQ Master Workbook 2016
 ** v1.6 08mar2017 For use with Oct 2016 version of CEQ Master Workbook 2016
 ** v1.5 06feb2017 For use with Sep 2016 version of CEQ Master Workbook 2016
@@ -13,6 +14,7 @@
 ** (beta version; please report any bugs), written by Sean Higgins sean.higgins@ceqinstitute.org
 
 ** CHANGES
+**	 09-11-2019 Fixed the totals issue for direct beneficiaries 
 **	 06-01-2017 Add additional options to print meta-information
 **   04-02-2017 Remove the temporary variables from the negative tax warning list 
 **   03-08-2017 Remove the net in-kind transfers as a broad category in accordance with the instruction that users
@@ -143,7 +145,7 @@ program define ceqcoverage, rclass
 	local dit display as text in smcl
 	local die display as error in smcl
 	local command ceqcoverage
-	local version 1.8
+	local version 1.9
 	`dit' "Running version `version' of `command' on `c(current_date)' at `c(current_time)'" _n "   (please report this information if reporting a bug to sean.higgins@ceqinstitute.org)"
 	
 	** income concepts
@@ -385,11 +387,23 @@ program define ceqcoverage, rclass
 					if "`rec`cat''"!="" {
 						tempvar db_`v_`cat''
 						foreach x in `rec`cat'' {
-							if wordcount("`rectotal'") > 0 local rectotal `rectotal' ,`x'
-							else local rectotal `x' 
+							if wordcount("`rectotal'") > 0{
+								local rectotal `rectotal' ,`x'
+							}
+							else {
+								local rectotal `x' 
+							}
 						}
-						if strpos("`rectotal'",",")!=0 qui gen double `db_`v_`cat''' = max(`rectotal') 
-						else qui gen double `db_`v_`cat''' = `rectotal'
+						if strpos("`rectotal'",",")!=0 {
+							*qui gen double `db_`v_`cat''' = max(`rectotal') 
+							qui egen double `db_`v_`cat''' = rsum(`rec`cat'')
+							
+						}
+						*else qui gen double `db_`v_`cat''' = `rectotal'
+						else {
+							qui gen double `db_`v_`cat''' = `rec`cat''
+
+						}
 					}
 				}
 				local db_vlist `db_vlist' `db_`v_`cat'''
@@ -452,21 +466,28 @@ program define ceqcoverage, rclass
 			}
 		}		*/
 		
-		// create individual-level and direct beneficiary vars      
+		// create individual-level and direct beneficiary vars    
+		
+	
+	
 		foreach var in `recvars' `payvars' {
 			tempvar db_`var'
-			qui bys `hhid' : egen `db_`var'' = total(`dbc_`var'') // counts number of direct ben   
+			qui bys `hhid' : egen double `db_`var'' = total(`dbc_`var'') // counts number of direct ben   
 			local db_tokeep `db_tokeep' `db_`var''
 		}
 		
+		
 		foreach var of local db_vlist {
 			tempvar temp`var'
-			qui bys `hhid': egen `temp`var'' = total(`var')
+			qui bys `hhid': egen double `temp`var'' = total(`var')
 			qui replace `var' = `temp`var''
-			local db_tokeep `db_tokeep' `var'
+			*qui replace `var' = `var'
+			local db_tokeep `db_tokeep' `var' 
+			*local db_tokeep `db_tokeep' `temp`var''
 		}
-		
+	
 		qui bys `hhid': drop if _n>1 // faster than duplicates drop
+	
 		local hsize `members'
 	}
 	
@@ -967,20 +988,21 @@ program define ceqcoverage, rclass
 					
 						// Direct beneficiaries
 						** dsijaofpsa
-
+				
 						if "`db_`pr''"!="" & `db_result' == 1 {
 							forval gp=1/6 {
-								qui summ `db_`pr'' if ``v'_group2'==`gp' ///
-									[aw=`exp'] // `db_`pr'' has number of direct beneficiaries in hh
+							qui	 summ `db_`pr'' if ``v'_group2'==`gp' [aw=`exp'] // `db_`pr'' has number of direct beneficiaries in hh
 									// use hh weight rather than hhweight*members since
 									// `db_`pr'' already has number of ben per hh
 								matrix `mat'`v'_direct[`pr_row',`gp'] = r(sum)
+								
 							}
 						
 							qui summ `db_`pr'' [aw=`exp']
 							// use hh weight rather than hhweight*members since
 							// `db_`pr'' already has number of ben per hh
 							matrix `mat'`v'_direct[`pr_row',7] = r(sum)
+						
 						}
 						if "`db_`pr''"=="" {
 							forval noval = 1/7 {
