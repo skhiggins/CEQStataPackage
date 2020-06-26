@@ -1,7 +1,9 @@
 * ADO FILE FOR DOMINANCE SHEET OF CEQ OUTPUT TABLES
 
 * VERSION AND NOTES (changes between versions described under CHANGES)
-*! v1.4 01jun2017 For use with July 2017 version of Output Tables
+** v1.6 14nov2019 For use with July 2017 version of Output Tables
+** v1.5 01jun2017 For use with July 2017 version of Output Tables
+** v1.4 01jun2017 For use with July 2017 version of Output Tables
 ** v1.3 29OCT2016 For use with Jul 2016 version of Output Tables
 ** (beta version; please report any bugs), written by Rodrigo Aranda raranda@tulane.edu
 
@@ -11,7 +13,8 @@
 * v1.2 Fixed bootstrapp test for no crossings
 * v1.3 Add set type double and data format check
 *      Change bootstrap ksmirnov to ksmorniv 
-
+* v1.4 Add version message to running adofile
+* v1.6 Added versionprint
 
 * NOTES
 * Uses uses domineq command from DASP to see number of intersections between concentration/lorenz curves, if 
@@ -86,7 +89,12 @@ zmax(string)
 step(string)  
 DEC(int 3)
 ];
-
+local command domineq;
+local dit display as text in smcl;
+local die display as error in smcl;
+local version 1.6;
+`dit' "Running version `version' of `command' on `c(current_date)' at `c(current_time)'" _n "   (please report this information if reporting a bug to sean.higgins@ceqinstitute.org)";
+	
 qui{;
 tokenize `namelist';
 
@@ -442,7 +450,7 @@ program define ceqdom, rclass sortpreserve;//General program for dominance;
 	local dit display as text in smcl;
 	local die display as error in smcl;
 	local command ceqdom;
-	local version 1.4;
+	local version 1.6;
 	`dit' "Running version `version' of `command' on `c(current_date)' at `c(current_time)'" _n "   (please report this information if reporting a bug to raranda@tulane.edu)";
 	qui{;
 	* weight (if they specified hhsize*hhweight type of thing);
@@ -780,13 +788,14 @@ program define ceqdom, rclass sortpreserve;//General program for dominance;
 			if "``title''"!="" & "``title''"!="-1" 
 				local  titlesprint `titlesprint' `r(col)'`titlerow'=("``title''");
 			local titlecol = `titlecol' + 1;
+
 		};
 				qui putexcel `titlesprint'  using `"`using'"', modify keepcellformat sheet("`sheet'");
 
-	
+	set trace on;
 		// Print version number on Excel sheet;
 		local versionprint A4=("Results produced by version `version' of `command' on `c(current_date)' at `c(current_time)'");
-		
+		qui putexcel `versionprint'  using `"`using'"', modify keepcellformat sheet("`sheet'");
 	};
     ********
     * OPEN *

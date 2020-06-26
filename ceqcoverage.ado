@@ -17,7 +17,6 @@
 ** CHANGES
 **	 09-06-2020 Added warning on hh level markers
 **	 16-04-2020 Fixed the totals issue for direct beneficiaries 
-**	 09-11-2019 Fixed the totals issue for direct beneficiaries 
 **	 06-01-2017 Add additional options to print meta-information
 **   04-02-2017 Remove the temporary variables from the negative tax warning list 
 **   03-08-2017 Remove the net in-kind transfers as a broad category in accordance with the instruction that users
@@ -410,6 +409,7 @@ program define ceqcoverage, rclass
 							else {
 								local rectotal `x' 
 							}
+
 						}
 						if strpos("`rectotal'",",")!=0 {
 							
@@ -421,8 +421,7 @@ program define ceqcoverage, rclass
 							qui gen double `db_`v_`cat''' = `rec`cat''
 
 						}
-					
-					
+
 					}
 					
 					local rectotal= "" // It's crucial to initialize this local in each round of the loop- April 15th, 2020
@@ -505,9 +504,7 @@ program define ceqcoverage, rclass
 			
 			
 		}
-	
-	
-	
+
 		foreach var of local db_vlist {
 			tempvar temp`var'
 			qui bys `hhid': egen double `temp`var'' = total(`var')

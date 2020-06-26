@@ -1,7 +1,8 @@
 ** ADO FILE FOR FISCAL INTERVENTIONS SHEET OF CEQ OUTPUT TABLES
 
 ** VERSION AND NOTES (changes between versions described under CHANGES)
-*! v5.1 07may2018 For use with Feb 2018 version of Output Tables
+*! v5.2 05sep2019 For use with Feb 2018 version of Output Tables
+** v5.1 07may2018 For use with Feb 2018 version of Output Tables
 ** v5.0 029jun2017 For use with July 2017 version of Output Tables
 ** v4.9 01jun2017 For use with May 2017 version of Output Tables
 ** v4.8 22may2017 For use with Oct 2016 version of Output Tables
@@ -31,6 +32,7 @@
 ** (beta version; please report any bugs), written by Sean Higgins sean.higgins@ceqinstitute.org
 
 ** CHANGES
+**   09-05-2019 Ado now calculates centiles and bins in PPP and fixed the totals issues of the latest version.
 **   05-07-2018 Fix issues with total amounts by decile
 **   06-29-2017 Replacing covconc with improved version by Paul Corral
 **   06-09-2017 Chaning locals prior to(5-27-2017) with group in name to group2
@@ -196,7 +198,7 @@ program define ceqfiscal, rclass
 	local dit display as text in smcl
 	local die display as error in smcl
 	local command ceqfiscal
-	local version 5.1
+	local version 5.2
 	`dit' "Running version `version' of `command' on `c(current_date)' at `c(current_time)'" _n "   (please report this information if reporting a bug to sean.higgins@ceqinstitute.org)"
 	
 	** income concepts
@@ -765,8 +767,11 @@ program define ceqfiscal, rclass
 	** CALCULATE RESULTS *
 	**********************
 	// Mean, median, standard deviation, concentration coefficient, reranking, etc.
-	foreach v of local alllist {
+	foreach v of local alllist { 
+	
 		if "``v''"!="" {
+			noi di c(current_time)
+			noi di  "``v''"
 			matrix frontmatter`v' = J(5,`cols',.) // changes with each E11 sheet
 			local col = 1
 			// Gini for Kakwani
@@ -840,7 +845,7 @@ program define ceqfiscal, rclass
 	}
 	foreach vrank of local alllist {
 		if "``vrank''"!="" {
-			foreach x in `_dec' `_group2' {
+			foreach x in `_dec' `_group2' `_cent' `_bin'{ //@@added `_cent' `_bin'
 				** create empty mata matrices for results
 				foreach ss in totLCU pcLCU totPPP pcPPP {
 					mata: I`vrank'_`ss'_`x' = J(``x'',`cols',.)
@@ -865,6 +870,7 @@ program define ceqfiscal, rclass
 							else local mean = `r(mean)'
 							mata: I`vrank'_totLCU_`x'[`i',`col'] = `r(sum)'
 							mata:  I`vrank'_pcLCU_`x'[`i',`col'] = `mean'
+
 							if `_ppp' {
 								// Concentration totals PPP
 								if strpos("`market'`mpluspensions'`netmarket'`gross'`taxable'`disposable'`consumable'`final'","`varname'")!=0 {
@@ -899,7 +905,7 @@ program define ceqfiscal, rclass
 
 				** totals rows
 				foreach ss in totLCU pcLCU totPPP pcPPP {
-					* mata: I`vrank'_`ss'_`x'_totalrow = J`x'*I`vrank'_`ss'_`x' 
+					mata: I`vrank'_`ss'_`x'_totalrow = J`x'*I`vrank'_`ss'_`x' //@@@@
 					// add totals rows to matrix:
 					mata: I`vrank'_`ss'_`x' = I`vrank'_`ss'_`x' \ I`vrank'_`ss'_`x'_totalrow  
 				}
@@ -923,6 +929,7 @@ program define ceqfiscal, rclass
 					mata: st_matrix("I`vrank'_`ss'_`x'",I`vrank'_`ss'_`x')
 				}
 			}
+			/* @@See if I have to take this out
 			foreach x in `_cent' `_bin' {
 				** create empty mata matrices for results
 				local ss totLCU
@@ -948,6 +955,7 @@ program define ceqfiscal, rclass
 				// Matrices from Mata to Stata
 				mata: st_matrix("I`vrank'_`ss'_`x'",I`vrank'_`ss'_`x')
 			}
+			*/
 		}
 	}
 	
@@ -994,7 +1002,7 @@ program define ceqfiscal, rclass
 				local startpop = `startcol_o'
 				returncol `startpop'
 				local resultset`vrank' `resultset`vrank'' `r(col)'`rfrontmatter'=matrix(frontmatter`vrank')
-				foreach x in `_dec' `_group2' {
+				foreach x in `_dec' `_group2' `_cent' `_bin' { //@@ added `_cent' `_bin'
 					local startcol = `startcol_o'
 					foreach ss in `supercols' fi_`vrank' {
 						cap confirm matrix I`vrank'_`ss'_`x' // to deal with fi_`v' for ``v''==""
@@ -1005,7 +1013,7 @@ program define ceqfiscal, rclass
 					returncol `=`startcol_o'-2'
 					local popresults`vrank' `popresults`vrank'' `r(col)'`r`x''=matrix(`x'_`vrank'pop)
 				}
-				foreach x in `_cent' `_bin' {
+			/*	foreach x in `_cent' `_bin' { @@ see if this goes out
 					local startcol = `startcol_o'
 					local ss totLCU
 					cap confirm matrix I`vrank'_`ss'_`x' // to deal with fi_`v' for ``v''==""
@@ -1015,6 +1023,7 @@ program define ceqfiscal, rclass
 					returncol `=`startcol_o'-2'
 					local popresults`vrank' `popresults`vrank'' `r(col)'`r`x''=matrix(`x'_`vrank'pop)
 				}
+				*/
 			}
 		}
 
