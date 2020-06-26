@@ -1,7 +1,8 @@
 ** ADO FILE FOR FISCAL INTERVENTIONS SHEET OF CEQ MASTER WORKBOOK SECTION E
 
 ** VERSION AND NOTES (changes between versions described under CHANGES)
-*! v2.1 02jun2017 For use with Jul 2017 version of CEQ Master Workbook 2017
+*! v2.2 09jun2020 For use with Jul 2017 version of CEQ Master Workbook 2017
+** v2.1 02jun2017 For use with Jul 2017 version of CEQ Master Workbook 2017
 ** v2.0 23apr2017 For use with Oct 2016 version of CEQ Master Workbook 2017
 ** v1.7 06apr2017 For use with Oct 2016 version of CEQ Master Workbook 2017
 ** v1.6 03mar2017 For use with Sep 2016 version of CEQ Master Workbook 2016
@@ -14,6 +15,8 @@
 ** (beta version; please report any bugs), written by Sean Higgins sean.higgins@ceqinstitute.org
 
 ** CHANGES
+**	 09-06-2020 Added warning on hh level markers
+**	 23-04-2020 Fixed issu with totals
 **   06-01-2017 Add additional options to print meta-information
 **   04-23-2017 Change variable used to calculate beneficiary household and direct and indirect beneficiaries
 **				Change the if condition for target from == 1 to >0 to account for household-level data
@@ -179,7 +182,7 @@ program define ceqtarget, rclass
 	local dit display as text in smcl
 	local die display as error in smcl
 	local command ceqtarget
-	local version 2.1
+	local version 2.2
 	`dit' "Running version `version' of `command' on `c(current_date)' at `c(current_time)'" _n "   (please report this information if reporting a bug to sean.higgins@ceqinstitute.org)"
 	
 	** income concepts
@@ -250,16 +253,17 @@ program define ceqtarget, rclass
 	
 	// move the broad category up so that we can create broad category variables for DB before collapsing
 	** columns including disaggregated components and broader categories 
+	// Removed `' because it was causing errors afterwards - Apr 22nd, 2020
 	local broadcats dtransfersp dtaxescontribs inkind userfees /*netinkind*/ alltaxes alltaxescontribs alltransfers alltransfersp
-	local dtransfersp `pensions' `dtransfers' 
-	local dtaxescontribs `dtaxes' `contribs'
-	local inkind `health' `education' `otherpublic' // these contain the variables, or blank if not specified
-	local userfees `userfeeshealth' `userfeeseduc' `userfeesother'
+	local dtransfersp pensions dtransfers 
+	local dtaxescontribs dtaxes contribs
+	local inkind health education otherpublic // these contain the variables, or blank if not specified
+	local userfees userfeeshealth userfeeseduc userfeesother
 	/*local netinkind `nethealth' `neteducation' `netother'*/
-	local alltransfers `dtransfers' `subsidies' `inkind' /*`userfees' */
-	local alltransfersp  `pensions' `dtransfers' `subsidies' `inkind' /* `userfees' */
-	local alltaxes `dtaxes' `indtaxes' // user fees are not included as tax
-	local alltaxescontribs `dtaxes' `contribs' `indtaxes'
+	local alltransfers dtransfers subsidies inkind /*`userfees' */
+	local alltransfersp  pensions dtransfers subsidies inkind /* `userfees' */
+	local alltaxes dtaxes indtaxes // user fees are not included as tax
+	local alltaxescontribs dtaxes contribs indtaxes
 	
 	** locals to produce broad categories for direct beneficiaries  (because we need to add pay/rec prefix to the items in locals)
 	local dtransfersp_n 	pensions dtransfers
@@ -286,16 +290,40 @@ program define ceqtarget, rclass
 		}	
 	}
 	
-	foreach bc of local broadcats {
+	foreach bc of local broadcats {  //Adjusting for no target markers - Apr 22nd, 2020
 		if wordcount("``bc''")>0 { // i.e. if any of the options were specified; for bc=inkind this says if any options health education or otherpublic were specified
 			tempvar v_`bc'
 			qui gen double `v_`bc'' = 0 
 			foreach var of local `bc' { // each element will be blank if not specified
-				qui replace `v_`bc'' = `v_`bc'' + `var'
+			
+		/*	if wordcount("``var''")==1 {
+				if strpos("`pay_options'","`var'") != 0 & "`tpay`var''"!="" qui replace `v_`bc'' = `v_`bc'' + ``var''
+				if strpos("`pay_options'","`var'") != 0 & "`tpay`var''"=="" qui replace `v_`bc'' = `v_`bc'' 
+				if strpos("`rec_options'","`var'") != 0 & "`trec`var''"!="" qui replace `v_`bc'' = `v_`bc'' + ``var''
+				if strpos("`rec_options'","`var'") != 0 & "`trec`var''"=="" qui replace `v_`bc'' = `v_`bc'' 
+				}
+			
+			else {
+		*/	
+				foreach varorg of local `var' {
+				
+					if strpos("`pay_options'","`var'") != 0 & "`tpay`var''"!="" qui replace `v_`bc'' = `v_`bc'' + `varorg'
+					if strpos("`pay_options'","`var'") != 0 & "`tpay`var''"=="" qui replace `v_`bc'' = `v_`bc'' 
+					if strpos("`rec_options'","`var'") != 0 & "`trec`var''"!="" qui replace `v_`bc'' = `v_`bc'' + `varorg'
+					if strpos("`rec_options'","`var'") != 0 & "`trec`var''"=="" qui replace `v_`bc'' = `v_`bc'' 
+					
+					}
+				
+			
+				*}
+			
 			}
+			
 			local v_broadcat `v_broadcat' `v_`bc''
 		}
 	}	
+	
+	
 	
 	** weight (if they specified hhsize*hhweight type of thing)
 	if strpos("`exp'","*")> 0 { // TBD: what if they premultiplied w by hsize?
@@ -328,6 +356,24 @@ program define ceqtarget, rclass
 			
 			else { // they did specify the option */
 				// make sure length is the same
+			if ("``_``x'opt'''"!="" | "`t`_``x'opt'''"!="") {
+					
+					foreach jj in ``_``x'opt'''{
+						if substr("`jj'",length("`jj'")-1,length("`jj'"))=="rh" { //Warning added for markers that only appear at the hh level - June 9, 2020
+							`dit' "Warning: Direct beneficiary marker {bf:`jj'} is constructed at the household level and assigend to the household head"
+							local warning `warning' "Warning: Direct beneficiary marker `jj' is constructed at the household level and assigend to the household head"
+						}
+					}			
+					
+					foreach hh in ``_``x'opt'''{
+						if substr("`hh'",length("`hh'")-1,length("`hh'"))=="th" { //Warning added for markers that only appear at the hh level - June 9, 2020
+							`dit' "Warning: Target marker {bf:`hh'} is constructed at the household level and assigend to the household head"
+							local warning `warning' "Warning: Target marker `hh' is constructed at the household level and assigend to the household head"
+						}
+					}
+					
+			
+			}
 			if "``_``x'opt'''"!="" & "`t`_``x'opt'''"!="" {
 				cap assert wordcount("``_``x'opt'''")==wordcount("`t`_``x'opt'''")  // changed the latter to t_
 				if _rc {
@@ -378,7 +424,9 @@ program define ceqtarget, rclass
 		}
 
 	}
-	
+	 
+	 
+	 
 	** Generate the variables for benefits   
 	tokenize `tb_recvars' 
 	local ben_count = 0
@@ -603,9 +651,18 @@ program define ceqtarget, rclass
 			local bdt_vlist `bdt_vlist' `bdt_`v_`cat'''
 			local tarb_vlist `tarb_vlist' `tarb_`v_`cat'''
 			
+			//Reseting locals - Apr 22nd, 2020
+			local tpaytotalb= ""
+			local bdttotal= ""
+			local trectotalb= ""
+			local trectotal= ""
+			local paytotal= ""
+			
 	}
 			
-		
+	
+	
+	
 		foreach bc of local broadcats {
 			if wordcount("``bc''")>0 {
 				local payid = 0
@@ -722,6 +779,11 @@ program define ceqtarget, rclass
 				local tar_vlist `tar_vlist' `tar_`v_`bc'''
 				local bdt_vlist `bdt_vlist' `bdt_`v_`bc'''
 				local tarb_vlist `tarb_vlist' `tarb_`v_`bc'''
+				
+				//Reseting locals - Apr 22nd, 2020
+				local trecbroadb= ""
+				local tpaybroad= ""
+				local bdtbroad= ""
 			}
 		}
 	// }
@@ -1267,6 +1329,8 @@ program define ceqtarget, rclass
 	}	
 	local group2 = 6
 	
+	
+	
 	**********************
 	** CALCULATE RESULTS *
 	**********************
@@ -1315,6 +1379,7 @@ program define ceqtarget, rclass
 						assert !missing(`tar_`pr'') // so `tar_`pr''>0 condition
 						assert !missing(`tarb_`pr'')
 							// not picking up missings
+						
 						
 						// BENEFITS MATRICES
 						// Benefits received by target population in LCU 
