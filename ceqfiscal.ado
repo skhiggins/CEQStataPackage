@@ -1,7 +1,8 @@
 ** ADO FILE FOR FISCAL INTERVENTIONS SHEET OF CEQ OUTPUT TABLES
 
 ** VERSION AND NOTES (changes between versions described under CHANGES)
-*! v5.2 05sep2019 For use with Feb 2018 version of Output Tables
+*! v5.3 07mar2020 For use with Mar 2018 version of Output Tables
+** v5.2 05sep2019 For use with Feb 2018 version of Output Tables
 ** v5.1 07may2018 For use with Feb 2018 version of Output Tables
 ** v5.0 029jun2017 For use with July 2017 version of Output Tables
 ** v4.9 01jun2017 For use with May 2017 version of Output Tables
@@ -32,7 +33,8 @@
 ** (beta version; please report any bugs), written by Sean Higgins sean.higgins@ceqinstitute.org
 
 ** CHANGES
-**   09-05-2019 Ado now calculates centiles and bins in PPP and fixed the totals issues of the latest version.
+**   07-03-2020 Fixed the totals issues of the latest version.
+**   09-05-2019 Ado now calculates centiles and bins in PPP and 
 **   05-07-2018 Fix issues with total amounts by decile
 **   06-29-2017 Replacing covconc with improved version by Paul Corral
 **   06-09-2017 Chaning locals prior to(5-27-2017) with group in name to group2
@@ -109,7 +111,7 @@ end // END returncol
 
 **********************
 ** ceqfiscal PROGRAM *
-**********************
+********************** 
 ** For sheet E10. Concentration
 // BEGIN ceqfiscal (Higgins 2015)
 capture program drop ceqfiscal
@@ -198,7 +200,7 @@ program define ceqfiscal, rclass
 	local dit display as text in smcl
 	local die display as error in smcl
 	local command ceqfiscal
-	local version 5.2
+	local version 5.3
 	`dit' "Running version `version' of `command' on `c(current_date)' at `c(current_time)'" _n "   (please report this information if reporting a bug to sean.higgins@ceqinstitute.org)"
 	
 	** income concepts
@@ -315,7 +317,7 @@ program define ceqfiscal, rclass
 	***********************
 	** SVYSET AND WEIGHTS *
 	***********************
-	cap svydes
+	cap svydes 
 	scalar no_svydes = _rc
 	if !_rc qui svyset // gets the results saved in return list
 	if "`r(wvar)'"=="" & "`exp'"=="" {
@@ -890,14 +892,23 @@ program define ceqfiscal, rclass
 						if r(sum)==0 local mean = 0		
 						else local mean = `r(mean)'	
 						mata: I`vrank'_totLCU_`x'_totalrow[1,`col'] = `r(sum)'
-						mata:  I`vrank'_pcLCU_`x'_totalrow[1,`col'] = `mean'	
+						mata:  I`vrank'_pcLCU_`x'_totalrow[1,`col'] = `mean'
+						
+						
+						
 						if `_ppp' {
-							// Lorenz PPP
-							qui summ ``pr'_ppp' `aw'
+							
+							if strpos("`market'`mpluspensions'`netmarket'`gross'`taxable'`disposable'`consumable'`final'","`varname'")!=0 {
+									qui summ ``vrank'_ppp'  `aw'
+								}
+								else {
+									qui summ ``pr'_ppp'  `aw'
+								}
 							if r(sum)==0 local mean = 0
 							else local mean = `r(mean)'
 							mata: I`vrank'_totPPP_`x'_totalrow[1,`col'] = `r(sum)'
-							mata:  I`vrank'_pcPPP_`x'_totalrow[1,`col'] = `mean'			
+							mata:  I`vrank'_pcPPP_`x'_totalrow[1,`col'] = `mean'	
+							
 						}					
 					}
 					local ++col
@@ -905,7 +916,7 @@ program define ceqfiscal, rclass
 
 				** totals rows
 				foreach ss in totLCU pcLCU totPPP pcPPP {
-					mata: I`vrank'_`ss'_`x'_totalrow = J`x'*I`vrank'_`ss'_`x' //@@@@
+				*	mata: I`vrank'_`ss'_`x'_totalrow = J`x'*I`vrank'_`ss'_`x'  // Commented out
 					// add totals rows to matrix:
 					mata: I`vrank'_`ss'_`x' = I`vrank'_`ss'_`x' \ I`vrank'_`ss'_`x'_totalrow  
 				}
