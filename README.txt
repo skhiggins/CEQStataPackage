@@ -3,19 +3,17 @@ CEQ Stata Package
 This README describes updates to the package, to be submitted along
  with the updated package to Statistical Software Components (SSC)
 
-Update April 1, 2018
+Update June 30, 2020
 
-This update contains 1 NEW file.
-The NEW files are:
-	covconc.sthlp
-	
-This update contains 5 UPDATED commands:
+This update contains 0 NEW file.
+
 The UPDATED commands are:
-	ceqef
-	ceqefext
-	ceqgraph_conc
-	ceqhhchar
-	ceqindchar
+	ceqppp
+    ceqcoverage
+    ceqtarget
+    ceqconc
+    ceqfiscal
+
 	
 Description of entire package:
 
