@@ -125,7 +125,7 @@ cut1(real 1.90)
 cut2(real 3.20)
 cut3(real 5.50)
 cut4(real 11.50)
-cut5(real 57.50)
+cut5(real 57.60)
 /* INFORMATION CELLS */
 COUNtry(string)
 SURVeyyear(string) /* string because could be range of years */
