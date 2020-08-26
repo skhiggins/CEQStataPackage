@@ -1,7 +1,8 @@
 ** ADO FILE FOR POPULATION SHEET OF CEQ OUTPUT TABLES
 
 ** VERSION AND NOTES (changes between versions described under CHANGES)
-*! v3.8 07may2018 For use with Feb 2018 version of Output Tables
+*! v3.9 18dec2019 For use with Dec 2019 version of Output Tables
+** v3.8 07may2018 For use with Feb 2018 version of Output Tables
 ** v3.7 29jun2017 For use with July 2017 version of Output Tables
 ** v3.6 01jun2017 For use with June 2017 version of Output Tables
 ** v3.5 12jan2017 For use with Oct 2016 version of Output Tables
@@ -25,6 +26,7 @@
 *! (beta version; please report any bugs), written by Sean Higgins sean.higgins@ceqinstitute.org
 
 ** CHANGES
+**   18-12-2019 Creating matrices of all variables for centiles and bins
 **   05-07-2018 Fix issues with total amounts by decile
 **   06-29-2017 Replacing covcon with improved version by Paul Corral
 **     06-01-2017 Add additional options to print meta-information
@@ -122,11 +124,11 @@ sheetc(string)
 sheetf(string)
 OPEN
 /** GROUP CUTOFFS */
-cut1(real 1.25)
-cut2(real 2.5)
-cut3(real 4)
-cut4(real 10)
-cut5(real 50)
+cut1(real 1.90)
+cut2(real 3.20)
+cut3(real 5.50)
+cut4(real 11.50)
+cut5(real 57.60)
 /** INFORMATION CELLS */
 COUNtry(string)
 SURVeyyear(string) /** string because could be range of years */
@@ -371,6 +373,7 @@ if ("`daily'"!="")        local divideby = 1
 else if ("`monthly'"!="") local divideby = 365/12
 else if ("`yearly'"!="")  local divideby = 365
 
+
 ** group cut-offs
 local cut0 = 0
 local cut6 = . // +infinity
@@ -444,6 +447,7 @@ tempvar one
 qui gen `one' = 1
 
 
+
 ***************************************************
 ** INCOME GROUPS AND BINS, DECILES, AND QUANTILES *
 ***************************************************
@@ -492,6 +496,7 @@ if "`nodecile'"==""  qui quantiles ``v'' `aw', gen(``v'_dec') n(10)   stable
 }
 }
 
+
 local group2 = 6
 local dec = 10
 local cent = 100
@@ -523,6 +528,8 @@ matrix frontmatter_constant[`row',`_`v''] = sqrt(e(N) * v_srs) // estimate of st
 local ++row
 }
 }
+
+
 ** Ginis for redistributive effect, etc.
 foreach v of local alllist {
 if "``v''"!="" {
@@ -579,15 +586,19 @@ matrix frontmatter`vrank'[4,`_`v''] = `gini`v''-r(conc)
 }
 }
 
+
 // Rest of sheet
 // Note: mata used in some places below to vectorize things and increase efficiency
 foreach x in `_dec' `_group2' `_cent' `_bin' {
 mata: J`x' = J(1,``x'',1) // row vector of 1s to get column sums
 mata: tri`x' = lowertriangle(J(`=``x''+1',`=``x''+1',1)) // for cumulative shares
 }
+
+
+
 foreach vrank of local alllist {
 if "``vrank''"!="" {
-foreach x in `_dec' `_group2' {
+foreach x in `_dec' `_group2' `_cent' `_bin'{
 ** create empty mata matrices for results
 foreach ss in totLCU pcLCU totPPP pcPPP {
 mata: C`vrank'_`ss'_`x' = J(``x'',`cols',.)
@@ -664,32 +675,11 @@ foreach ss in `supercols' fi_`vrank' {
 mata: st_matrix("C`vrank'_`ss'_`x'",C`vrank'_`ss'_`x')
 }
 }
-foreach x in `_cent' `_bin' {
-** create empty mata matrices for results
-local ss totLCU
-mata: C`vrank'_`ss'_`x' = J(``x'',`cols',.)
-foreach v of local alllist {
-if "``v''"!="" {
-forval i=1/``x'' { // 1/100 for centiles, etc.
-** LORENZ
-// Lorenz LCU
-qui summ ``v'' if ``vrank'_`x''==`i' `aw'
-mata: C`vrank'_totLCU_`x'[`i',`_`v''] = `r(sum)'
-}
-}
-}
-** totals rows
-mata: C`vrank'_`ss'_`x'_totalrow = J`x'*C`vrank'_`ss'_`x'
-// add totals rows to matrix:
-mata: C`vrank'_`ss'_`x' = C`vrank'_`ss'_`x' \ C`vrank'_`ss'_`x'_totalrow
 
-** residual progression - leave for later
+}
+}
 
-// Matrices from Mata to Stata
-mata: st_matrix("C`vrank'_`ss'_`x'",C`vrank'_`ss'_`x')
-}
-}
-}
+
 *****************
 ** SAVE RESULTS *
 *****************
@@ -715,7 +705,7 @@ local startpop = `startcol_o'
 returncol `startpop'
 local resultset`vrank' `resultset`vrank'' `r(col)'`rfrontmatter_constant'=matrix(frontmatter_constant)
 local resultset`vrank' `resultset`vrank'' `r(col)'`rfrontmatter_specific'=matrix(frontmatter`vrank')
-foreach x in `_dec' `_group2' {
+foreach x in `_dec' `_group2' `_cent' `_bin' {
 local startcol = `startcol_o'
 foreach ss in `supercols' fi_`vrank' {
 cap confirm matrix C`vrank'_`ss'_`x' // to deal with fi_`v' for ``v''==""
@@ -726,16 +716,7 @@ local resultset`vrank' `resultset`vrank'' `r(col)'`r`x''=matrix(C`vrank'_`ss'_`x
 local startcol = `startcol' + `cols'
 }
 }
-foreach x in `_cent' `_bin' {
-local startcol = `startcol_o'
-local ss totLCU
-cap confirm matrix C`vrank'_`ss'_`x' // to deal with fi_`v' for ``v''==""
-if !_rc {
-returncol `startcol'
-local resultset`vrank' `resultset`vrank'' `r(col)'`r`x''=matrix(C`vrank'_`ss'_`x')
-}
-local startcol = `startcol' + `cols'
-}
+
 }
 }
 
@@ -801,17 +782,13 @@ qui di "
 // In return list
 foreach vrank of local alllist {
 if "``vrank''"!="" {
-foreach x in `_dec' `_group2' {
+foreach x in `_dec' `_group2' `_cent' `_bin' {
 foreach ss in `supercols' fi_`vrank' {
 return matrix C`vrank'_`ss'_`x' = C`vrank'_`ss'_`x'
 cap matrix drop C`vrank'_`ss'_`x'
 }
 }
-foreach x in `_cent' `_bin' {
-local ss totLCU
-return matrix C`vrank'_`ss'_`x' = C`vrank'_`ss'_`x'
-cap matrix drop C`vrank'_`ss'_`x'
-}
+
 cap matrix drop frontmatter`vrank'
 }
 }
