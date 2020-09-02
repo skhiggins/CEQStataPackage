@@ -13,7 +13,7 @@ import datetime
 now = datetime.datetime.now()
 
 # DIRECTORIES
-os.chdir('C:/Dropbox/CEQGates/CEQStataPackage')
+os.chdir('/Users/beenishamjad/Documents/GitHub/CEQStataPackage')
 
 # LISTS
 ados = [
