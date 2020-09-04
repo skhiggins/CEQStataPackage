@@ -4,7 +4,8 @@
 *ADO FILE FOR CEQ ETHNO RACIAL WORKBOOK
 
 *VERSION AND NOTES (changes between versions described under CHANGES)
-*! v2.4 29oct2016 For use with December 3 2015 version of Ethno Racial Workbook
+*! v2.5 23jul2020
+** v2.4 29oct2016 For use with December 3 2015 version of Ethno Racial Workbook
 *! (beta version; please report any bugs), written by Rodrigo Aranda raranda@tulane.edu
 
 *CHANGES
@@ -205,7 +206,7 @@ di "hi!";
 local dit display as text in smcl;
 local die display as error in smcl;
 local command ceqrace;
-local version 2.4;
+local version 2.5;
 `dit' "Running version `version' of `command' on `c(current_date)' at `c(current_time)'" _n "(please report this information if reporting a bug to raranda@tulane.edu)";
 local versionprint ("Results produced by version `version' of `command' on `c(current_date)' at `c(current_time)'");
 #delimit cr
