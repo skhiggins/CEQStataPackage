@@ -1,7 +1,8 @@
 ** ADO FILE FOR FISCAL INTERVENTIONS SHEET OF CEQ MASTER WORKBOOK SECTION E
 
 ** VERSION AND NOTES (changes between versions described under CHANGES)
-*! v1.4 29jun2017 For use with Jul 2017 version of CEQ Master Workbook
+*! v1.5 23jul2020
+** v1.4 29jun2017 For use with Jul 2017 version of CEQ Master Workbook
 ** v1.3 02jun2017 For use with Jun 2017 version of CEQ Master Workbook
 ** v1.2 12jan2017 For use with Oct 2016 version of CEQ Master Workbook
 ** v1.1 01oct2016 For use with Jun 2016 version of CEQ Master Workbook
@@ -110,7 +111,7 @@ NEGATIVES
 local dit display as text in smcl
 local die display as error in smcl
 local command ceqindchar
-local version 1.4
+local version 1.5
 `dit' "Running version `version' of `command' on `c(current_date)' at `c(current_time)'" _n "   (please report this information if reporting a bug to sean.higgins@ceqinstitute.org)"
 
 ** characteristic variables
