@@ -1,7 +1,8 @@
 ** ADO FILE FOR POPULATION SHEET OF CEQ OUTPUT TABLES
 
 ** VERSION AND NOTES (changes between versions described under CHANGES)
-*! v3.9 18dec2019 For use with Dec 2019 version of Output Tables
+*! v3.10 23jul2020
+** v3.9 18dec2019 For use with Dec 2019 version of Output Tables
 ** v3.8 07may2018 For use with Feb 2018 version of Output Tables
 ** v3.7 29jun2017 For use with July 2017 version of Output Tables
 ** v3.6 01jun2017 For use with June 2017 version of Output Tables
@@ -159,7 +160,7 @@ set seed 1234
 local dit display as text in smcl
 local die display as error in smcl
 local command ceqconc
-local version 3.8
+local version 3.10
 `dit' "Running version `version' of `command' on `c(current_date)' at `c(current_time)'" _n "   (please report this information if reporting a bug to sean.higgins@ceqinstitute.org)"
 
 ** income concepts
