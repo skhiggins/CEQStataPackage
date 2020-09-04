@@ -1,7 +1,8 @@
 ** ADO FILE FOR MARGINAL EFFECTS
 
 ** VERSION AND NOTES (changes between versions described under CHANGES)
-*! v1.9 31oct2018 For use with July 2017 version of Output Tables
+*! v1.10 23jul2020
+** v1.9 31oct2018 For use with July 2017 version of Output Tables
 ** v1.8 5sep2018 For use with July 2017 version of Output Tables
 ** v1.7 10jun2018 For use with July 2017 version of Output Tables
 ** v1.6 29jun2017 For use with July 2017 version of Output Tables
@@ -164,7 +165,7 @@ NEGATIVES
 local dit display as text in smcl
 local die display as error in smcl
 local command ceqmarg
-local version 1.9
+local version 1.10
 `dit' "Running version `version' of `command' on `c(current_date)' at `c(current_time)'" _n "   (please report this information if reporting a bug to sean.higgins@ceqinstitute.org)"
 
 ** income concepts
