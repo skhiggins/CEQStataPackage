@@ -2,7 +2,8 @@
 **  OF CEQ MASTER WORKBOOK PART II
 
 ** VERSION AND NOTES (changes between versions described under CHANGES)
-*! v3.3 01jun2017 For use with May 2017 version of Output Tables
+*! v3.4 23jul2020
+** v3.3 01jun2017 For use with May 2017 version of Output Tables
 ** v3.2 28mar2017 For use with Oct 2016 version of Output Tables
 ** v3.1 06feb2017 For use with Oct 2016 version of Output Tables
 ** v3.0 03feb2017 For use with Oct 2016 version of Output Tables
@@ -196,7 +197,7 @@ IGNOREMissing
 local dit display as text in smcl
 local die display as error in smcl
 local command ceqfi
-local version 3.3
+local version 3.4
 `dit' "Running version `version' of `command' on `c(current_date)' at `c(current_time)'" _n "   (please report this information if reporting a bug to sean.higgins@ceqinstitute.org)"
 
 ** income concepts
