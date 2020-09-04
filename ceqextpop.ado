@@ -1,7 +1,8 @@
 ** ADO FILE FOR POPULATION SHEET OF CEQ OUTPUT TABLES
 
 ** VERSION AND NOTES (changes between versions described under CHANGES)
-*! v1.6 01jun2017 For use with July 2017 version of Output Tables
+*! v1.7 23jul2020
+** v1.6 01jun2017 For use with July 2017 version of Output Tables
 ** v1.5 08mar2017 For use with Oct 2016 version of Output Tables
 ** v1.4 12jan2017 For use with Oct 2016 version of Output Tables
 ** v1.3 30oct2016 For use with Jun 2016 version of Output Tables
@@ -80,7 +81,7 @@ OPEN
 local dit display as text in smcl
 local die display as error in smcl
 local command ceqextpop
-local version 1.6
+local version 1.7
 `dit' "Running version `version' of `command' on `c(current_date)' at `c(current_time)'" _n "   (please report this information if reporting a bug to sean.higgins@ceqinstitute.org)"
 
 ** income concept options
