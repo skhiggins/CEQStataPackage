@@ -1,7 +1,8 @@
 ** ADO FILE FOR FISCAL INTERVENTIONS SHEET OF CEQ MASTER WORKBOOK SECTION E
 
 ** VERSION AND NOTES (changes between versions described under CHANGES)
-*! v1.10 30jun2020 For use with July 2017 version of CEQ Master Workbook 2016
+*! v1.11 23jul2020
+** v1.10 30jun2020 For use with July 2017 version of CEQ Master Workbook 2016
 ** v1.9 11sep2019 For use with July 2017 version of CEQ Master Workbook 2016
 ** v1.8 01jun2017 For use with July 2017 version of CEQ Master Workbook 2016
 ** v1.7 02apr2017 For use with Oct 2016 version of CEQ Master Workbook 2016
@@ -149,7 +150,7 @@ IGNOREMissing
 local dit display as text in smcl
 local die display as error in smcl
 local command ceqcoverage
-local version 1.10
+local version 1.11
 `dit' "Running version `version' of `command' on `c(current_date)' at `c(current_time)'" _n "   (please report this information if reporting a bug to sean.higgins@ceqinstitute.org)"
 
 ** income concepts
