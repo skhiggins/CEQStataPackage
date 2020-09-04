@@ -1,7 +1,8 @@
 ** ADO FILE FOR EXTENDED INCOME CONCEPTS SHEET OF CEQ OUTPUT TABLES
 
 ** VERSION AND NOTES (changes between versions described under CHANGES)
-*! v5.0 29jun2017 For use with July 2017 version of Output Tables
+*! v6.0 23jul2020
+** v5.0 29jun2017 For use with July 2017 version of Output Tables
 ** v4.9 01jun2017 For use with May 2017 version of Output Tables
 ** v4.8 22may2017 For use with Oct 2016 version of Output Tables
 ** v4.7 08mar2017 For use with Oct 2016 version of Output Tables
@@ -189,7 +190,7 @@ OPEN
 local dit display as text in smcl
 local die display as error in smcl
 local command ceqextend
-local version 5.0
+local version 6.0
 `dit' "Running version `version' of `command' on `c(current_date)' at `c(current_time)'" _n "   (please report this information if reporting a bug to sean.higgins@ceqinstitute.org)"
 
 ** income concept options
