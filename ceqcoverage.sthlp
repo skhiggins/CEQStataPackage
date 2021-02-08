@@ -1,5 +1,5 @@
 {smcl}
-{* oct112016}{...}
+{* 17dec2020}{...}
 {cmd:help ceqcoverage} (beta version; please report bugs) {right:Sean Higgins}
 {hline}
 
@@ -195,16 +195,6 @@ beneficiary (e.g., if a question only asks whether anyone in the household recei
 benefits from a program), mark one member of the household (e.g. the head) as a direct beneficiary.
 
 {pstd}
-Each fiscal interventions sheet using the ranking from one of the CEQ core income concepts, which
-include market income, market income plus pensions, net market income, gross income, taxable income,
-disposable income, consumable income, and final income. The variables for these income concepts, which
-should be expressed in local currency units (preferably {bf:per year} for ease of comparison with
-totals from national accounts), are indicated using the {opth m:arket(varname)},
-{opth mp:luspensions(varname)}, {opth n:etmarket(varname)}, {opth g:ross(varname)},
-{opth t:axable(varname)}, {opth d:isposable(varname)}, {opth c:onsumable(varname)},
-{opth c:onsumable(varname)}, and {opth f:inal(varname)} options.
-
-{pstd}
 {cmd: ceqcoverage} automatically converts local currency variables to PPP dollars, using the PPP conversion
 factor given by {opth ppp(real)}, the consumer price index (CPI) of the year of PPP (e.g., 2005 or
 2011) given by {opth cpib:ase(real)}, and the CPI of the year of the household
@@ -312,7 +302,7 @@ Net Market Income given by {opth n:etmarket(varname)} as Market Income plus pens
 and {bf: MINUS} non-pension social contributions.
 
 {p 16 16 10}
-Taxable income given by {opth t:axable(varname)} as Gross Income (PDI) MINUS all non-taxable Gross Income components.
+Taxable income given by {opth t:axable(varname)} as Gross Income (PDI) {bf: MINUS} all non-taxable Gross Income components.
 
 {p 16 16 10}
 Disposable income given by {opth d:isposable(varname)} as Market Income plus pensions (PDI) {bf: PLUS} all direct transfers
@@ -338,7 +328,7 @@ Net Market Income given by {opth n:etmarket(varname)} as Market Income (PGT) {bf
 social contributions.
 
 {p 16 16 10}
-Taxable income given by {opth t:axable(varname)} as Gross Income (PGT) MINUS all non-taxable Gross Income components.
+Taxable income given by {opth t:axable(varname)} as Gross Income (PGT) {bf: MINUS} all non-taxable Gross Income components.
 
 {p 16 16 10}
 Disposable income given by {opth d:isposable(varname)} as Market Income (PGT) {bf: MINUS}  all direct taxes {bf: PLUS} pension income {bf: PLUS}
@@ -398,6 +388,8 @@ Pending
 
 {phang}
 Higgins, Sean and Nora Lustig. 2016. {browse "http://www.sciencedirect.com/science/article/pii/S0304387816300220":"Can a Poverty-Reducing and Progressive Tax and Transfer System Hurt the Poor?"} {it:Journal of Development Economics} 122, 63-75.{p_end}
+
+{pstd}Lustig, Nora, editor. 2018. {browse "https://commitmentoequity.org/publications-ceq-handbook":Commitment to Equity Handbook. Estimating the Impact of Fiscal Policy on Inequality and Poverty}. Brookings Institution Press and CEQ Institute, Tulane University. {p_end}
 
 {phang}
 Osorio, R. 2007. "{bf:quantiles}: Stata module to categorize by quantiles." Boston
