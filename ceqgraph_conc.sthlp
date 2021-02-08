@@ -1,5 +1,5 @@
 {smcl}
-{* 04mar2017}{...}
+{* 17dec2020}{...}
 {cmd:help ceqgraph conc} (beta version; please report bugs) {right:Sean Higgins}
 {hline}
 
@@ -83,15 +83,6 @@
 produced for various categories of fiscal intervention, and a separate set of these
 graphs is produced for the income ranking corresponding to each of the core income
 concepts.
-
-{pstd}
-The core income concepts include market income, market income plus pensions, net market income, gross
-income, taxable income, disposable income, consumable income, and final income. The variables for
-these income concepts, which should be expressed in local currency units (preferably {bf:per year} for
-ease of comparison with totals from national accounts), are indicated using the
-{opth m:arket(varname)}, {opth mp:luspensions(varname)}, {opth n:etmarket(varname)},
-{opth g:ross(varname)}, {opth d:isposable(varname)}, {opth c:onsumable(varname)},
-{opth c:onsumable(varname)}, and {opth f:inal(varname)} options.
 
 {pstd}
 The fiscal interventions are specified using fiscal intervention options. Note that each option takes
@@ -228,7 +219,7 @@ Net Market Income given by {opth n:etmarket(varname)} as Market Income plus pens
 and {bf: MINUS} non-pension social contributions.
 
 {p 16 16 10}
-Taxable income given by {opth t:axable(varname)} as Gross Income (PDI) MINUS all non-taxable Gross Income components.
+Taxable income given by {opth t:axable(varname)} as Gross Income (PDI) {bf: MINUS} all non-taxable Gross Income components.
 
 {p 16 16 10}
 Disposable income given by {opth d:isposable(varname)} as Market Income plus pensions (PDI) {bf: PLUS} all direct transfers
@@ -254,7 +245,7 @@ Net Market Income given by {opth n:etmarket(varname)} as Market Income (PGT) {bf
 social contributions.
 
 {p 16 16 10}
-Taxable income given by {opth t:axable(varname)} as Gross Income (PGT) MINUS all non-taxable Gross Income components.
+Taxable income given by {opth t:axable(varname)} as Gross Income (PGT) {bf: MINUS}all non-taxable Gross Income components.
 
 {p 16 16 10}
 Disposable income given by {opth d:isposable(varname)} as Market Income (PGT) {bf: MINUS}  all direct taxes {bf: PLUS} pension income {bf: PLUS}
@@ -296,4 +287,5 @@ Pending
 
 {pstd}Commitment to Equity (CEQ) {browse "http://www.commitmentoequity.org":website}.{p_end}
 
+{pstd}Lustig, Nora, editor. 2018. {browse "https://commitmentoequity.org/publications-ceq-handbook":Commitment to Equity Handbook. Estimating the Impact of Fiscal Policy on Inequality and Poverty}. Brookings Institution Press and CEQ Institute, Tulane University. {p_end}
 
