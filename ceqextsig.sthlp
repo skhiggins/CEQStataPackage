@@ -1,5 +1,5 @@
 {smcl}
-{* 25aug2016}{...}
+{* 17dec2020}{...}
 {cmd:help ceqextsig} (beta version; please report bugs) {right:Sean Higgins}
 {hline}
 
@@ -98,16 +98,6 @@ Note that the default PPP conversion factors, default poverty lines and default 
 
 {pstd}
 {cmd:ceqextsig} tests the statistical significance of the change in inequality or poverty between extended income concepts and core income concepts. Equivalently, it tests the statistical significance of the marginal contribution of particular taxes or transfers to poverty or inequality reduction. It uses modified versions of the routines from Araar and Duclos's (2013) Distributive Analysis Data Package to compute p-values for a test of the null hypothesis that the difference between inequality or poverty estimates for two income concepts is zero. (Specifically, it uses modified versions of the commands {cmd:digini}, {cmd:dientropy}, {cmd:dinineq}, and {cmd:difgt}.) The included measures are the Gini, absolute Gini, Theil, 90/10, poverty headcount ratio at various poverty lines, poverty gap ratio at various poverty lines, squared poverty gap (also known as poverty severity) at various poverty lines, and the concentration coefficients of income concepts with respect to each of the eight core income concepts. It produces matrices of the difference in point estimates as well as the p-values from the above statistical test.
-
-{pstd}
-The CEQ core income concepts include market income, market income plus pensions, net
-market income, gross income, taxable income, disposable income, consumable income, and final
-income. The variables for these income concepts, which should be expressed in local currency
-units (preferably {bf:per year} for ease of comparison with totals from national accounts), are
-indicated using the {opth m:arket(varname)}, {opth mp:luspensions(varname)},
-{opth n:etmarket(varname)}, {opth g:ross(varname)}, {opth t:axable(varname)},
-{opth d:isposable(varname)}, {opth c:onsumable(varname)}, {opth c:onsumable(varname)},
-and {opth f:inal(varname)} options.
 
 {pstd}
 The extended income concepts are created from the CEQ core income concepts, specified with the options
@@ -242,7 +232,7 @@ Net Market Income given by {opth n:etmarket(varname)} as Market Income plus pens
 and {bf: MINUS} non-pension social contributions.
 
 {p 16 16 10}
-Taxable income given by {opth t:axable(varname)} as Gross Income (PDI) MINUS all non-taxable Gross Income components.
+Taxable income given by {opth t:axable(varname)} as Gross Income (PDI) {bf: MINUS} all non-taxable Gross Income components.
 
 {p 16 16 10}
 Disposable income given by {opth d:isposable(varname)} as Market Income plus pensions (PDI) {bf: PLUS} all direct transfers
@@ -268,7 +258,7 @@ Net Market Income given by {opth n:etmarket(varname)} as Market Income (PGT) {bf
 social contributions.
 
 {p 16 16 10}
-Taxable income given by {opth t:axable(varname)} as Gross Income (PGT) MINUS all non-taxable Gross Income components.
+Taxable income given by {opth t:axable(varname)} as Gross Income (PGT) {bf: MINUS} all non-taxable Gross Income components.
 
 {p 16 16 10}
 Disposable income given by {opth d:isposable(varname)} as Market Income (PGT) {bf: MINUS}  all direct taxes {bf: PLUS} pension income {bf: PLUS}
@@ -350,13 +340,11 @@ Pending
 
 {title:References}
 
-{pstd}Commitment to Equity (CEQ) {browse "http://www.commitmentoequity.org":website}.{p_end}
-
 {phang}
 Araar, A. and J.-Y. Duclos. 2013. {browse "http://dasp.ecn.ulaval.ca/":"Distributive Analysis Stata Package"}{p_end}
 
-{phang}
-Lustig, N. and S. Higgins. 2013. "Commitment to Equity Assessment (CEQ): Estimating the
-Incidence of Social Spending, Subsidies and Taxes Handbook." {browse "http://www.commitmentoequity.org/publications_files/Methodology/CEQWPNo1%20Handbook%20Edition%20Sept%202013.pdf":CEQ Working Paper 1.}{p_end}
+{pstd}Commitment to Equity (CEQ) {browse "http://www.commitmentoequity.org":website}.{p_end}
+
+{pstd}Lustig, Nora, editor. 2018. {browse "https://commitmentoequity.org/publications-ceq-handbook":Commitment to Equity Handbook. Estimating the Impact of Fiscal Policy on Inequality and Poverty}. Brookings Institution Press and CEQ Institute, Tulane University. {p_end}
 
 
