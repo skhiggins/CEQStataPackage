@@ -1,5 +1,5 @@
 {smcl}
-{* 19aug2016}{...}
+{* 17dec2020}{...}
 {cmd:help ceqconc} (beta version; please report bugs) {right:Sean Higgins}
 {hline}
 
@@ -100,14 +100,7 @@ respect to the ranking variable.
 {pstd}
 These sheets differ from the Lorenz sheet because in these sheets, the ranking of household is held
 fixed across columns within each sheet. In other words, the results are non-anonymous: we define
-deciles, groups, centiles, and bins once for each sheet. The CEQ core income concepts include market
-income, market income plus pensions, net market income, gross income, taxable income, disposable
-income, consumable income, and final income. The variables for these income concepts, which should be
-expressed in local currency units (preferably {bf:per year} for ease of comparison with totals from
-national accounts), are indicated using the {opth m:arket(varname)}, {opth mp:luspensions(varname)},
-{opth n:etmarket(varname)}, {opth g:ross(varname)}, {opth t:axable(varname)},
-{opth d:isposable(varname)}, {opth c:onsumable(varname)}, {opth c:onsumable(varname)}, and
-{opth f:inal(varname)} options.
+deciles, groups, centiles, and bins once for each sheet.
 
 {pstd}
 {cmd: ceqconc} automatically converts local currency variables to PPP dollars, using the PPP conversion
@@ -224,7 +217,7 @@ Net Market Income given by {opth n:etmarket(varname)} as Market Income plus pens
 and {bf: MINUS} non-pension social contributions.
 
 {p 16 16 10}
-Taxable income given by {opth t:axable(varname)} as Gross Income (PDI) MINUS all non-taxable Gross Income components.
+Taxable income given by {opth t:axable(varname)} as Gross Income (PDI) {bf: MINUS} all non-taxable Gross Income components.
 
 {p 16 16 10}
 Disposable income given by {opth d:isposable(varname)} as Market Income plus pensions (PDI) {bf: PLUS} all direct transfers
@@ -250,7 +243,7 @@ Net Market Income given by {opth n:etmarket(varname)} as Market Income (PGT) {bf
 social contributions.
 
 {p 16 16 10}
-Taxable income given by {opth t:axable(varname)} as Gross Income (PGT) MINUS all non-taxable Gross Income components.
+Taxable income given by {opth t:axable(varname)} as Gross Income (PGT) {bf: MINUS} all non-taxable Gross Income components.
 
 {p 16 16 10}
 Disposable income given by {opth d:isposable(varname)} as Market Income (PGT) {bf: MINUS}  all direct taxes {bf: PLUS} pension income {bf: PLUS}
@@ -305,9 +298,7 @@ The user may specify any set of cut points that create exclusive population grou
 
 {pstd}Commitment to Equity (CEQ) {browse "http://www.commitmentoequity.org":website}.{p_end}
 
-{phang}
-Lustig, N. and S. Higgins. 2013. "Commitment to Equity Assessment (CEQ): Estimating the Incidence of Social Spending, Subsidies and Taxes Handbook." {browse "http://www.commitmentoequity.org/publications_files/Methodology/CEQWPNo1%20Handbook%20Edition%20Sept%202013.pdf":CEQ Working Paper 1.}{p_end}
-
+{pstd}Lustig, Nora, editor. 2018. {browse "https://commitmentoequity.org/publications-ceq-handbook":Commitment to Equity Handbook. Estimating the Impact of Fiscal Policy on Inequality and Poverty}. Brookings Institution Press and CEQ Institute, Tulane University. {p_end}
 
 {phang}
 Osorio, R. 2007. "{bf:quantiles}: Stata module to categorize by quantiles." Boston
