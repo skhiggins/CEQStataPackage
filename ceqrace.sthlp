@@ -1,5 +1,5 @@
 {smcl}
-{* 3/4/2016}{...}
+{* 17dec2020}{...}
 {cmd:help ceqrace}{beta version; please report bugs} {right:Rodrigo Aranda}
 {vieweralsosee "" "--"}{...}
 {vieweralsosee "[R] help" "help help"}{...}
@@ -283,6 +283,115 @@ are in local currency units per day ({opt da:ily}), per month ({opt mo:nthly}), 
 {phang} {cmd:. ceqrace [pw=weight] using CEQ_Ethno_Racial_MWB.xlsx,race1(indig) race2(white) race3(afrd) race4(orace) race5(nonrace) table(f27) m(y_m) mplusp(y_mp) n(y_nm) g(y_g) taxab(y_taxab) d(y_d) c(y_c)        f(y_f) psu(upm) strata(strata) ppp(7.65) cpibase(78.661) cpisurvey(105.196) year}{p_end}
 
 
+{marker opt}
+{title:Options}
+
+{marker cor}
+{dlgtab:Core options}
+
+{p 8 8 2}
+Notice that if the user wishes to do the CEQ {it} Assessment {sf} for both the {bf: "pensions as deferred income scenario"} and
+{bf: "pensions as government transfer scenario"}, the ado does {bf: NOT} run both scenarios automatically. The user must run the
+ado twice, one time per scenario (see Income concepts options for an explanation on the differences across
+scenarios), and create two separate sets of E sheets. Hence, {it:filename} should be changed accordingly.
+
+
+{marker inc}
+{dlgtab:Income concepts options}
+
+{pstd}
+The CEQ core income concepts include market income, market income plus pensions, net market income, gross income,
+taxable income, disposable income, consumable income, and final income. The variables for these income
+concepts, which should be expressed in local currency units (preferably {bf:per year} for ease of comparison
+with totals from national accounts), are indicated using the {opth m:arket(varname)}, {opth mp:luspensions(varname)},
+{opth n:etmarket(varname)}, {opth g:ross(varname)}, {opth t:axable(varname)}, {opth d:isposable(varname)},
+{opth c:onsumable(varname)}, and {opth f:inal(varname)} options.
+
+{pstd}
+The public contributory old-age pension system can be incorporated into a CEQ Assessment as deferred income or as a government transfer (for a detailed discussion regarding
+the alternatives see Lustig (2018) available at {browse "http://commitmentoequity.org/publications-ceq-handbook"}). The decision regarding the public contributory pension system can have a significant impact on assessing the redistributive power of a fiscal system, especially in countries with a high proportion of retirees and large spending on social security. The construction of Market income, Market income plus pensions, Gross income, Net market income, and Taxable Income will differ between the PDI and PGT scenarios (while Disposable income, Consumable income and Final income are equivalent in value in both scenarios). The user must create two separate sets of E sheets, one per scenario (for a more detailed
+explanation see {cmd: using} in {help ceqlorenz##cor:core options}).
+
+{pstd}
+In CEQ {it} Assessments {sf} in the {bf: "pensions as deferred income scenario"}, it is assumed that contributions
+during working years are a form of “forced saving” and income concepts are defined in the following way:
+
+{p 16 16 10}
+Market income given by {opth m:arket(varname)} as factor income (wages and salaries and income from capital) plus private transfers
+ (remittances, private pensions, etc.) {bf: PLUS} imputed rent and own production {bf: MINUS} contributions to social insurance old-age pensions.
+
+{p 16 16 10}
+Market income plus pensions given by {opth mp:luspensions(varname)} as Market income (PDI) {bf: PLUS} contributory social
+ insurance old-age pensions. Prefiscal income (PDI) is defined as Market income plus Pensions (PDI).
+
+{p 16 16 10}
+Gross Income given by {opth g:ross(varname)} as Market Income plus pensions (PDI) {bf: PLUS} direct cash and near cash
+transfers (conditional and unconditional cash transfers, school feeding programs, free food transfers, etc.).
+
+{p 16 16 10}
+Net Market Income given by {opth n:etmarket(varname)} as Market Income plus pensions (PDI) {bf: MINUS} direct taxes
+and {bf: MINUS} non-pension social contributions.
+
+{p 16 16 10}
+Taxable income given by {opth t:axable(varname)} as Gross Income (PDI) {bf: MINUS} all non-taxable Gross Income components.
+
+{p 16 16 10}
+Disposable income given by {opth d:isposable(varname)} as Market Income plus pensions (PDI) {bf: PLUS} all direct transfers
+ {bf: MINUS} all direct taxes and non-pension social contributions.
+
+
+{pstd}
+In the {bf: "pensions as government transfer scenario"}, it is assumed that pensions are a pure government transfers and income concepts are defined in the following way:
+
+{p 16 16 10}
+Market income given by {opth m:arket(varname)} as factor income (wages and salaries and income from capital) plus private transfers
+ (remittances, private pensions, etc.)  {bf: PLUS} imputed rent and own production. Prefiscal income (PGT) is defined as Market income (PGT).
+
+{p 16 16 10}
+Market income plus pensions given by {opth mp:luspensions(varname)} as Market income (PGT) {bf: PLUS} contributory social insurance old-age pensions.
+
+{p 16 16 10}
+Gross Income given by {opth g:ross(varname)} as Market Income plus pensions (PGT) {bf: PLUS} direct cash and near cash transfers (conditional and
+ unconditional cash transfers, school feeding programs, free food transfers, etc.).
+
+{p 16 16 10}
+Net Market Income given by {opth n:etmarket(varname)} as Market Income (PGT) {bf: MINUS} direct taxes and {bf: MINUS}  non-pension
+social contributions.
+
+{p 16 16 10}
+Taxable income given by {opth t:axable(varname)} as Gross Income (PGT) {bf: MINUS} all non-taxable Gross Income components.
+
+{p 16 16 10}
+Disposable income given by {opth d:isposable(varname)} as Market Income (PGT) {bf: MINUS}  all direct taxes {bf: PLUS} pension income {bf: PLUS}
+ all other direct transfers {bf: MINUS} all pension and non-pension social contributions.
+
+
+{pstd}
+The construction of Consumable and Final income is done in the same way in both the PDI and PGT scenarios:
+
+{p 16 16 10}
+Consumable income given by {opth c:onsumable(varname)} as Disposable Income {bf: PLUS} indirect subsidies (energy, food and other general
+ or targeted price subsidies) and {bf: MINUS} indirect taxes (VAT, excise taxes, and other indirect taxes).
+
+{p 16 16 10}
+Final income given by {opth f:inal(varname)} as Consumable income {bf: PLUS} Monetized value of in-kind transfers in education and health
+ services at average government cost and {bf: MINUS} co-payments and user fees.
+
+
+
+{marker cut}
+{dlgtab:Income group cut-offs options}
+
+{pstd}
+{opth cut1(real)} to {opth cut5(real)} are in $PPP. The default cut-off values of $1.90, $3.20 and $5.50 correspond to the income-category-specific poverty lines suggested in Joliffe & Prydz (2016), who determined the median (to the nearest 10 cents) national poverty line in $PPP (using the 2011 ICP PPP conversion factors) for each set of countries grouped under the World Bank's income classification system. Specifically, there are three income class-specific poverty lines: US$1.90 a day for low income countries, US$3.20 a day for lower middle- income countries and US$5.50 a day for upper middle-income countries. Thus, in the context of middle-income countries, we call those living on less than US$1.90 PPP per day the “ultra-poor.” The US$3.20 and US$5.50 PPP per day poverty lines are commonly used as extreme and moderate poverty lines for Latin America and roughly correspond to the median official extreme and moderate poverty lines in those countries.
+
+{pstd}
+The $11.50 and $57.60 cutoffs correspond to cutoffs for the vulnerable and middle-class populations suggested for the 2005-era PPP conversion factors by Lopez-Calva and Ortiz-Juarez (2014); $11.50 and $57.60 represent a United States CPI-inflation adjustment of the 2005-era $10 and $50 cutoffs.  The US$10 PPP per day line is the upper bound of those vulnerable to falling into poverty (and thus the lower bound of the middle class) in three Latin American countries, calculated by Lopez-Calva and Ortiz-Juarez (2014). Ferreira and others (2013) find that an income of around US$10 PPP also represents the income at which individuals in various Latin American countries tend to self-identify as belonging to the middle class and consider this a further justification for using it as the lower bound of the middle class. The US$10 PPP per day line was also used as the lower bound of the middle class in Latin America in Birdsall (2010) and in developing countries in all regions of the world in Kharas (2010). The US$50 PPP per day line is the upper bound of the middle class proposed by Ferreira and others (2013).
+
+{pstd}
+The user may specify any set of cut points that create exclusive population groups.  For example, the older cut points for the ultra-poor, extreme poor, moderate poor, vulnerable and middle class, which corresponded to the 2005-era PPP conversion factors were $1.25, $2.50, $4, $10 and $50 (respectively).
+
+
 
 {hline}
 {p 4 4 2}
@@ -293,11 +402,7 @@ are in local currency units per day ({opt da:ily}), per month ({opt mo:nthly}), 
 
 {title:References}
 
-{pstd}Commitment to Equity (CEQ) Handbook, which describes the income concepts and contents of CEQ Master Workbook:{p_end}
-{phang2}
-{browse "http://www.commitmentoequity.org/publications_files/Methodology/CEQWPNo1%20Handbook%20Edition%20Sept%202013.pdf":Lustig, N. and S. Higgins. 2013. "Commitment to Equity Assessment (CEQ): Estimating the Incidence of Social Spending, Subsidies and Taxes Handbook." CEQ Working Paper 1.}{p_end}
-
 {pstd}Commitment to Equity {browse "http://www.commitmentoequity.org":website}{p_end}
 
-{pstd}Fiscal Policy and the Ethno-racial Divide in Bolivia, Brazil, Guatemala and Uruguay (Working document) {p_end}
-{hline}
+{pstd}Lustig, Nora, editor. 2018. {browse "https://commitmentoequity.org/publications-ceq-handbook":Commitment to Equity Handbook. Estimating the Impact of Fiscal Policy on Inequality and Poverty}. Brookings Institution Press and CEQ Institute, Tulane University. {p_end}
+
