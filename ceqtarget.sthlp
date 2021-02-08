@@ -1,5 +1,5 @@
 {smcl}
-{* 04mar2017}{...}
+{* 17dec2020}{...}
 {cmd:help ceqtarget} (beta version; please report bugs) {right:Sean Higgins}
 {hline}
 
@@ -142,16 +142,6 @@ within each group (what percent of households or people in that group receive
 benefits), and mean benefits (per beneficiary household and per beneficiary).
 
 {pstd}
-The CEQ core income concepts include market income, market income plus pensions, net
-market income, gross income, taxable income, disposable income, consumable income, and final
-income. The variables for these income concepts, which should be expressed in local currency
-units (preferably {bf:per year} for ease of comparison with totals from national accounts), are
-indicated using the {opth m:arket(varname)}, {opth mp:luspensions(varname)},
-{opth n:etmarket(varname)}, {opth g:ross(varname)}, {opth t:axable(varname)},
-{opth d:isposable(varname)}, {opth c:onsumable(varname)}, {opth c:onsumable(varname)},
-and {opth f:inal(varname)} options.
-
-{pstd}
 The income and fiscal intervention variables should be expressed in household per capita or per adult equivalent
 terms, regardless of whether the data set being used is at the household or individual level. Hence, they should
 have the same per-person amount for each member within a household when using individual-level data.
@@ -244,16 +234,6 @@ beneficiary (e.g., if a question only asks whether anyone in the household recei
 benefits from a program), mark one member of the household (e.g. the head) as a direct beneficiary.
 
 {pstd}
-Each fiscal interventions sheet using the ranking from one of the CEQ core income concepts, which
-include market income, market income plus pensions, net market income, gross income, taxable income,
-disposable income, consumable income, and final income. The variables for these income concepts, which
-should be expressed in local currency units (preferably {bf:per year} for ease of comparison with
-totals from national accounts), are indicated using the {opth m:arket(varname)},
-{opth mp:luspensions(varname)}, {opth n:etmarket(varname)}, {opth g:ross(varname)},
-{opth t:axable(varname)}, {opth d:isposable(varname)}, {opth c:onsumable(varname)},
-{opth c:onsumable(varname)}, and {opth f:inal(varname)} options.
-
-{pstd}
 {cmd: ceqtarget} automatically converts local currency variables to PPP dollars, using the PPP conversion
 factor given by {opth ppp(real)}, the consumer price index (CPI) of the year of PPP (e.g., 2005 or
 2011) given by {opth cpib:ase(real)}, and the CPI of the year of the household
@@ -308,7 +288,7 @@ allowing the command to run even if there are missing values.
 {phang}
 {opt using} is required, and indicates the filename for the output. Results are automatically exported to the CEQ Master Workbook if
 {cmd:using} {it:filename} is specifed in the command, where {it:filename} is the Master Workbook. By
-default, {cmd:ceqtarget} prints to the sheets titled "E18.X Coverage Tables" where X indicates the
+default, {cmd:ceqtarget} prints to the sheets titled "E19. Coverage (Target)" where X indicates the
 income concept (m, m+p, n, g, t, d, c, f); the user can override the sheet names using the
 {opt sheetm(string)}, {opt sheetmp(string)}, {opt sheetn(string)}, {opt sheetg(string)},
 {opt sheett(string)}, {opt sheetd(string)}, {opt sheetc(string)}, and {opt sheetf(string)} options,
@@ -317,6 +297,7 @@ Workbook populated with results from {cmd:ceqtarget} can be automatically opened
 option is specified (in this case, {it:filename} cannot have spaces). Results are also saved in
 matrices available from {cmd:return list}.
 
+{phang}
 Notice that if the user wishes to do the CEQ {it} Assessment {sf} for both the {bf: "pensions as deferred income scenario"} and
 {bf: "pensions as government transfer scenario"}, the ado does {bf: NOT} run both scenarios automatically. The user must run the
 ado twice, one time per scenario (see Income concepts options for an explanation on the differences across
@@ -360,7 +341,7 @@ Net Market Income given by {opth n:etmarket(varname)} as Market Income plus pens
 and {bf: MINUS} non-pension social contributions.
 
 {p 16 16 10}
-Taxable income given by {opth t:axable(varname)} as Gross Income (PDI) MINUS all non-taxable Gross Income components.
+Taxable income given by {opth t:axable(varname)} as Gross Income (PDI) {bf: MINUS} all non-taxable Gross Income components.
 
 {p 16 16 10}
 Disposable income given by {opth d:isposable(varname)} as Market Income plus pensions (PDI) {bf: PLUS} all direct transfers
@@ -386,7 +367,7 @@ Net Market Income given by {opth n:etmarket(varname)} as Market Income (PGT) {bf
 social contributions.
 
 {p 16 16 10}
-Taxable income given by {opth t:axable(varname)} as Gross Income (PGT) MINUS all non-taxable Gross Income components.
+Taxable income given by {opth t:axable(varname)} as Gross Income (PGT) {bf: MINUS} all non-taxable Gross Income components.
 
 {p 16 16 10}
 Disposable income given by {opth d:isposable(varname)} as Market Income (PGT) {bf: MINUS}  all direct taxes {bf: PLUS} pension income {bf: PLUS}
@@ -453,3 +434,6 @@ Pending
 {title:References}
 
 {pstd}Commitment to Equity (CEQ) {browse "http://www.commitmentoequity.org":website}.{p_end}
+
+{pstd}Lustig, Nora, editor. 2018. {browse "https://commitmentoequity.org/publications-ceq-handbook":Commitment to Equity Handbook. Estimating the Impact of Fiscal Policy on Inequality and Poverty}. Brookings Institution Press and CEQ Institute, Tulane University. {p_end}
+
