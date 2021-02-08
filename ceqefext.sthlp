@@ -1,5 +1,5 @@
 {smcl}
-{* 9jul2016}{...}
+{* 17dec2020}{...}
 {cmd:help ceqefext} (beta version; please report bugs) {right:Rodrigo Aranda}
 {hline}
 
@@ -227,7 +227,7 @@ Net Market Income given by {opth n:etmarket(varname)} as Market Income plus pens
 and {bf: MINUS} non-pension social contributions.
 
 {p 16 16 10}
-Taxable income given by {opth t:axable(varname)} as Gross Income (PDI) MINUS all non-taxable Gross Income components.
+Taxable income given by {opth t:axable(varname)} as Gross Income (PDI) {bf: MINUS} all non-taxable Gross Income components.
 
 {p 16 16 10}
 Disposable income given by {opth d:isposable(varname)} as Market Income plus pensions (PDI) {bf: PLUS} all direct transfers
@@ -253,7 +253,7 @@ Net Market Income given by {opth n:etmarket(varname)} as Market Income (PGT) {bf
 social contributions.
 
 {p 16 16 10}
-Taxable income given by {opth t:axable(varname)} as Gross Income (PGT) MINUS all non-taxable Gross Income components.
+Taxable income given by {opth t:axable(varname)} as Gross Income (PGT) {bf: MINUS} all non-taxable Gross Income components.
 
 {p 16 16 10}
 Disposable income given by {opth d:isposable(varname)} as Market Income (PGT) {bf: MINUS}  all direct taxes {bf: PLUS} pension income {bf: PLUS}
@@ -326,16 +326,15 @@ The user may specify any set of cut points that create exclusive population grou
 
 Pending
 
-{title:Authors}
+{title:Author}
 
-{p 4 4 2}Rodrigo Aranda, Tulane University, raranda@tulane.edu
-{p 4 4 2}Sean Higgins, Tulane University, shiggins@tulane.edu
-
+{p 4 4 2}Sean Higgins, CEQ Institute, sean.higgins@ceqinstitute.org
 
 {title:References}
 
 {pstd}Commitment to Equity (CEQ) {browse "http://www.commitmentoequity.org":website}.{p_end}
 
-{phang}
-Lustig, N. and S. Higgins. 2013. "Commitment to Equity Assessment (CEQ): Estimating the Incidence of Social Spending, Subsidies and Taxes Handbook." {browse "http://www.commitmentoequity.org/publications_files/Methodology/CEQWPNo1%20Handbook%20Edition%20Sept%202013.pdf":CEQ Working Paper 1.}{p_end}
+{pstd}Higgins, Sean and Nora Lustig. 2016. "Can a Poverty-Reducing and Progressive Tax and Transfer System Hurt
+the Poor?" Journal of Development Economics 122, 63-75.{p_end}
 
+{pstd}Lustig, Nora, editor. 2018. {browse "https://commitmentoequity.org/publications-ceq-handbook":Commitment to Equity Handbook. Estimating the Impact of Fiscal Policy on Inequality and Poverty}. Brookings Institution Press and CEQ Institute, Tulane University. {p_end}
