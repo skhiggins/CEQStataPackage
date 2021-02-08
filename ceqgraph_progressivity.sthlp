@@ -1,5 +1,5 @@
 {smcl}
-{* 20aug2016}{...}
+{* 17dec2020}{...}
 {cmd:help ceqgraph progressivity} (beta version; please report bugs) {right:Sean Higgins}
 {hline}
 
@@ -174,7 +174,7 @@ Net Market Income given by {opth n:etmarket(varname)} as Market Income plus pens
 and {bf: MINUS} non-pension social contributions.
 
 {p 16 16 10}
-Taxable income given by {opth t:axable(varname)} as Gross Income (PDI) MINUS all non-taxable Gross Income components.
+Taxable income given by {opth t:axable(varname)} as Gross Income (PDI) {bf: MINUS} all non-taxable Gross Income components.
 
 {p 16 16 10}
 Disposable income given by {opth d:isposable(varname)} as Market Income plus pensions (PDI) {bf: PLUS} all direct transfers
@@ -200,7 +200,7 @@ Net Market Income given by {opth n:etmarket(varname)} as Market Income (PGT) {bf
 social contributions.
 
 {p 16 16 10}
-Taxable income given by {opth t:axable(varname)} as Gross Income (PGT) MINUS all non-taxable Gross Income components.
+Taxable income given by {opth t:axable(varname)} as Gross Income (PGT) {bf: MINUS} all non-taxable Gross Income components.
 
 {p 16 16 10}
 Disposable income given by {opth d:isposable(varname)} as Market Income (PGT) {bf: MINUS}  all direct taxes {bf: PLUS} pension income {bf: PLUS}
@@ -242,4 +242,4 @@ Pending
 
 {pstd}Commitment to Equity (CEQ) {browse "http://www.commitmentoequity.org":website}.{p_end}
 
-
+{pstd}Lustig, Nora, editor. 2018. {browse "https://commitmentoequity.org/publications-ceq-handbook":Commitment to Equity Handbook. Estimating the Impact of Fiscal Policy on Inequality and Poverty}. Brookings Institution Press and CEQ Institute, Tulane University. {p_end}
