@@ -1,5 +1,5 @@
 {smcl}
-{* 26aug2015}{...}
+{* 17dec2020}{...}
 {cmd:help ceqiop} (beta version; please report bugs) {right:Sean Higgins}
 {hline}
 
@@ -70,12 +70,8 @@ values for the household head.){p_end}
 
 {pstd}
 {cmd:ceqiop} measures ex-ante inequality of opportunity for each of the CEQ core
-income concepts, following the non-parametric method in Ferreira and Gignoux (2011). The core income concepts are indicated using the {opth m:arket(varname)},
-{opth mp:luspensions(varname)}, {opth n:etmarket(varname)}, {opth g:ross(varname)},
-{opth t:axable(varname)}, {opth d:isposable(varname)}, {opth c:onsumable(varname)},
-{opth c:onsumable(varname)}, and {opth f:inal(varname)} options.
-Circumstance sets are specified by
-the variables in {opth groupb:y(varlist)}. For example, one circumstance set could be
+income concepts, following the non-parametric method in Ferreira and Gignoux (2011).
+Circumstance sets are specified by the variables in {opth groupb:y(varlist)}. For example, one circumstance set could be
 (female, black, parents were college graduates, urban): all individuals with those four traits are grouped together in
 one circumstance set. Circumstances are pre-determined factors that are not dependent on an
 individual’s effort, such as race, gender, and parents’ education or parents’ income. A smoothed income distribution
@@ -192,7 +188,7 @@ Net Market Income given by {opth n:etmarket(varname)} as Market Income plus pens
 and {bf: MINUS} non-pension social contributions.
 
 {p 16 16 10}
-Taxable income given by {opth t:axable(varname)} as Gross Income (PDI) MINUS all non-taxable Gross Income components.
+Taxable income given by {opth t:axable(varname)} as Gross Income (PDI) {bf: MINUS} all non-taxable Gross Income components.
 
 {p 16 16 10}
 Disposable income given by {opth d:isposable(varname)} as Market Income plus pensions (PDI) {bf: PLUS} all direct transfers
@@ -218,7 +214,7 @@ Net Market Income given by {opth n:etmarket(varname)} as Market Income (PGT) {bf
 social contributions.
 
 {p 16 16 10}
-Taxable income given by {opth t:axable(varname)} as Gross Income (PGT) MINUS all non-taxable Gross Income components.
+Taxable income given by {opth t:axable(varname)} as Gross Income (PGT) {bf: MINUS} all non-taxable Gross Income components.
 
 {p 16 16 10}
 Disposable income given by {opth d:isposable(varname)} as Market Income (PGT) {bf: MINUS}  all direct taxes {bf: PLUS} pension income {bf: PLUS}
@@ -260,9 +256,7 @@ Final income given by {opth f:inal(varname)} as Consumable income {bf: PLUS} Mon
 {pstd}Commitment to Equity (CEQ) {browse "http://www.commitmentoequity.org":website}.{p_end}
 
 {phang}
-Lustig, N. and S. Higgins. 2013. "Commitment to Equity Assessment (CEQ): Estimating the Incidence of Social Spending, Subsidies and Taxes Handbook." {browse "http://www.commitmentoequity.org/publications_files/Methodology/CEQWPNo1%20Handbook%20Edition%20Sept%202013.pdf":CEQ Working Paper 1.}{p_end}
-
-{phang}
 Ferreira, F. and J. Gignoux. 2011.
 {browse "http://onlinelibrary.wiley.com/doi/10.1111/j.1475-4991.2011.00467.x/abstract":"The Measurement of Inequality of Opportunity: Theory and an Application to Latin America,"} {it:Review of Income and Wealth} 57, 622-657.{p_end}
 
+{pstd}Lustig, Nora, editor. 2018. {browse "https://commitmentoequity.org/publications-ceq-handbook":Commitment to Equity Handbook. Estimating the Impact of Fiscal Policy on Inequality and Poverty}. Brookings Institution Press and CEQ Institute, Tulane University. {p_end}
