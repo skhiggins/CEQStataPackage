@@ -1,5 +1,5 @@
 {smcl}
-{* 21aug2016}{...}
+{* 17dec2020}{...}
 {cmd:help ceqfiscal} (beta version; please report bugs) {right:Sean Higgins}
 {hline}
 
@@ -138,16 +138,6 @@ either positive or negative values, as long as one is used consistently for all 
 variables. The same goes for user fees variables. The variables provided in the {opth health(varlist)}, {opth educ:ation(varlist)}, and {opth other:public(varlist)} options should already be net of co-payments and user fees; we nevertheless include the separate options {opth userfeesh:ealth(varlist)}, {opth userfeese:duc(varlist)}, and {opth userfeeso:ther(varlist)} so that, for example, user fees can be analyzed.
 
 {pstd}
-Each fiscal interventions sheet using the ranking from one of the CEQ core income concepts, which
-include market income, market income plus pensions, net market income, gross income, taxable income,
-disposable income, consumable income, and final income. The variables for these income concepts, which
-should be expressed in local currency units (preferably {bf:per year} for ease of comparison with
-totals from national accounts), are indicated using the {opth m:arket(varname)},
-{opth mp:luspensions(varname)}, {opth n:etmarket(varname)}, {opth g:ross(varname)},
-{opth t:axable(varname)}, {opth d:isposable(varname)}, {opth c:onsumable(varname)},
-{opth c:onsumable(varname)}, and {opth f:inal(varname)} options.
-
-{pstd}
 {cmd: ceqfiscal} automatically converts local currency variables to PPP dollars, using the PPP conversion
 factor given by {opth ppp(real)}, the consumer price index (CPI) of the year of PPP (e.g., 2005 or
 2011) given by {opth cpib:ase(real)}, and the CPI of the year of the household
@@ -263,7 +253,7 @@ Net Market Income given by {opth n:etmarket(varname)} as Market Income plus pens
 and {bf: MINUS} non-pension social contributions.
 
 {p 16 16 10}
-Taxable income given by {opth t:axable(varname)} as Gross Income (PDI) MINUS all non-taxable Gross Income components.
+Taxable income given by {opth t:axable(varname)} as Gross Income (PDI) {bf: MINUS} all non-taxable Gross Income components.
 
 {p 16 16 10}
 Disposable income given by {opth d:isposable(varname)} as Market Income plus pensions (PDI) {bf: PLUS} all direct transfers
@@ -289,7 +279,7 @@ Net Market Income given by {opth n:etmarket(varname)} as Market Income (PGT) {bf
 social contributions.
 
 {p 16 16 10}
-Taxable income given by {opth t:axable(varname)} as Gross Income (PGT) MINUS all non-taxable Gross Income components.
+Taxable income given by {opth t:axable(varname)} as Gross Income (PGT) {bf: MINUS} all non-taxable Gross Income components.
 
 {p 16 16 10}
 Disposable income given by {opth d:isposable(varname)} as Market Income (PGT) {bf: MINUS}  all direct taxes {bf: PLUS} pension income {bf: PLUS}
@@ -349,10 +339,11 @@ Pending
 
 {pstd}Commitment to Equity (CEQ) {browse "http://www.commitmentoequity.org":website}.{p_end}
 
-{phang}
-Lustig, N. and S. Higgins. 2013. "Commitment to Equity Assessment (CEQ): Estimating the Incidence of Social Spending, Subsidies and Taxes Handbook." {browse "http://www.commitmentoequity.org/publications_files/Methodology/CEQWPNo1%20Handbook%20Edition%20Sept%202013.pdf":CEQ Working Paper 1.}{p_end}
+{pstd}Lustig, Nora, editor. 2018. {browse "https://commitmentoequity.org/publications-ceq-handbook":Commitment to Equity Handbook. Estimating the Impact of Fiscal Policy on Inequality and Poverty}. Brookings Institution Press and CEQ Institute, Tulane University. {p_end}
 
 {phang}
 Osorio, R. 2007. "{bf:quantiles}: Stata module to categorize by quantiles." Boston
 College Department of Economics Statistical Software Components S456856.{p_end}
+
+
 
