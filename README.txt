@@ -3,28 +3,39 @@ CEQ Stata Package
 This README describes updates to the package, to be submitted along
  with the updated package to Statistical Software Components (SSC)
 
-Update August 31, 2020
+Update February 28, 2021
 
 This update contains 0 NEW file.
 
-The UPDATED commands are:
-    ceqpop
-    ceqextpop
-    ceqlorenz
-    ceqfi
+The UPDATED help files are:
+    ceqassump
     ceqconc
-    ceqfiscal
-    ceqextend
-    ceqmarg
+    ceqcov
     ceqcoverage
+    cedes
+    ceqdom
+    ceqdomext
     ceqeduc
-    ceqinfra
+    ceqef
+    ceqefext
+    ceqextend
+    ceqextpop
+    ceqextsig
+    ceqfi
+    ceqfiscal
+    ceqgraph_cdf
+    ceqgraph_conc
+    ceqgraph_fi
+    ceqgraph_progressivity
     ceqhhchar
     ceqindchar
-    ceqgraphcdf
-    ceqgraphfi
-    ceqassump
+    ceqinfra
+    ceqiop
+    ceqlorenz
+    ceqmarg
+    ceqpop
     ceqrace
+    ceqtarget
 
 	
 Description of entire package:
