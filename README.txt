@@ -3,9 +3,12 @@ CEQ Stata Package
 This README describes updates to the package, to be submitted along
  with the updated package to Statistical Software Components (SSC)
 
-Update February 28, 2021
+Update March 24, 2021
 
 This update contains 0 NEW file.
+
+The UPDATED ado files are:
+    ceqtarget
 
 The UPDATED help files are:
     ceqassump
