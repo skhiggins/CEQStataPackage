@@ -1,6 +1,7 @@
 ** ADO FILE FOR EFFECTIVENESS SHEET OF CEQ OUTPUT TABLES
 
 ** VERSION AND NOTES (changes between versions described under CHANGES)
+*! v1.13 22feb2022
 *! v1.12 16oct2020
 ** v1.11 23jul2020
 ** v1.10 30jun2018
@@ -16,6 +17,8 @@
 
 
 ** CHANGES
+**  v1.13 Using semicolumns as delimiters created problems with comments in some Stata versions.
+**          Added comments with * instead of /*.
 **  v1.12 Added lines to print poverty lines in MWB
 **  v1.11 Adding return to output of _ceqspend sub-program and fixed issue with tempvar S
 **          Adjusted _ceqspend sub-program to Ali's excel file and to new formulas
@@ -389,7 +392,7 @@ program define ceqbenstar, rclass
 
 cap program drop ceqtaxharm
 program define ceqtaxharm, rclass
-#delimit;
+    #delimit;
     syntax [if] [in] [pw aw iw fw/] [,
             /*Incomes*/
             endinc(varname)
@@ -405,7 +408,8 @@ program define ceqtaxharm, rclass
         else {
             tempvar ww
             gen `ww' = 1
-            }
+        }
+
         *no taxes income
         cap drop ___ww
         gen double ___ww = `exp'
@@ -416,7 +420,7 @@ program define ceqtaxharm, rclass
         sort ___notax
 
         qui sum ___taxes `aw'
-        local tot=r(sum) //total amount to redistribute
+        local tot= abs(r(sum)) //total amount to redistribute
 
         qui sum ___notax `aw'
 
@@ -425,19 +429,24 @@ program define ceqtaxharm, rclass
             exit
         }
         else {
-
             gen double ___inc_wght= ___notax*___ww
             gen double ___cum_inc_wght = sum(___inc_wght)
-            gen ___taxed = ___cum_inc_wght < `tot'
+            gen ___taxed = ___cum_inc_wght < abs(`tot')
             gen ___new_inc = ___notax
             replace ___new_inc = 0 if ___taxed == 1
             gen ___last_taxed = 1 if ___taxed == 1 & ___taxed[_n+1] == 0
             gen ___id = _n
             sum ___id if ___last_taxed == 1
+
+            //pause will this assertion breakus? here is r(N)
+
             assert r(N) ==1
             local which = r(mean)
 
-            scalar remainder = `tot' - ___cum_inc_wght[`which']
+            scalar remainder = abs(`tot') - ___cum_inc_wght[`which']
+
+            //pause or is it this
+
             assert remainder > 0 & remainder < ___cum_inc_wght[`which' + 1]
             replace ___new_inc = ___notax - (remainder/___ww) in `=`which' + 1'
             cap drop ___taxstar
@@ -449,7 +458,9 @@ program define ceqtaxharm, rclass
             // Ensuring harm tax is equal to amount avaible to tax
             local tax1 = round(`tot',.1)
             local tax2 = round(`rsum',.1)
+
             assert (abs((`tax1'-`tax2')/`tax1') < 0.00001)
+
 
             cap drop ____id_taxharm
             cap drop ____ytaxharm
@@ -462,7 +473,7 @@ program define ceqtaxharm, rclass
 
         }
         cap drop  ___taxes ___notax ___ww
-        end
+end
 
 ***Marginal contribution ID
     
@@ -1838,10 +1849,18 @@ program define ceqef
         matrix `y'_ef = J(82,8,.);
     };
     
-    
+
     *Calculate Effectiveness indicators;
-    foreach rw of local     alllist{;//row income concept;
-        foreach cc of local alllist{;//column income concept;
+    foreach rw of local alllist {; //row income concept;
+
+        *pause we made it to `rw';
+
+        foreach cc of local alllist{; //column income concept;
+
+            if "`rw'" == "mp" {;
+                    *pause we are here with `cc';
+            };
+
             nois di "`rw'"; //just for debugging
             nois di "`cc'";
             nois di `_`rw'';
@@ -1852,141 +1871,148 @@ program define ceqef
             if ("`rw'" !="`cc'") & (`_`rw''<`_`cc'') {;
             ****TAXES AND TRANSFERS for R and N;
             
-                    qui su ``rw'';
-                    local inc1 = r(mean);
-                    qui su ``cc'';
-                    local inc2 = r(mean);
-                    if `inc1'== -1 {;
-                        forval i = 1/82 {;
-                            matrix `rw'_ef[`i',`_`cc''] = .;
-                        };
-                    
+                qui su ``rw'';
+                local inc1 = r(mean);
+                qui su ``cc'';
+                local inc2 = r(mean);
+
+                if `inc1'== -1 {;
+                    forval i = 1/82 {;
+                        matrix `rw'_ef[`i',`_`cc''] = .;
                     };
-                    if `inc2'==-1 {;
-                        forval i = 1/82 {;
-                            matrix `rw'_ef[`i',`_`cc''] = .;
-                        };
-                    };
-                    if `inc1'!=-1 & `inc2'!=-1 {;
-                        if "`tax_`rw'_`cc''"!=""{;
-                            tempvar taxesef;
-                            gen double `taxesef'=abs(`tax_`rw'_`cc'');
-                            
-                        };
-                        if "`ben_`rw'_`cc''"!=""{;
-                            tempvar benef;
-                            gen double `benef'=`ben_`rw'_`cc'';
-                        };
-                        local yes= wordcount("`benef'")+wordcount("`taxesef'");
-                        
-                        
-                        if (wordcount("`tax_`rw'_`cc''")>0 | wordcount("`ben_`rw'_`cc''")>0){; //ESTIMATE EFFECTIVENESS INDICATORS FOR CASES THAT APPLY;
-                            *impact effectiveness;
-                            /*if wordcount("`benef'")>0{;
-                                ceqbenstar [w=`w'], endinc(``cc'') ben(`benef');
-                            };
-                            if wordcount("`taxesef'")>0{;
-                                ceqtaxstar [w=`w'], endinc(``cc'') taxes(`taxesef');
-                            };*/
-                            
-                            
-                            if wordcount("`tax_`rw'_`cc''")>0 & wordcount("`ben_`rw'_`cc''")>0{;  // Fixed algorithm for combined system- Apr 30th, 2020
-                                tempvar ystar;
-                                gen double `ystar'=``rw'';
-                                ceqbenstar `pw', startinc(``rw'') ben(`benef');
-                                local bwarn = 0 ;
-                                local twarn = 0 ;
-                                local t_N=0;
-                                if r(b_gr) ==1 { ;
-                                    nois `dit' "Sum of `bname_`rw'_`cc'' exceed ``rw'', so impact effectiveness indicator for ``rw'' to ``cc'' excludes benefits or is not produced" ;
-                                    local warning `warning' "Sum of `bname_`rw'_`cc'' exceed ``rw'', so impact effectiveness indicator for ``rw'' to ``cc'' excludes benefits or is not produced" ;
-                                    local bwarn = r(b_gr) ;
-                                    
-                                } ;
-                                else if r(b_0) ==1 { ;
-                                    nois `dit' "Sum of `bname_`rw'_`cc'' exceed ``rw'', so impact effectiveness indicator for ``rw'' to ``cc'' excludes benefits or is not produced" ;
-                                    local warning `warning' "Sum of `bname_`rw'_`cc'' exceed ``rw'', so impact effectiveness indicator for ``rw'' to ``cc'' excludes benefits or is not produced" ;
-                                    local bwarn = r(b_0) ;
-                                    
-                                } ;
+
+                };
                 
-                                if `bwarn' == 0{;
+                if `inc2'==-1 {;
+                    forval i = 1/82 {;
+                        matrix `rw'_ef[`i',`_`cc''] = .;
+                    };
+                };
+                if `inc1'!=-1 & `inc2'!=-1 {;
+                    if "`tax_`rw'_`cc''"!=""{;
+                        tempvar taxesef;
+                        gen double `taxesef'=abs(`tax_`rw'_`cc'');
+                        
+                    };
+                    if "`ben_`rw'_`cc''"!=""{;
+                        tempvar benef;
+                        gen double `benef'=`ben_`rw'_`cc'';
+                    };
+                    local yes= wordcount("`benef'")+wordcount("`taxesef'");
+                        
+                        
+                    if (wordcount("`tax_`rw'_`cc''")>0 | wordcount("`ben_`rw'_`cc''")>0){; //ESTIMATE EFFECTIVENESS INDICATORS FOR CASES THAT APPLY;
+                        *impact effectiveness;
+                        /*if wordcount("`benef'")>0{;
+                            ceqbenstar [w=`w'], endinc(``cc'') ben(`benef');
+                        };
+                        if wordcount("`taxesef'")>0{;
+                            ceqtaxstar [w=`w'], endinc(``cc'') taxes(`taxesef');
+                        };*/
+                        
+                        
+                        if wordcount("`tax_`rw'_`cc''")>0 & wordcount("`ben_`rw'_`cc''")>0{;  // Fixed algorithm for combined system- Apr 30th, 2020
+                            tempvar ystar;
+                            gen double `ystar'=``rw'';
+                            ceqbenstar `pw', startinc(``rw'') ben(`benef');
+                            local bwarn = 0 ;
+                            local twarn = 0 ;
+                            local t_N=0;
+                            if r(b_gr) ==1 { ;
+                                nois `dit' "Sum of `bname_`rw'_`cc'' exceed ``rw'', so impact effectiveness indicator for ``rw'' to ``cc'' excludes benefits or is not produced" ;
+                                local warning `warning' "Sum of `bname_`rw'_`cc'' exceed ``rw'', so impact effectiveness indicator for ``rw'' to ``cc'' excludes benefits or is not produced" ;
+                                local bwarn = r(b_gr) ;
+                                
+                            } ;
+                            else if r(b_0) ==1 { ;
+                                nois `dit' "Sum of `bname_`rw'_`cc'' exceed ``rw'', so impact effectiveness indicator for ``rw'' to ``cc'' excludes benefits or is not produced" ;
+                                local warning `warning' "Sum of `bname_`rw'_`cc'' exceed ``rw'', so impact effectiveness indicator for ``rw'' to ``cc'' excludes benefits or is not produced" ;
+                                local bwarn = r(b_0) ;
+                            } ;
+
+                            if `bwarn' == 0{;
                                 *set trace on ;
-                                    ceqtaxstar `pw', startinc(____ybenstar) taxes(`taxesef');
-                                    *set trace off ;
-                                    local t_N=r(t_N);
-                                    
-                                    if r(t_gr) == 1{ ;
-                                        nois `dit'  "Sum of `tname_`rw'_`cc'' exceed ``rw'', so impact effectiveness indicator not produced from ``rw'' to ``cc''" ;
-                                        local warning `warning'  "Sum of `tname_`rw'_`cc'' exceed ``rw'', so impact effectiveness indicator not produced from ``rw'' to ``cc''" ;
-                                        local twarn = r(t_gr) ;
-                                    } ;
-                                    else if r(t_0) == 1{ ;
-                                        nois `dit'  "Sum of `tname_`rw'_`cc'' is 0, so impact effectiveness indicator not produced from ``rw'' to ``cc''" ;
-                                        local warning `warning'  "Sum of `tname_`rw'_`cc'' exceed ``rw'', so impact effectiveness indicator not produced from ``rw'' to ``cc''" ;
-                                        local twarn = r(t_0) ;
-                                    } ;
+                                ceqtaxstar `pw', startinc(____ybenstar) taxes(`taxesef');
+                                *set trace off ;
+                                local t_N=r(t_N);
                                 
-                                };
-                                
-                                if `bwarn' == 0 & `twarn' == 0 { ;
-                                    replace `ystar'=____ytaxstar;
-                                    *cap drop ____ytaxstar ____ybenstar ____id_benstar ____id_taxstar ;
-                                    cap drop ____ytaxstar ____id_benstar ____id_taxstar ;
-                                    
-                                };
-                                else  { ;
-                                    local bwarn = 1 ;
-                                    local twarn = 1 ;
-                                };
-                            };
-                        if wordcount("`tax_`rw'_`cc''")>0 & wordcount("`ben_`rw'_`cc''")==0{;
-                                *set trace on;
-                                ceqtaxstar `pw' , startinc(``rw'') taxes(`taxesef') ;
-                                *set trace off;
-                                local twarn = 0 ;
-                                local t_N=0;
-                                local bwarn=1; // Reseting all locals - May 6, 2020
-                                if  r(t_gr) ==1 { ;
-                                    nois `dit' "Sum of `tname_`rw'_`cc'' exceed ``rw'', so impact effectiveness indicator not produced from ``rw'' to ``cc''" ;
-                                    local warning `warning' "Sum of `tname_`rw'_`cc'' exceed ``rw'', so impact effectiveness indicator not produced from ``rw'' to ``cc''" ;
+                                if r(t_gr) == 1{ ;
+                                    nois `dit'  "Sum of `tname_`rw'_`cc'' exceed ``rw'', so impact effectiveness indicator not produced from ``rw'' to ``cc''" ;
+                                    local warning `warning'  "Sum of `tname_`rw'_`cc'' exceed ``rw'', so impact effectiveness indicator not produced from ``rw'' to ``cc''" ;
                                     local twarn = r(t_gr) ;
                                 } ;
-                                else if  r(t_0) ==1 { ;
-                                    nois `dit' "Sum of `tname_`rw'_`cc'' is 0, so impact effectiveness indicator not produced from ``rw'' to ``cc''" ;
-                                    local warning `warning' "Sum of `tname_`rw'_`cc'' is 0, so impact effectiveness indicator not produced from ``rw'' to ``cc''" ;
+                                else if r(t_0) == 1{ ;
+                                    nois `dit'  "Sum of `tname_`rw'_`cc'' is 0, so impact effectiveness indicator not produced from ``rw'' to ``cc''" ;
+                                    local warning `warning'  "Sum of `tname_`rw'_`cc'' exceed ``rw'', so impact effectiveness indicator not produced from ``rw'' to ``cc''" ;
                                     local twarn = r(t_0) ;
                                 } ;
                                 
-                            
-                                else if !(r(t_0) == 1 | r(t_gr) == 1) {;  // if was missing - March, 31st 2020
-                                    tempvar ystar;
-                                    gen double `ystar'=____ytaxstar;
-                                    cap drop ____ytaxstar ____ybenstar ____id_benstar ____id_taxstar;
-                                };
                             };
-                            if wordcount("`tax_`rw'_`cc''")==0 & wordcount("`ben_`rw'_`cc''")>0{;
-                                ceqbenstar `pw', startinc(``rw'') ben(`benef');
-                                local bwarn = 0 ;
-                                local t_N=0;
-                                local twarn=1; // Reseting all locals - May 6, 2020
-                                if r(b_gr) == 1 { ;
-                                    nois `dit' "Sum of `bname_`rw'_`cc'' is 0, so impact effectiveness indicator not produced from ``rw'' to ``cc''" ;
-                                    local warning `warning' "Sum of `bname_`rw'_`cc'' exceed ``rw'', so impact effectiveness indicator not produced from ``rw'' to ``cc''" ;
-                                    local bwarn = r(b_gr) ;
-                                } ;
-                                else if r(b_0) == 1 { ;
-                                    nois `dit' "Sum of `bname_`rw'_`cc'' is 0, so impact effectiveness indicator not produced from ``rw'' to ``cc''" ;
-                                    local warning `warning' "Sum of `bname_`rw'_`cc'' exceed ``rw'', so impact effectiveness indicator not produced from ``rw'' to ``cc''" ;
-                                    local bwarn = r(b_0) ;
-                                } ;
-                                if !(r(b_0) == 1 | r(b_gr) == 1) {;
-                                    tempvar ystar;
-                                    gen double `ystar'=____ybenstar;
-                                    cap drop ____ytaxstar ____ybenstar ____id_benstar ____id_taxstar;
-                                };
+                                
+                            if `bwarn' == 0 & `twarn' == 0 { ;
+
+                                replace `ystar'=____ytaxstar;
+                                *cap drop ____ytaxstar ____ybenstar ____id_benstar ____id_taxstar ;
+                                cap drop ____ytaxstar ____id_benstar ____id_taxstar ;
+                                    
+                            };
+                            else  { ;
+                                local bwarn = 1 ;
+                                local twarn = 1 ;
+                            };
+                        };
+                        if wordcount("`tax_`rw'_`cc''")>0 & wordcount("`ben_`rw'_`cc''")==0{;
+                            
+                            *set trace on;
+                            ceqtaxstar `pw' , startinc(``rw'') taxes(`taxesef') ;
+                            *set trace off;
+                            local twarn = 0 ;
+                            local t_N=0;
+                            local bwarn=1; // Reseting all locals - May 6, 2020
+
+                            if  r(t_gr) ==1 { ;
+                                nois `dit' "Sum of `tname_`rw'_`cc'' exceed ``rw'', so impact effectiveness indicator not produced from ``rw'' to ``cc''" ;
+                                local warning `warning' "Sum of `tname_`rw'_`cc'' exceed ``rw'', so impact effectiveness indicator not produced from ``rw'' to ``cc''" ;
+                                local twarn = r(t_gr) ;
+                            } ;
+                            else if  r(t_0) ==1 { ;
+                                nois `dit' "Sum of `tname_`rw'_`cc'' is 0, so impact effectiveness indicator not produced from ``rw'' to ``cc''" ;
+                                local warning `warning' "Sum of `tname_`rw'_`cc'' is 0, so impact effectiveness indicator not produced from ``rw'' to ``cc''" ;
+                                local twarn = r(t_0) ;
+                            } ;
+                            else if !(r(t_0) == 1 | r(t_gr) == 1) {;  // if was missing - March, 31st 2020
+                                tempvar ystar;
+                                gen double `ystar'=____ytaxstar;
+                                cap drop ____ytaxstar ____ybenstar ____id_benstar ____id_taxstar;
+                            };
+
+
+                        };
+
+                        if wordcount("`tax_`rw'_`cc''")==0 & wordcount("`ben_`rw'_`cc''")>0{;
+                            ceqbenstar `pw', startinc(``rw'') ben(`benef');
+                            local bwarn = 0 ;
+                            local t_N=0;
+                            local twarn=1; // Reseting all locals - May 6, 2020
+                            if r(b_gr) == 1 { ;
+                                nois `dit' "Sum of `bname_`rw'_`cc'' is 0, so impact effectiveness indicator not produced from ``rw'' to ``cc''" ;
+                                local warning `warning' "Sum of `bname_`rw'_`cc'' exceed ``rw'', so impact effectiveness indicator not produced from ``rw'' to ``cc''" ;
+                                local bwarn = r(b_gr) ;
+                            } ;
+                            else if r(b_0) == 1 { ;
+                                nois `dit' "Sum of `bname_`rw'_`cc'' is 0, so impact effectiveness indicator not produced from ``rw'' to ``cc''" ;
+                                local warning `warning' "Sum of `bname_`rw'_`cc'' exceed ``rw'', so impact effectiveness indicator not produced from ``rw'' to ``cc''" ;
+                                local bwarn = r(b_0) ;
+                            } ;
+
+                            if !(r(b_0) == 1 | r(b_gr) == 1) {;
+                                tempvar ystar;
+                                gen double `ystar'=____ybenstar;
+                                cap drop ____ytaxstar ____ybenstar ____id_benstar ____id_taxstar;
+                            };
                         };
                     
+
                     
                         if !( "`bwarn'" == "1" & "`twarn'" == "1" ) { ; // Moved outside the previous if- Feb 12,2020
                             covconc ``cc'' `pw'; //gini of column income;
@@ -2000,49 +2026,189 @@ program define ceqef
                             matrix `rw'_ef[1,`_`cc'']=`imef';
                         };
                             
-                            *noisily di in red "INEQ IMPACT EFF. `rw' `cc' Row= `row'";
-                        
-                            *IMPACT EFFECTIVENESS FOR POVERTY (WHEN THERE IS ONLY TAXES OR ONLY TRANSFERS);
-                            *Convert to ppp;
-                            if "`tax_`rw'_`cc''"!=""{;
-                                    tempvar int_tax_ppp;
-                                    gen double  `int_tax_ppp'=(`tax_`rw'_`cc''/`divideby')*(1/`ppp_calculated');
-                            };
-                            if "`ben_`rw'_`cc''"!=""{;
-                                tempvar int_ben_ppp;
-                                gen double  `int_ben_ppp'=(`ben_`rw'_`cc''/`divideby')*(1/`ppp_calculated');
-                            };
+                        *noisily di in red "INEQ IMPACT EFF. `rw' `cc' Row= `row'";
+                    
+                        *IMPACT EFFECTIVENESS FOR POVERTY (WHEN THERE IS ONLY TAXES OR ONLY TRANSFERS);
+                        *Convert to ppp;
+                        if "`tax_`rw'_`cc''"!=""{;
+                                tempvar int_tax_ppp;
+                                gen double  `int_tax_ppp'=(`tax_`rw'_`cc''/`divideby')*(1/`ppp_calculated');
+                        };
+
+                        if "`ben_`rw'_`cc''"!=""{;
+                            tempvar int_ben_ppp;
+                            gen double  `int_ben_ppp'=(`ben_`rw'_`cc''/`divideby')*(1/`ppp_calculated');
+                        };
                                 
-                            /*tempvar int_tax;
-                            gen double `int_tax'=abs(`tax_`rw'_`cc'');
-                            tempvar int_ben;
-                            gen double `int_ben'=`ben_`rw'_`cc'';
+                        /*tempvar int_tax;
+                        gen double `int_tax'=abs(`tax_`rw'_`cc'');
+                        tempvar int_ben;
+                        gen double `int_ben'=`ben_`rw'_`cc'';
 
-                             tempvar int_tax_ppp;
-                             gen double  `int_tax_ppp'=(`int_tax'/`divideby')*(1/`ppp_calculated');
-                             
-                             tempvar int_ben_ppp;
-                             gen double  `int_ben_ppp'=(`int_ben'/`divideby')*(1/`ppp_calculated');
-                             */
-                             
-                            tempvar `rw'_ppp;
-                            gen double ``rw'_ppp'=(``rw''/`divideby')*(1/`ppp_calculated');
-                            tempvar `cc'_ppp;
-                            gen double ``cc'_ppp'=(``cc''/`divideby')*(1/`ppp_calculated');
-                            ** if (wordcount("`tax_`rw'_`cc''")>0 & wordcount("`ben_`rw'_`cc''")==0) { ;
-                                ** above line was leading to error (issue 50 on Github);
-                                tempvar ystar_ppp;
-                                gen double `ystar_ppp'=(`ystar'/`divideby')*(1/`ppp_calculated');
-                                ** } ;
-                            local row=2;
+                         tempvar int_tax_ppp;
+                         gen double  `int_tax_ppp'=(`int_tax'/`divideby')*(1/`ppp_calculated');
+                         
+                         tempvar int_ben_ppp;
+                         gen double  `int_ben_ppp'=(`int_ben'/`divideby')*(1/`ppp_calculated');
+                         */
+                         
+                        tempvar `rw'_ppp;
+                        gen double ``rw'_ppp'=(``rw''/`divideby')*(1/`ppp_calculated');
+                        tempvar `cc'_ppp;
+                        gen double ``cc'_ppp'=(``cc''/`divideby')*(1/`ppp_calculated');
+                        ** if (wordcount("`tax_`rw'_`cc''")>0 & wordcount("`ben_`rw'_`cc''")==0) { ;
+                            ** above line was leading to error (issue 50 on Github);
+                            tempvar ystar_ppp;
+                            gen double `ystar_ppp'=(`ystar'/`divideby')*(1/`ppp_calculated');
+                            ** } ;
+                        local row=2;
                             
-                            *noisily di in red "Begin of POV IMPACT EFF. `rw' `cc' Row= `row'";
+                        *noisily di in red "Begin of POV IMPACT EFF. `rw' `cc' Row= `row'";
 
-                            *Only taxes MC<0 so harm formula);
-                            if (wordcount("`tax_`rw'_`cc''")>0 & wordcount("`ben_`rw'_`cc''")==0) {;
-                                *if wordcount("`ben_`rw'_`cc''")==0) & wordcount("`tax_`rw'_`cc''")>0 {;
-                                foreach p in `plopts'{;
-                                    if "``p''"!=""{;
+                        *Only taxes MC<0 so harm formula);
+                        if (wordcount("`tax_`rw'_`cc''")>0 & wordcount("`ben_`rw'_`cc''")==0) {;
+                            *if wordcount("`ben_`rw'_`cc''")==0) & wordcount("`tax_`rw'_`cc''")>0 {;
+                            foreach p in `plopts'{;
+                                if "``p''"!=""{;
+                                    if substr("`p'",1,2)=="pl" {; // these are the PPP lines;
+                                        local _pline = ``p'';
+                                        local vtouse1 ``cc'_ppp';//1 is for original;
+                                        local vtouse2 ``rw'_ppp';//2 is for income without intervention;
+                                        local vtouse3 `ystar_ppp';//3 is for ideal income;
+                                    };
+                                    else if _`p'_isscalar==1 { ;  // if pov line is scalar, // (note this local defined above);
+                                        local _pline = ``p''; // set `_pline' as that scalar and;
+                                        local vtouse1 ``cc''   ;// use original income variable;
+                                        local vtouse2 ``rw'';//income without intervention;
+                                        local vtouse3 `ystar';//income with ideal intervention;
+                                    };
+                                    else if _`p'_isscalar==0 {; // if pov line is variable,;
+                                        tempvar `v'_normalized1 ; // create temporary variable that is income...;
+                                        tempvar `v'_normalized2 ; // create temporary variable that is income...;
+                                        tempvar `v'_normalized3 ; // create temporary variable that is income...;
+                                        
+                                        qui gen ``v'_normalized1' = ``cc''/``p'' ;// normalized by pov line;
+                                        qui gen ``v'_normalized2' = ``rw''/``p'' ;// normalized by pov line;
+                                        qui gen ``v'_normalized3' = `ystar'/``p'' ;// normalized by pov line;
+                                        
+                                        local _pline = 1            ;           // and normalized pov line is 1;
+                                        local vtouse1 ``v'_normalized1'; // use normalized income in the calculations;
+                                        local vtouse2 ``v'_normalized2'; // use normalized income in the calculations;
+                                        local vtouse3 ``v'_normalized3'; // use normalized income in the calculations;
+                                    };
+        
+                                    tempvar zyzfgt1_1 zyzfgt2_1 zyzfgt1_2 zyzfgt2_2 zyzfgt1_3 zyzfgt2_3 ;   // zyzfgt2_2 added by Rosie on May 21st;
+                                    qui gen `zyzfgt1_1' = max((`_pline'-`vtouse1')/`_pline',0) ;// normalized povety gap of each individual;
+                                    qui gen `zyzfgt2_1' = `zyzfgt1_1'^2 ;                           // square of normalized poverty gap;
+                                    qui gen `zyzfgt1_2' = max((`_pline'-`vtouse2')/`_pline',0) ;// normalized povety gap of each individual;
+                                    qui gen `zyzfgt2_2' = `zyzfgt1_2'^2 ;                           // square of normalized poverty gap;
+                                    qui gen `zyzfgt1_3' = max((`_pline'-`vtouse3')/`_pline',0) ;// normalized povety gap of each individual;
+                                    qui gen `zyzfgt2_3' = `zyzfgt1_3'^2 ;                           // square of normalized poverty gap;
+                        
+                                    forval i=1/2 {;
+                                        qui summ `zyzfgt`i'_1' `aw', meanonly; // `if' `in' restrictions already taken care of by `touse' above;
+                                        local p`i'_orig=r(mean);
+                                        qui summ `zyzfgt`i'_2' `aw', meanonly; // `if' `in' restrictions already taken care of by `touse' above;
+                                        local p`i'_wo=r(mean);
+                                        qui summ `zyzfgt`i'_3' `aw', meanonly; // `if' `in' restrictions already taken care of by `touse' above;
+                                        local p`i'_3=r(mean);
+                                        
+                                        drop  `zyzfgt`i'_3' `zyzfgt`i'_2' `zyzfgt`i'_1';
+                        
+                                        ****Poverty Impact effectiveness;
+                                        //Marginal contributions for fgt 1,2;
+                                        local mp_`i'_`p'_`rc'=`p`i'_wo'-`p`i'_orig'; //Observed MC; Corrected spelling mistake - Apr 30th, 2020
+                                    
+                                        ****For Impact effectiveness there can only be a negative effect, we use the harm formula Ch. 5 CEQ Handbook;
+                                        if `mp_`i'_`p'_`rc''<0{;
+                                            
+                                            //pause here ar are passing "`pw'", "`cc'", "`tax_`ra'_`cc''";
+
+                                            ceqtaxharm `pw', endinc(``cc'') taxes(`tax_`rw'_`cc'');
+
+                                            if "`rw'" == "mp" & "`cc'" == "n" { ;
+                                                //pause we are right here! with `i';
+                                            };
+
+
+                                            if r(thwarn) == 1 { ;
+                                                nois `dit' "Sum of `tname_`rw'_`cc'' exceed ``rw'', so impact effectiveness indicator not produced from ``rw'' to ``cc''" ;
+                                                local warning `warning' "Sum of `tname_`rw'_`cc'' exceed ``rw'', so impact effectiveness indicator not produced from ``rw'' to ``cc''" ;
+                                                local row=`row'+1;
+                                            } ;
+                                            else { ;
+                                                tempvar yharm;
+                                                gen double `yharm'=____ytaxharm;
+                                                cap drop ____ytaxharm   ____id_taxharm;
+                                                tempvar yharm_ppp;
+                                                gen `yharm_ppp'=(`yharm'/`divideby')*(1/`ppp_calculated');
+                                    
+                                
+                                                if "``p''"!="" {    ;
+
+                                                    if substr("`p'",1,2)=="pl" {; // these are the PPP lines;
+                                                        local _pline = ``p'';
+                                                        local vtouseh `yharm_ppp';//h is for harm;
+                                                    };
+                                                    else if _`p'_isscalar==1 { ;  // if pov line is scalar, // (note this local defined above);
+                                                        local _pline = ``p''; // set `_pline' as that scalar and;
+                                                        local vtouseh `yharm'   ;
+                                                    };
+                                                    else if _`p'_isscalar==0 {; // if pov line is variable,;
+                                                        tempvar `v'_normalizedh ; // create temporary variable that is income...;
+                                                        qui gen ``v'_normalizedh' = `yharm'/``p'' ;// normalized by pov line;
+                                                        local _pline = 1            ;           // and normalized pov line is 1;
+                                                        local vtouseh ``v'_normalizedh'; // use normalized income in the calculations;
+                                                    };
+                                
+                                
+                                                    tempvar zyzfgt1_h zyzfgt2_h;
+                                                    qui gen `zyzfgt1_h' = max((`_pline'-`vtouseh')/`_pline',0) ;// normalized povety gap of each individual;
+                                                    qui gen `zyzfgt2_h' = `zyzfgt1_h'^2 ;                           // square of normalized poverty gap;
+                                                            
+                                                    
+                                                    qui summ `zyzfgt`i'_h' `aw', meanonly; // `if' `in' restrictions already taken care of by `touse' above;
+                                                    local p`i'_h=r(mean);
+                                                    
+                                                    local mst_p`i'_h=`p`i'_wo' - `p`i'_h';//Ideal MC with tax formula; Corrected formula- Apr 30th, 2020
+                                                    local eft_`i'_h=(`mp_`i'_`p'_`rc''/`mst_p`i'_h')*(-1);
+                                                    *return scalar eft_`i'_h =  `eft_`i'_h';//Impact effectiveness indicator, v has the variable name of the transfer, y=income, p=poverty line ;
+                                                    
+                                                    local row=`row'+1;
+                                                    matrix `rw'_ef[`rw_ie_`p'_`i'',`_`cc''] = `eft_`i'_h';
+
+                                                    *noisily di in green "Doing POV IMPACT EFF. TAXES `rw' `cc' Row= `row'";
+
+                                                    /*local row=`row'+1;
+                                                    matrix p_ie_`y'[`row',`col'] = `eft_2_h';
+                                                    matrix p_se_`y'[`row',`col'] = .;*/
+                                                };
+                                            };
+                                        };
+
+                                        else{;
+
+                                            local row=`row'+1;
+                                            matrix `rw'_ef[`rw_ie_`p'_`i'',`_`cc''] =.;
+
+                                        };
+                                    };
+
+                                    if "`rw'" == "mp" & "`cc'" == "n" { ;
+                                        //pause we made it out of that bad boy;
+                                    };
+            
+                                };
+                            };
+                        };
+
+
+                        *Only Benefits;
+                        local rowsp=18;
+                        if wordcount("`tax_`rw'_`cc''")==0 &  wordcount("`ben_`rw'_`cc''")>0{;
+                            if wordcount("`povlines'")>0 {; // otherwise produces inequality only;
+                                foreach p in `plopts'  { ;// plopts includes all lines;
+                                    if "``p''"!="" {    ;
                                         if substr("`p'",1,2)=="pl" {; // these are the PPP lines;
                                             local _pline = ``p'';
                                             local vtouse1 ``cc'_ppp';//1 is for original;
@@ -2056,238 +2222,117 @@ program define ceqef
                                             local vtouse3 `ystar';//income with ideal intervention;
                                         };
                                         else if _`p'_isscalar==0 {; // if pov line is variable,;
-                                            tempvar `v'_normalized1 ; // create temporary variable that is income...;
-                                            tempvar `v'_normalized2 ; // create temporary variable that is income...;
-                                            tempvar `v'_normalized3 ; // create temporary variable that is income...;
-                                            
-                                            qui gen ``v'_normalized1' = ``cc''/``p'' ;// normalized by pov line;
-                                            qui gen ``v'_normalized2' = ``rw''/``p'' ;// normalized by pov line;
-                                            qui gen ``v'_normalized3' = `ystar'/``p'' ;// normalized by pov line;
-                                            
+                                            tempvar `v'_normalized4 ; // create temporary variable that is income...;
+                                            tempvar `v'_normalized5 ; // create temporary variable that is income...;
+                                            tempvar `v'_normalized6 ; // create temporary variable that is income...;
+
+                                            qui gen ``v'_normalized4' = ``cc''/``p'' ;// normalized by pov line;
+                                            qui gen ``v'_normalized5' = ``rw''/``p'' ;// normalized by pov line;
+                                            /*qui gen ``v'_normalized2' = `ext'/``p'' ;// normalized by pov line;*/
+                                            qui gen ``v'_normalized6' = `ystar'/``p'' ;// normalized by pov line;
+
                                             local _pline = 1            ;           // and normalized pov line is 1;
-                                            local vtouse1 ``v'_normalized1'; // use normalized income in the calculations;
-                                            local vtouse2 ``v'_normalized2'; // use normalized income in the calculations;
-                                            local vtouse3 ``v'_normalized3'; // use normalized income in the calculations;
+                                            local vtouse1 ``v'_normalized4'; // use normalized income in the calculations;
+                                            local vtouse2 ``v'_normalized5'; // use normalized income in the calculations;
+                                            local vtouse3 ``v'_normalized6'; // use normalized income in the calculations;
+
                                         };
-            
-                                        tempvar zyzfgt1_1 zyzfgt2_1 zyzfgt1_2 zyzfgt2_2 zyzfgt1_3 zyzfgt2_3 ;   // zyzfgt2_2 added by Rosie on May 21st;
+                        
+                        
+                                        tempvar zyzfgt1_1 zyzfgt2_1 zyzfgt1_2 zyzfgt2_2 zyzfgt1_3 zyzfgt2_3;
                                         qui gen `zyzfgt1_1' = max((`_pline'-`vtouse1')/`_pline',0) ;// normalized povety gap of each individual;
                                         qui gen `zyzfgt2_1' = `zyzfgt1_1'^2 ;                           // square of normalized poverty gap;
                                         qui gen `zyzfgt1_2' = max((`_pline'-`vtouse2')/`_pline',0) ;// normalized povety gap of each individual;
                                         qui gen `zyzfgt2_2' = `zyzfgt1_2'^2 ;                           // square of normalized poverty gap;
                                         qui gen `zyzfgt1_3' = max((`_pline'-`vtouse3')/`_pline',0) ;// normalized povety gap of each individual;
                                         qui gen `zyzfgt2_3' = `zyzfgt1_3'^2 ;                           // square of normalized poverty gap;
+                        
+                                        qui summ `zyzfgt1_1' `aw', meanonly; // `if' `in' restrictions already taken care of by `touse' above;
+                                        local p1_`y'_orig=r(mean);
+                                        qui summ `zyzfgt1_2' `aw', meanonly; // `if' `in' restrictions already taken care of by `touse' above;
+                                        local p1_`y'_2=r(mean);
+                                        qui summ `zyzfgt1_3' `aw', meanonly; // `if' `in' restrictions already taken care of by `touse' above;
+                                        local p1_`y'_3_st=r(mean);
                             
+                                        qui summ `zyzfgt2_1' `aw', meanonly; // `if' `in' restrictions already taken care of by `touse' above;
+                                        local p2_`y'_orig=r(mean);
+                                        qui summ `zyzfgt2_2' `aw', meanonly; // `if' `in' restrictions already taken care of by `touse' above;
+                                        local p2_`y'_2=r(mean);
+                                        qui summ `zyzfgt2_3' `aw', meanonly; // `if' `in' restrictions already taken care of by `touse' above;
+                                        local p2_`y'_3_st=r(mean);
+                                    
+                                        drop  `zyzfgt1_3' `zyzfgt1_2' `zyzfgt1_1' `zyzfgt2_3' `zyzfgt2_2' `zyzfgt2_1';
+                            
+                                        //Marginal contributions for fgt 1,2;
+                                        local mp_1_`p'=`p1_`y'_2'-`p1_`y'_orig';//Observed MC;
+                                        local mp_1_`p'_s=`p1_`y'_2'-`p1_`y'_3_st';//Star MC;
+                                        local mp_2_`p'=`p2_`y'_2'-`p2_`y'_orig';//Observed MC;
+                                        local mp_2_`p'_s=`p2_`y'_2'-`p2_`y'_3_st';//Star MC;
+                            
+                            
+                    
+                                        ****Poverty Impact effectiveness;
+                                        ****For Impact effectiveness with Transfers there can only be a positive effect;
                                         forval i=1/2 {;
-                                            qui summ `zyzfgt`i'_1' `aw', meanonly; // `if' `in' restrictions already taken care of by `touse' above;
-                                            local p`i'_orig=r(mean);
-                                            qui summ `zyzfgt`i'_2' `aw', meanonly; // `if' `in' restrictions already taken care of by `touse' above;
-                                            local p`i'_wo=r(mean);
-                                            qui summ `zyzfgt`i'_3' `aw', meanonly; // `if' `in' restrictions already taken care of by `touse' above;
-                                            local p`i'_3=r(mean);
-                                            
-                                            drop  `zyzfgt`i'_3' `zyzfgt`i'_2' `zyzfgt`i'_1';
-                            
-                                            ****Poverty Impact effectiveness;
-                                            //Marginal contributions for fgt 1,2;
-                                            local mp_`i'_`p'_`rc'=`p`i'_wo'-`p`i'_orig'; //Observed MC; Corrected spelling mistake - Apr 30th, 2020
-                                        
-                                            ****For Impact effectiveness there can only be a negative effect, we use the harm formula Ch. 5 CEQ Handbook;
-                                            if `mp_`i'_`p'_`rc''<0{;
-                                                ceqtaxharm `pw', endinc(``cc'') taxes(`tax_`rw'_`cc'');
-                                                if r(thwarn) == 1 { ;
-                                                    nois `dit' "Sum of `tname_`rw'_`cc'' exceed ``rw'', so impact effectiveness indicator not produced from ``rw'' to ``cc''" ;
-                                                    local warning `warning' "Sum of `tname_`rw'_`cc'' exceed ``rw'', so impact effectiveness indicator not produced from ``rw'' to ``cc''" ;
-                                                    local row=`row'+1;
+                                            if `mp_`i'_`p''>0{;
+                                                *Impact effectiveness;
+                                                *Ystar already exists;
+                                                *local mst_p`i'_h=`p`i'_`y'_3' - `p`i'_h';//Ideal MC with tax formula;
+                                                scalar eft_`i' =  (`mp_`i'_`p''/`mp_`i'_`p'_s');//MC/MCstar;
+                                                
+                                                local row=`row'+1;
+                                                matrix `rw'_ef[`rw_ie_`p'_`i'',`_`cc''] = eft_`i';
+                                                            
+
+                                                local rowsp=`rowsp'+1;
+
+                                                ****Poverty Spending effectiveness;
+                                                tempvar bentouse;
+                                                gen double `bentouse'=abs(`vtouse1'-`vtouse2');
+                                                //! Uncomment out once fixed
+                                                ****Poverty Spending effectiveness;
+                                                *tempvar bentouse;
+                                                cap drop ___bentouse;
+                                                gen double ___bentouse=abs(`vtouse1'-`vtouse2');
+                                                //! Uncomment after fixed.
+                                                cap drop ___t ;
+                                                gen double ___t = `vtouse2'+  abs(`bentouse') ;
+                                                covconc ``cc'' `pw' ;
+                                                local gini1 = r(gini) ;
+                                                covconc ``rw'' `pw' ;
+                                                local gini2 = r(gini) ;
+                                                ceqbensp  `pw', startinc(`vtouse2') ben(`bentouse') zz(`_pline') obj1(`p1_`y'_orig') obj2(`p2_`y'_orig');
+                                                local dip = r(sp_ef_pov_`i') ;
+
+                                                if "`p1_`y'_orig'" ! = "" { ;
+                                                    local squared = 1  ;
                                                 } ;
-                                                else { ;
-                                                    tempvar yharm;
-                                                    gen double `yharm'=____ytaxharm;
-                                                    cap drop ____ytaxharm   ____id_taxharm;
-                                                    tempvar yharm_ppp;
-                                                    gen `yharm_ppp'=(`yharm'/`divideby')*(1/`ppp_calculated');
-                                    
-                                    
-                                                    if "``p''"!="" {    ;
-                                                        if substr("`p'",1,2)=="pl" {; // these are the PPP lines;
-                                                            local _pline = ``p'';
-                                                            local vtouseh `yharm_ppp';//h is for harm;
-                                                        };
-                                    
-                                                        else if _`p'_isscalar==1 { ;  // if pov line is scalar, // (note this local defined above);
-                                                            local _pline = ``p''; // set `_pline' as that scalar and;
-                                                            local vtouseh `yharm'   ;
-                                                        };
-                                                        else if _`p'_isscalar==0 {; // if pov line is variable,;
-                                                            tempvar `v'_normalizedh ; // create temporary variable that is income...;
-                                                            qui gen ``v'_normalizedh' = `yharm'/``p'' ;// normalized by pov line;
-                                                            local _pline = 1            ;           // and normalized pov line is 1;
-                                                            local vtouseh ``v'_normalizedh'; // use normalized income in the calculations;
-                                                        };
-                                
-                                
-                                                        tempvar zyzfgt1_h zyzfgt2_h;
-                                                        qui gen `zyzfgt1_h' = max((`_pline'-`vtouseh')/`_pline',0) ;// normalized povety gap of each individual;
-                                                        qui gen `zyzfgt2_h' = `zyzfgt1_h'^2 ;                           // square of normalized poverty gap;
-                                                        
-                                                        
-                                                        qui summ `zyzfgt`i'_h' `aw', meanonly; // `if' `in' restrictions already taken care of by `touse' above;
-                                                        local p`i'_h=r(mean);
-                                                        
-                                                        local mst_p`i'_h=`p`i'_wo' - `p`i'_h';//Ideal MC with tax formula; Corrected formula- Apr 30th, 2020
-                                                        local eft_`i'_h=(`mp_`i'_`p'_`rc''/`mst_p`i'_h')*(-1);
-                                                        *return scalar eft_`i'_h =  `eft_`i'_h';//Impact effectiveness indicator, v has the variable name of the transfer, y=income, p=poverty line ;
-                                                        
-                                                        local row=`row'+1;
-                                                        matrix `rw'_ef[`rw_ie_`p'_`i'',`_`cc''] = `eft_`i'_h';
+                                                else if "`p2_`y'_orig'" != "" { ;
+                                                    local squared = 2 ;
+                                                } ;
 
-                                                        *noisily di in green "Doing POV IMPACT EFF. TAXES `rw' `cc' Row= `row'";
+                                                matrix `rw'_ef[`rw_se_`p'_`i'',`_`cc''] = r(sp_ef_pov_`i');
 
-                                                        /*local row=`row'+1;
-                                                        matrix p_ie_`y'[`row',`col'] = `eft_2_h';
-                                                        matrix p_se_`y'[`row',`col'] = .;*/
-                                                        };
-                                                    };
-                                                };
+                                                    
+                                            };
                                             else{;
                                                 local row=`row'+1;
-                                                matrix `rw'_ef[`rw_ie_`p'_`i'',`_`cc''] =.;
-        
+                                                matrix `rw'_ef[`rw_ie_`p'_`i'',`_`cc''] = .;
+                                                local rowsp=`rowsp'+1;
+                                                matrix `rw'_ef[`rw_se_`p'_`i'',`_`cc''] = .;
                                             };
-                                        };
-            
-                                    };
-                                };
-                            };
-                            *Only Benefits;
-                            local rowsp=18;
-                            if wordcount("`tax_`rw'_`cc''")==0 &  wordcount("`ben_`rw'_`cc''")>0{;
-                                if wordcount("`povlines'")>0 {; // otherwise produces inequality only;
-                                    foreach p in `plopts'  { ;// plopts includes all lines;
-                                        if "``p''"!="" {    ;
-                                            if substr("`p'",1,2)=="pl" {; // these are the PPP lines;
-                                                local _pline = ``p'';
-                                                local vtouse1 ``cc'_ppp';//1 is for original;
-                                                local vtouse2 ``rw'_ppp';//2 is for income without intervention;
-                                                local vtouse3 `ystar_ppp';//3 is for ideal income;
-                                            };
-                                            else if _`p'_isscalar==1 { ;  // if pov line is scalar, // (note this local defined above);
-                                                local _pline = ``p''; // set `_pline' as that scalar and;
-                                                local vtouse1 ``cc''   ;// use original income variable;
-                                                local vtouse2 ``rw'';//income without intervention;
-                                                local vtouse3 `ystar';//income with ideal intervention;
-                                            };
-                                            else if _`p'_isscalar==0 {; // if pov line is variable,;
-                                                tempvar `v'_normalized4 ; // create temporary variable that is income...;
-                                                tempvar `v'_normalized5 ; // create temporary variable that is income...;
-                                                tempvar `v'_normalized6 ; // create temporary variable that is income...;
+                                            *noisily di in green "Doing POV IMPACT EFF. BEN `rw' `cc' Row= `row'";
 
-                                                qui gen ``v'_normalized4' = ``cc''/``p'' ;// normalized by pov line;
-                                                qui gen ``v'_normalized5' = ``rw''/``p'' ;// normalized by pov line;
-                                                /*qui gen ``v'_normalized2' = `ext'/``p'' ;// normalized by pov line;*/
-                                                qui gen ``v'_normalized6' = `ystar'/``p'' ;// normalized by pov line;
-
-                                                local _pline = 1            ;           // and normalized pov line is 1;
-                                                local vtouse1 ``v'_normalized4'; // use normalized income in the calculations;
-                                                local vtouse2 ``v'_normalized5'; // use normalized income in the calculations;
-                                                local vtouse3 ``v'_normalized6'; // use normalized income in the calculations;
-
-                                            };
                             
-                            
-                                            tempvar zyzfgt1_1 zyzfgt2_1 zyzfgt1_2 zyzfgt2_2 zyzfgt1_3 zyzfgt2_3;
-                                            qui gen `zyzfgt1_1' = max((`_pline'-`vtouse1')/`_pline',0) ;// normalized povety gap of each individual;
-                                            qui gen `zyzfgt2_1' = `zyzfgt1_1'^2 ;                           // square of normalized poverty gap;
-                                            qui gen `zyzfgt1_2' = max((`_pline'-`vtouse2')/`_pline',0) ;// normalized povety gap of each individual;
-                                            qui gen `zyzfgt2_2' = `zyzfgt1_2'^2 ;                           // square of normalized poverty gap;
-                                            qui gen `zyzfgt1_3' = max((`_pline'-`vtouse3')/`_pline',0) ;// normalized povety gap of each individual;
-                                            qui gen `zyzfgt2_3' = `zyzfgt1_3'^2 ;                           // square of normalized poverty gap;
-                            
-                                            qui summ `zyzfgt1_1' `aw', meanonly; // `if' `in' restrictions already taken care of by `touse' above;
-                                            local p1_`y'_orig=r(mean);
-                                            qui summ `zyzfgt1_2' `aw', meanonly; // `if' `in' restrictions already taken care of by `touse' above;
-                                            local p1_`y'_2=r(mean);
-                                            qui summ `zyzfgt1_3' `aw', meanonly; // `if' `in' restrictions already taken care of by `touse' above;
-                                            local p1_`y'_3_st=r(mean);
-                                
-                                            qui summ `zyzfgt2_1' `aw', meanonly; // `if' `in' restrictions already taken care of by `touse' above;
-                                            local p2_`y'_orig=r(mean);
-                                            qui summ `zyzfgt2_2' `aw', meanonly; // `if' `in' restrictions already taken care of by `touse' above;
-                                            local p2_`y'_2=r(mean);
-                                            qui summ `zyzfgt2_3' `aw', meanonly; // `if' `in' restrictions already taken care of by `touse' above;
-                                            local p2_`y'_3_st=r(mean);
-                                        
-                                            drop  `zyzfgt1_3' `zyzfgt1_2' `zyzfgt1_1' `zyzfgt2_3' `zyzfgt2_2' `zyzfgt2_1';
-                                
-                                            //Marginal contributions for fgt 1,2;
-                                            local mp_1_`p'=`p1_`y'_2'-`p1_`y'_orig';//Observed MC;
-                                            local mp_1_`p'_s=`p1_`y'_2'-`p1_`y'_3_st';//Star MC;
-                                            local mp_2_`p'=`p2_`y'_2'-`p2_`y'_orig';//Observed MC;
-                                            local mp_2_`p'_s=`p2_`y'_2'-`p2_`y'_3_st';//Star MC;
-                                
-                                
-                        
-                                            ****Poverty Impact effectiveness;
-                                            ****For Impact effectiveness with Transfers there can only be a positive effect;
-                                            forval i=1/2 {;
-                                                if `mp_`i'_`p''>0{;
-                                                    *Impact effectiveness;
-                                                    *Ystar already exists;
-                                                    *local mst_p`i'_h=`p`i'_`y'_3' - `p`i'_h';//Ideal MC with tax formula;
-                                                    scalar eft_`i' =  (`mp_`i'_`p''/`mp_`i'_`p'_s');//MC/MCstar;
-                                                    
-                                                    local row=`row'+1;
-                                                    matrix `rw'_ef[`rw_ie_`p'_`i'',`_`cc''] = eft_`i';
-                                                                
-
-                                                    local rowsp=`rowsp'+1;
-
-                                                    ****Poverty Spending effectiveness;
-                                                    tempvar bentouse;
-                                                    gen double `bentouse'=abs(`vtouse1'-`vtouse2');
-                                                    //! Uncomment out once fixed
-                                                    ****Poverty Spending effectiveness;
-                                                    *tempvar bentouse;
-                                                    cap drop ___bentouse;
-                                                    gen double ___bentouse=abs(`vtouse1'-`vtouse2');
-                                                    //! Uncomment after fixed.
-                                                    cap drop ___t ;
-                                                    gen double ___t = `vtouse2'+  abs(`bentouse') ;
-                                                    covconc ``cc'' `pw' ;
-                                                    local gini1 = r(gini) ;
-                                                    covconc ``rw'' `pw' ;
-                                                    local gini2 = r(gini) ;
-                                                    ceqbensp  `pw', startinc(`vtouse2') ben(`bentouse') zz(`_pline') obj1(`p1_`y'_orig') obj2(`p2_`y'_orig');
-                                                    local dip = r(sp_ef_pov_`i') ;
-                                                    if "`p1_`y'_orig'" ! = "" { ;
-                                                        local squared = 1  ;
-                                                    } ;
-                                                    else if "`p2_`y'_orig'" != "" { ;
-                                                        local squared = 2 ;
-                                                    } ;
-
-                                                    matrix `rw'_ef[`rw_se_`p'_`i'',`_`cc''] = r(sp_ef_pov_`i');
-
-                                                    
-                                                };
-                                                else{;
-                                                    local row=`row'+1;
-                                                    matrix `rw'_ef[`rw_ie_`p'_`i'',`_`cc''] = .;
-                                                    local rowsp=`rowsp'+1;
-                                                    matrix `rw'_ef[`rw_se_`p'_`i'',`_`cc''] = .;
-                                                };
-                                                *noisily di in green "Doing POV IMPACT EFF. BEN `rw' `cc' Row= `row'";
-
-                                
-                                            };
-        
                                         };
         
                                     };
+        
                                 };
                             };
+                        };
         
-                            *noisily di in red "End of POV IMPACT EFF. `rw' `cc' Row= `row'";
+                        *noisily di in red "End of POV IMPACT EFF. `rw' `cc' Row= `row'";
                         
         
                         *SPENDING EFFECTIVENESS FOR INEQUALITY;
@@ -2295,10 +2340,11 @@ program define ceqef
                         local row=17;
                         *Only TAXES with  MC>0 , with poverty it never happens with taxes;
                         
+
                         if wordcount("`tax_`rw'_`cc''")>0 & wordcount("`ben_`rw'_`cc''")==0{;
+                    
                             _ceqmcid `pw', inc(``cc'') sptax(`tax_`rw'_`cc'') ;
                             *If Marg. Cont. is negative, SE is missing;
-                            
                             
                             if r(mc_ineq)<0{;
                                 matrix `rw'_ef[17,`_`cc''] = .;
@@ -2317,6 +2363,7 @@ program define ceqef
                             };
                         };
                         
+
         
         
                         *Only TRANSFERS with  MC>0 ;
@@ -2346,127 +2393,136 @@ program define ceqef
                         };
                         *Beckerman Imervoll Effectiveness Indicators (row 2 to 30);
                         
-                if (`_ppp'){;  // Added if clause in case the user does not specify ppp since it's a necessary condition for these indicators - July 23rd, 2020
+                        if (`_ppp'){;  // Added if clause in case the user does not specify ppp since it's a necessary condition for these indicators - July 23rd, 2020
                 
-                        local row=33;
-                        *noisily di in red "Begin of BECK EFF. `rw' `cc' Row= `row'";
-                        // line 1608 to 1621 updated by Rosie on May 3rd, 2017;
-                        foreach p in `plopts'{;
-                            if "``p''"!=""{;
-                                if substr("`p'",1,2)!="pl" {; // these are the national PL;
-                                    if _`p'_isscalar==1 { ;
-                                        local z= (``p''/`divideby')*(1/`ppp_calculated');
-                                    };
-                                    else if _`p'_isscalar==0 {;
-                                        tempvar z;
-                                        qui gen `z'= (``p''/`divideby')*(1/`ppp_calculated');
-                                    };
-                                };
-                                if substr("`p'",1,2)=="pl" {; // these are the national PL;
-                                    local z= ``p'';
-                                };
-                        
-                                ceqbeck `aw' ,preinc(``rw'_ppp') postinc(``cc'_ppp') zline(`z');
-                                local rowbk=`rbk_`p'';
-                                matrix `rw'_ef[`rowbk',`_`cc'']=r(VEE);//Vertical Expenditure Efficiency;
-                                local rowbk=`rowbk'+1;
-                                matrix `rw'_ef[`rowbk',`_`cc'']=r(Spill);//Spillover Index;
-                                local rowbk=`rowbk'+1;
-                                matrix `rw'_ef[`rowbk',`_`cc'']=r(PRE);//Poverty Reduction Efficiency;
-                                local rowbk=`rowbk'+1;
-                                matrix `rw'_ef[`rowbk',`_`cc'']=r(PGE);//Poverty Gap Efficiency;
-                                local rowbk=`rowbk'+1;
-                            };
-                            else{;
-                                local row=`row'+4;
-                            };
-                        };
-                        *noisily di in red "End of BECK EFF. `rw' `cc' Row= `row'";
-
-                        *FI/FGP (row 62 to  to 82);
-                        local row=62;
-                        *noisily di in red "Begin of FI/FGP EFF. `rw' `cc' Row= `row'";
-
-                        ****TAXES AND TRANSFERS for R and N;
-                        if "`tax_`rw'_`cc''"!=""{;
-                            tempvar taxesef;
-                            gen double `taxesef'=abs((`tax_`rw'_`cc''/`divideby')*(1/`ppp_calculated'));
-                        };
-                        if "`ben_`rw'_`cc''"!=""{;
-                            tempvar benef;
-                            gen double `benef'=(`ben_`rw'_`cc''/`divideby')*(1/`ppp_calculated');
-                        };
-            
-                        local yes= wordcount("`tax_`rw'_`cc''")+wordcount("`ben_`rw'_`cc''");
-                        if `yes'>0{; //ESTIMATE EFFECTIVENESS INDICATORS FOR CASES THAT APPLY;
+                            local row=33;
+                            *noisily di in red "Begin of BECK EFF. `rw' `cc' Row= `row'";
+                            // line 1608 to 1621 updated by Rosie on May 3rd, 2017;
                             foreach p in `plopts'{;
                                 if "``p''"!=""{;
                                     if substr("`p'",1,2)!="pl" {; // these are the national PL;
-                                        local z= (``p''/`divideby')*(1/`ppp_calculated');
+                                        if _`p'_isscalar==1 { ;
+                                            local z= (``p''/`divideby')*(1/`ppp_calculated');
+                                        };
+                                        else if _`p'_isscalar==0 {;
+                                            tempvar z;
+                                            qui gen `z'= (``p''/`divideby')*(1/`ppp_calculated');
+                                        };
                                     };
+
                                     if substr("`p'",1,2)=="pl" {; // these are the national PL;
                                         local z= ``p'';
                                     };
+                        
+                                    ceqbeck `aw' ,preinc(``rw'_ppp') postinc(``cc'_ppp') zline(`z');
+                                    local rowbk=`rbk_`p'';
+                                    matrix `rw'_ef[`rowbk',`_`cc'']=r(VEE);//Vertical Expenditure Efficiency;
+                                    local rowbk=`rowbk'+1;
+                                    matrix `rw'_ef[`rowbk',`_`cc'']=r(Spill);//Spillover Index;
+                                    local rowbk=`rowbk'+1;
+                                    matrix `rw'_ef[`rowbk',`_`cc'']=r(PRE);//Poverty Reduction Efficiency;
+                                    local rowbk=`rowbk'+1;
+                                    matrix `rw'_ef[`rowbk',`_`cc'']=r(PGE);//Poverty Gap Efficiency;
+                                    local rowbk=`rowbk'+1;
+                                };
+                                else{;
+                                    local row=`row'+4;
+                                };
+                            };
+                        
+                            *noisily di in red "End of BECK EFF. `rw' `cc' Row= `row'";
+
+                            *FI/FGP (row 62 to  to 82);
+                            local row=62;
+                            *noisily di in red "Begin of FI/FGP EFF. `rw' `cc' Row= `row'";
+
+                            ****TAXES AND TRANSFERS for R and N;
+                            if "`tax_`rw'_`cc''"!=""{;
+                                tempvar taxesef;
+                                gen double `taxesef'=abs((`tax_`rw'_`cc''/`divideby')*(1/`ppp_calculated'));
+                            };
+                            if "`ben_`rw'_`cc''"!=""{;
+                                tempvar benef;
+                                gen double `benef'=(`ben_`rw'_`cc''/`divideby')*(1/`ppp_calculated');
+                            };
+            
+                            local yes= wordcount("`tax_`rw'_`cc''")+wordcount("`ben_`rw'_`cc''");
+                            if `yes'>0{; //ESTIMATE EFFECTIVENESS INDICATORS FOR CASES THAT APPLY;
+                                foreach p in `plopts'{;
+                                    if "``p''"!=""{;
+                                        if substr("`p'",1,2)!="pl" {; // these are the national PL;
+                                            local z= (``p''/`divideby')*(1/`ppp_calculated');
+                                        };
+                                        if substr("`p'",1,2)=="pl" {; // these are the national PL;
+                                            local z= ``p'';
+                                        };
                                     *FI/FGP effectiveness;
                                     
-                                    if wordcount("`tax_`rw'_`cc''")>0 & wordcount("`ben_`rw'_`cc''")>0{;
-                                        _fifgpmc `aw',taxes(`taxesef') benef(`benef') startinc(``rw'_ppp') endinc(``cc'_ppp') z(`z');
-                                        local rowfi=`rfi_`p'';
-                                        matrix `rw'_ef[`rowfi',`_`cc'']=r(MCEF_t);
-                                        local rowfi=`rowfi'+1;
-                                        matrix `rw'_ef[`rowfi',`_`cc'']=.;
-                                        local rowfi=`rowfi'+1;
-                                        matrix `rw'_ef[`rowfi',`_`cc'']=.;
-                                        local rowfi=`rowfi'+1;
+                                        if wordcount("`tax_`rw'_`cc''")>0 & wordcount("`ben_`rw'_`cc''")>0{;
+                                            _fifgpmc `aw',taxes(`taxesef') benef(`benef') startinc(``rw'_ppp') endinc(``cc'_ppp') z(`z');
+                                            local rowfi=`rfi_`p'';
+                                            matrix `rw'_ef[`rowfi',`_`cc'']=r(MCEF_t);
+                                            local rowfi=`rowfi'+1;
+                                            matrix `rw'_ef[`rowfi',`_`cc'']=.;
+                                            local rowfi=`rowfi'+1;
+                                            matrix `rw'_ef[`rowfi',`_`cc'']=.;
+                                            local rowfi=`rowfi'+1;
                         
-                                    };
-                                    if wordcount("`tax_`rw'_`cc''")>0 & wordcount("`ben_`rw'_`cc''")==0{;
-                                    *noisily di in green "HEEEEEEEEEEEEEEREEEEE" in red "`rw' to `cc'";
+                                        };
+                            
+                                        if wordcount("`tax_`rw'_`cc''")>0 & wordcount("`ben_`rw'_`cc''")==0{;
+                                            *noisily di in green "HEEEEEEEEEEEEEEREEEEE" in red "`rw' to `cc'";
 
+                                            _fifgpmc `aw',taxes(`taxesef') startinc(``rw'_ppp') endinc(``cc'_ppp') z(`z');
+                                            local rowfi=`rfi_`p'';
+                                            matrix `rw'_ef[`rowfi',`_`cc'']=r(MCEF_t);
+                                            local rowfi=`rowfi'+1;
+                                            matrix `rw'_ef[`rowfi',`_`cc'']=.;
+                                            local rowfi=`rowfi'+1;
+                                            matrix `rw'_ef[`rowfi',`_`cc'']=.;
+                                            local rowfi=`rowfi'+1;
+                                            
+                                            *noisily di r(MCEF_t);
+                                            *noisily di r(MCEF_pc);
+                                            *noisily di r(MCEF_n);
+                                        };
 
-                                        _fifgpmc `aw',taxes(`taxesef') startinc(``rw'_ppp') endinc(``cc'_ppp') z(`z');
-                                        local rowfi=`rfi_`p'';
-                                        matrix `rw'_ef[`rowfi',`_`cc'']=r(MCEF_t);
-                                        local rowfi=`rowfi'+1;
-                                        matrix `rw'_ef[`rowfi',`_`cc'']=.;
-                                        local rowfi=`rowfi'+1;
-                                        matrix `rw'_ef[`rowfi',`_`cc'']=.;
-                                        local rowfi=`rowfi'+1;
-                        
-                
-
-                                        *noisily di r(MCEF_t);
-                                        *noisily di r(MCEF_pc);
-                                        *noisily di r(MCEF_n);
-                                    };
-                                    if wordcount("`tax_`rw'_`cc''")==0 & wordcount("`ben_`rw'_`cc''")>0{;
-                                        _fifgpmc `aw', benef(`benef') startinc(``rw'_ppp') endinc(``cc'_ppp') z(`z');
-                                        local rowfi=`rfi_`p'';
-                                        matrix `rw'_ef[`rowfi',`_`cc'']=r(MCEF_t);
-                                        local rowfi=`rowfi'+1;
-                                        matrix `rw'_ef[`rowfi',`_`cc'']=.;
-                                        local rowfi=`rowfi'+1;
-                                        matrix `rw'_ef[`rowfi',`_`cc'']=.;
-                                        local rowfi=`rowfi'+1;
+                                        if wordcount("`tax_`rw'_`cc''")==0 & wordcount("`ben_`rw'_`cc''")>0{;
+                                            
+                                            _fifgpmc `aw', benef(`benef') startinc(``rw'_ppp') endinc(``cc'_ppp') z(`z');
+                                            local rowfi=`rfi_`p'';
+                                            matrix `rw'_ef[`rowfi',`_`cc'']=r(MCEF_t);
+                                            local rowfi=`rowfi'+1;
+                                            matrix `rw'_ef[`rowfi',`_`cc'']=.;
+                                            local rowfi=`rowfi'+1;
+                                            matrix `rw'_ef[`rowfi',`_`cc'']=.;
+                                            local rowfi=`rowfi'+1;
                                 
-                                        *noisily di in green "FI/FGP INCOME COL:`cc':`_`cc'', row: `row', real col: `_`cc''";
+                                            *noisily di in green "FI/FGP INCOME COL:`cc':`_`cc'', row: `row', real col: `_`cc''";
+                                        };
                                     };
+
+                                    **else{;
+                                    **local row=`row'+3;
+                                    **};
                                 };
-                                **else{;
-                                **local row=`row'+3;
-                                **};
                             };
-                        };
-        
-                        *noisily di in red "End of FI/FGP EFF. `rw' `cc' Row= `row'";
-                      };
+                            *noisily di in red "End of FI/FGP EFF. `rw' `cc' Row= `row'";
+                          };
+
                     };
-            };
+
+                };
+
                 *noisily matrix list `rw'_ef;
+            
+            };
         };
     };
-};
     
+    
+
+
     ****************
     * SAVE RESULTS *
     ****************;
@@ -2564,6 +2620,8 @@ program define ceqef
     
         
     }; // if using
+
+
     ********
     * OPEN *
     ********;
