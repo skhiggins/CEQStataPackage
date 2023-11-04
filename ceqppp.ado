@@ -2,7 +2,8 @@
 //  the WDI numbers needed to check the ones used by country teams.
 // It also uses pathutil
 ** Sean Higgins, created 22nov2015
-*! v1.1 23mar2020
+*! v1.2 04nov2023 (Maya Goldman, update to include 2017) 
+** v1.1 23mar2020
 ** v1.0 22nov2015
 
 capture program drop ceqppp
@@ -23,8 +24,8 @@ cap which pathutil
 if _rc ssc install pathutil
 
 ** Parse options
-if `baseyear'!=2005 & `baseyear'!=2011 {
-`die' "{bf:baseyear()} must be 2005 or 2011"
+if `baseyear'!=2005 & `baseyear'!=2011 & `baseyear'!=2017 {
+`die' "{bf:baseyear()} must be 2005, 2011 or 2017"
 }
 if `baseyear'==2005 local ext ".05"
 else local ext ""
@@ -36,7 +37,7 @@ local country=upper("`country'")
 cap preserve
 clear
 
-if `baseyear'==2011 {
+if `baseyear'==2011 | `baseyear'==2017 {
 
 quietly {
 wbopendata, country(`country') indicator(FP.CPI.TOTL) year(`surveyyear') nometadata clear
