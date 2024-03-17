@@ -3,42 +3,13 @@ CEQ Stata Package
 This README describes updates to the package, to be submitted along
  with the updated package to Statistical Software Components (SSC)
 
-Update September 15,2021
+Update March 17,2024
 
-This update contains 0 NEW file.
+This update contains removal of two bugged Ados. 
 
-The UPDATED ado files are:
-    ceqtarget
-
-The UPDATED help files are:
-    ceqassump
-    ceqconc
-    ceqcov
-    ceqcoverage
-    cedes
-    ceqdom
-    ceqdomext
-    ceqeduc
-    ceqef
-    ceqefext
-    ceqextend
-    ceqextpop
+The REMOVED ado and help files are:
     ceqextsig
-    ceqfi
-    ceqfiscal
-    ceqgraph_cdf
-    ceqgraph_conc
-    ceqgraph_fi
-    ceqgraph_progressivity
-    ceqhhchar
-    ceqindchar
-    ceqinfra
-    ceqiop
-    ceqlorenz
-    ceqmarg
-    ceqpop
-    ceqrace
-    ceqtarget
+    ceqstatsig
 
 	
 Description of entire package:
@@ -51,7 +22,6 @@ The following commands have ado and sthlp files:
 	ceqlorenz
 	ceqiop
 	ceqfi
-	ceqstatsig
 	ceqdom
 	ceqef
 	ceqconc
@@ -60,7 +30,6 @@ The following commands have ado and sthlp files:
 	ceqmarg
 	ceqefext
 	ceqcov
-	ceqextsig
 	ceqdomext
 	ceqcoverage
 	ceqtarget
