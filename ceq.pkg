@@ -1,7 +1,7 @@
 v 3
 d 'ceq': Estimates fiscal incidence and exports results directly to the CEQ Master Workbook
 d 
-d Distribution date: 20210915
+d Distribution date: 20240317
 d 
 f ceq.ado
 f ceq.sthlp
@@ -17,8 +17,6 @@ f ceqiop.ado
 f ceqiop.sthlp
 f ceqfi.ado
 f ceqfi.sthlp
-f ceqstatsig.ado
-f ceqstatsig.sthlp
 f ceqdom.ado
 f ceqdom.sthlp
 f ceqef.ado
@@ -35,8 +33,6 @@ f ceqefext.ado
 f ceqefext.sthlp
 f ceqcov.ado
 f ceqcov.sthlp
-f ceqextsig.ado
-f ceqextsig.sthlp
 f ceqdomext.ado
 f ceqdomext.sthlp
 f ceqcoverage.ado
